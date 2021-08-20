@@ -1,0 +1,6 @@
+# ignore consent csv  files and bonus  csv files
+analysis-code/data/consent*.csv
+analysis-code/data/bonus*.csv
+analysis/parse_data.py
+original_data_backup
+original_data_backup/*
