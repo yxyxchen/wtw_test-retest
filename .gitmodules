@@ -1,0 +1,6 @@
+[submodule "task-code/task-sess1"]
+	path = task-code/task-sess1
+	url = https://cdlab@gitlab.pavlovia.org/cdlab/wtw_online_sess1.git
+[submodule "task-code/task-sess2"]
+	path = task-code/task-sess2
+	url = https://cdlab@gitlab.pavlovia.org/cdlab/wtw_online_sess2.git
