@@ -185,7 +185,7 @@ def plot_group_WTW(WTW_, TaskTime):
 		})
 	# code.interact(local = dict(globals(), **locals()))
 	df = df.assign(ymin = df.mu - df.se, ymax = df.mu + df.se)
-	df.plot("TaskTime", "mu", color = "black", ax = ax, label = "_nolegend_")
+	df.plot("TaskTime", "mu", color = "black", ax = ax)
 	ax.fill_between(df.TaskTime, df.ymin, df.ymax, facecolor='grey', edgecolor = "none",alpha = 0.4, interpolate=True)
 	ax.set_xlabel("")
 	ax.set_ylabel("WTW (s)")
@@ -209,9 +209,9 @@ def plot_group_KMSC(Psurv_block1_, Psurv_block2_, Time):
 		})
 	df2 = df2.assign(ymin = lambda df: df.mu - df.se, ymax = lambda df: df.mu + df.se)
 
-	df1.plot("Time", "mu", color = expParas.conditionColors[0], ax = ax, label = "_nolegend_")
+	df1.plot("Time", "mu", color = expParas.conditionColors[0], ax = ax)
 	ax.fill_between(df1.Time, df1.ymin, df1.ymax, facecolor= expParas.conditionColors[0], edgecolor = "none",alpha = 0.4, interpolate=True)
-	df2.plot("Time", "mu", color = expParas.conditionColors[1], ax = ax, label = "_nolegend_")
+	df2.plot("Time", "mu", color = expParas.conditionColors[1], ax = ax)
 	ax.fill_between(df2.Time, df2.ymin, df2.ymax, facecolor= expParas.conditionColors[1], edgecolor = "none",alpha = 0.4, interpolate=True)
 	ax.set_xlabel("Elapsed time (s)")
 	ax.set_ylabel("Survival rate (%)")
@@ -288,7 +288,7 @@ if __name__ == "__main__":
 	# code.interact(local=dict(globals(), **locals()))
 	# Time = np.linspace(0, 600 * 2, 600*2)
 	# wtw, WTW, Time = analysisFxs.wtwTS(trialdata_[('s0007', 1)], expParas.tMax, Time, True)
-	# plt.show()
+	plt.show()
 
 ############
 
