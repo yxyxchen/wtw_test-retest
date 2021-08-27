@@ -25,14 +25,14 @@ def loaddata(hdrdatafile, trialdatafiles):
 	"""load hdrdata and trialdata from given folders 
 	"""
 	hdrdata   = pd.read_csv(hdrdatafile)
-	nsub = len(trialdatafiles)
+	nsub = hdrdata.included.sum()
 	trialdata_  = {}
+	# code.interact(local = dict(locals(), **globals()))
 	for i in range(nsub):
 		trialdata = pd.read_csv(trialdatafiles[i])
 		
 		# add blockIdx
 		trialdata['blockIdx'] = [1 if x == "LP" else 2 for x in trialdata['condition']]
-
 
 		# add totalTrialIdx
 		ntrial_firstblock = int(trialdata.trialIdx[trialdata.condition == "LP"].max())
@@ -49,7 +49,7 @@ def loaddata(hdrdatafile, trialdatafiles):
 # this can be very different across datasets
 
 ############################# individual-level analysis functions #####################
-def ind_selfreport(row, plot_k = False, plot_upps = False, plot_BIS = False):
+def parse_ind_selfreport(row, plot_k = False, plot_upps = False, plot_BIS = False):
 	""" process selfreport data for a single participant 
 
 	Inputs:
@@ -162,13 +162,13 @@ def ind_MF(trialdata, key, Time, TaskTime, plot_RT = False, plot_trial = False, 
 	return stats, objs
 
 ############################# group-level analysis functions #####################
-def group_selfreport(selfreportfile):
+def parse_group_selfreport(selfreportfile):
 	# process selfreport data
 	selfreport = pd.read_csv(selfreportfile)
 	selfdata = pd.DataFrame()
 	for i, row in selfreport.iterrows():
 		try:
-			out  = ind_selfreport(row, plot_k = False, plot_upps = False, plot_BIS = False)
+			out  = parse_ind_selfreport(row, plot_k = False, plot_upps = False, plot_BIS = False)
 			selfdata = pd.concat([selfdata, out])
 		except:
 			code.interact(local = dict(globals(), **locals()))
@@ -273,11 +273,10 @@ def group_MF(sess, plot_each = False, plot_group = False):
 # 		plt.clf()
 
 ############################## main ##########################
-
 if __name__ == "__main__":
 	# print(group_selfreport(os.path.join("data", "selfreport_sess1.csv")))
 	
-	group_MF(1, plot_each = False, plot_group = True) 
+	group_MF(1, plot_each = True, plot_group = False) 
 
 	# print(hdrdata)
 	# print(trialdata[(hdrdata.id[0], hdrdata.sess[0])])

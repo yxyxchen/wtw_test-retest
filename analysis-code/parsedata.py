@@ -8,10 +8,11 @@ import itertools
 import copy # pay attention to copy 
 import code
 from subFxs import expParas
+from datetime import datetime
 
 ############################# parse_original data files ############################
 def parsedata(sess):
-    ############### variables in the enclosing scope ###############
+    ############### input variables ###############
     taskdir  = os.path.join("..", "task-code", "task-sess%d"%sess)
     taskdata_outdir = os.path.join("data")
     if not os.path.exists(taskdata_outdir):
@@ -62,10 +63,19 @@ def parsedata(sess):
                                                       "demo4": "handness",
                                                       "demo5": "language",
                                                       "demo7": "race"})
+            # delete duplicated entries. Sometimes a participant can sign a consent multiple times. 
+            dup = consentdata.worker_id.duplicated(keep = 'last')
+            if any(dup):
+                print("Some participants signed the consent multiple times.")
+                print(consentdata.loc[consentdata.worker_id.duplicated(keep = False)])
+                print("Deleting duplicated entries.....")
+                consentdata = consentdata.loc[~dup]
+                print("Duplicated entries deleted!")
             # add unidentifiable IDs
             consentdata.sort_values("consent_date", ignore_index = True)
-            consentdata.insert(0, "id", ["s" + str(x + 1).zfill(4) for x in consentdata.index]) 
+            consentdata.insert(0, "id", ["s" + str(x + 1).zfill(4) for x in range(consentdata.shape[0])]) 
         else:
+            # Yeah I need to debug this issue later
             consentdata = consentdata[['workerId', "EndDate"]]
             consentdata = consentdata.rename(columns={"workerId": "worker_id", 
                                                       "EndDate": "consent_date"})
@@ -82,6 +92,7 @@ def parsedata(sess):
         """Parse selfreport data for session 1 
         """
         ################ parse data ##########################
+        # code.interact(local = dict(globals(), **locals()))
         selfreportdata = pd.read_csv(selfreportfile)
         consentdata = pd.read_csv(consentfile_sess1)
         selfreportdata = selfreportdata.drop(['StartDate', 'Status', 'IPAddress', 'Progress',\
@@ -91,15 +102,15 @@ def parsedata(sess):
                                               'UserLanguage', 'assignmentId', 'hitId'], axis = 1)
         selfreportdata = selfreportdata.rename(columns={"workerId": "worker_id", "Finished": "selfreport_finished", "Duration (in seconds)": "selfreport_duration",
                                 "EndDate": "selfreport_date"})
-
         ## sort entries by date
         selfreportdata = selfreportdata.sort_values("selfreport_date", ignore_index = True)
 
         ## match id and delete worker_id
+        # code.interact(local = dict(globals(), **locals()))
         selfreportdata = pd.merge(selfreportdata, consentdata[['worker_id', 'id']], how = "left", left_on = ["worker_id"], right_on = ["worker_id"])
         selfreportdata.pop("worker_id")
         tmp = selfreportdata.pop("id"); selfreportdata.insert(0, "id", tmp) # 
-        selfreportdata.sort_values('id', inplace  = True) # sort by id 
+        selfreportdata.sort_values('id', inplace  = True, ignore_index = True) # sort by id 
 
         # save data
         selfreportdata.to_csv(selfreport_out,  index = False)
@@ -147,7 +158,7 @@ def parsedata(sess):
 
         # check the number of saved task blocks 
         numblock = taskdata.shape[0]
-        print("%d blocks are saved."%numblock)
+        # print("%d blocks are saved."%numblock)
 
         # parse task data 
         def parse_task_variable(variable, data):
@@ -185,7 +196,7 @@ def parsedata(sess):
                 blockduration = max(cleandata_in_this_block['sellTime']) - cleandata_in_this_block['trialReadyTime'][0]
             else:
                 blockduration = max(cleandata_in_this_block['sellTime']) - cleandata_in_this_block['trialStartTime'][0]
-            print('The block duration, measured by last sellTime - first trialStartTime, is %.2f s'%blockduration)
+            # print('The block duration, measured by last sellTime - first trialStartTime, is %.2f s'%blockduration)
             blockdurations.append(blockduration)
         if numblock > 0:
             cleandata = pd.concat(cleandata)
@@ -194,51 +205,75 @@ def parsedata(sess):
         # cleandata.to_csv(os.path.join(cleandatadir, workerId+".csv"))
         return cleandata, workerId, cb, numblock, blockdurations
     def parse_task_data(sess):
-        """Parse task data
+        """Loop over all taskdata files under ../task-code/task-sess*. Convert all taskdata files that are not empty
         """
-        ########### parse data ###################
         consentdata = pd.read_csv(consentfile_sess1)
         files = glob.glob(os.path.join(taskdata_dir, "*"))
-        hdrdata = {
-            "id": [],
-            "cb": [],
-            "sess": [],
-            "date": [],
-        }
-        bonusdata = {
-            "worker_id": [],
-            "bonus": []
-        }
+        hdrdata = pd.DataFrame()
+        bonusdata = pd.DataFrame()
 
-        date_parser = re.compile(os.path.join(taskdata_dir, "wtw_.*_PARTICIPANT_SESSION_(.*)_.*.csv"))
+        # Loop over all taskdata files under ../task-code/task-sess*
+        if os.path.exists(os.path.join('log','hdrdata_empty_sess%d.csv'%sess)):
+            os.remove(os.path.join('log','hdrdata_empty_sess%d.csv'%sess))
+        date_parser = re.compile(os.path.join(taskdata_dir, "wtw_.*_PARTICIPANT_SESSION_(.*)_(.*)h([0-9][0-9]).*.csv"))
         for file in files:
             cleandata, worker_id, cb, numblock, blockdurations = parse_data(file, taskdata_outdir)
-            if all([x > expParas.blocksec - 20 for x in blockdurations]) and numblock == 2:
-                #code.interact(local = dict(globals(), **locals()))
+            try:
                 thisid = consentdata['id'][np.where(consentdata['worker_id'] == worker_id)[0]].values[0]
-                hdrdata['id'].append(thisid)
-                hdrdata['cb'].append(cb)
-                hdrdata['sess'].append(sess)
-                hdrdata['date'].append(date_parser.findall(file)[0])
-                
-                bonusdata['worker_id'].append(worker_id)
-                bonusdata['bonus'].append(max(cleandata.totalEarnings) / 100)
+            except:
+                code.interact(local = dict(globals(), **locals()))
+            # if the file is not empty, convert it to a readable format and add an entry to hdrdata and bonusdata 
+            if numblock > 0:
+                dateval = date_parser.findall(file)[0][0].replace("-", "/")
+                hourval = date_parser.findall(file)[0][1]
+                minval = hour = date_parser.findall(file)[0][2]
+                date = datetime.strptime(dateval + " " + hourval + ":" + minval, '%Y/%m/%d %H:%M')
+                thisentry = pd.DataFrame(                    {
+                    "id": thisid,
+                    "cb": cb,
+                    "sess": sess,
+                    "date": date,
+                    "cptask": all(np.array(blockdurations) > expParas.blocksec - 20) and numblock == 2
+                    }, index = [0])
+                hdrdata = pd.concat([hdrdata, thisentry])
                 cleandata.to_csv(os.path.join(taskdata_outdir, "task-" + thisid + "-sess%s.csv"%sess), index = False)
+                thisbonusentry = pd.DataFrame({
+                    "worker_id": worker_id,
+                    "bonus": max(cleandata.totalEarnings) / 100
+                    }, index = [0])
+                bonusdata = pd.concat([bonusdata, thisbonusentry])
+            # if the file is empty, add an entry to ./log/hdrdata_empty.csv
             else:
-                print("Exclude" + thisid)
+                print("Find a task file which is empty: " + thisid)
                 logdf = pd.DataFrame({
                     "id": thisid,
-                    "worker_id": worker_id,
                     "sess": sess,
                     "cb": cb,
-                    "date": date_parser.findall(file)[0]
+                    "date": date
                     }, index = [0])
-                if os.path.exists(os.path.join('log','excludedIDs.csv')):
-                    logdf.to_csv(os.path.join('log','excludedIDs.csv'), mode='a', header=False, index = False)
+                if os.path.exists(os.path.join('log','hdrdata_empty_sess%d.csv'%sess)):
+                    logdf.to_csv(os.path.join('log', 'hdrdata_empty_sess%d.csv'%sess), mode='a', header=False, index = False)
                 else:
-                    logdf.to_csv(os.path.join('log','excludedIDs.csv'), header=False, index = False)
+                    logdf.to_csv(os.path.join('log','hdrdata_empty_sess%d.csv'%sess), header=False, index = False)
+
+        # exclude participants who didn't complete the task and who took the task for multiple times
+        hdrdata = hdrdata.sort_values("id", ignore_index = True)
+        hdrdata['duptask'] = hdrdata.id.duplicated(keep = False)
+        hdrdata['included'] = np.logical_and(~hdrdata.duptask, hdrdata.cptask) # 
+
+        # print summary messages
+        print("Loop over %d files"%len(files))
+        print("Loop over %d files that are not empty"%hdrdata.shape[0])
+        print("Loop over %d participannts"%len(np.unique(hdrdata.id)))
+        # print("%d files are empty"%len()) yeah I can make it better tomorrow
+        print("%d participants completed the task"%len(np.unique(hdrdata.id[hdrdata.cptask])))
+        tmp = hdrdata.id[np.logical_and(hdrdata.duptask, hdrdata.cptask)].unique()
+        print("Among those participants, %d of them did the task for multiple times"%len(tmp))
+        for x in tmp:
+            print( x + " did the task for %d times and her/his files were excluded"% np.sum(hdrdata.id == x))
+
         # save hdrdata and bonus data
-        hdrdata = pd.DataFrame(hdrdata).sort_values("id", ignore_index = True)
+        # yeah I need to change bonus data as well..
         hdrdata.to_csv(hdrdata_out, index = False)
 
         bonusdata = pd.DataFrame(bonusdata)
@@ -249,6 +284,38 @@ def parsedata(sess):
     if sess == 1:
         parse_selfreport_data()
     parse_task_data(sess)
+
+    ######################## initial quality check ###############
+    # I want to use these as global variables 
+    selfreportfile = os.path.join("data", "selfreport_sess%d.csv"%sess)
+    consentfile = os.path.join("data", "consent_sess%d.csv"%sess)
+    hdrdatafile = os.path.join("data", "hdrdata_sess%d.csv"%sess)
+    
+    ################## read in data #############
+    selfdata = pd.read_csv(selfreportfile)
+    # code.interact(local = dict(locals(), **globals()))
+    consentdata = pd.read_csv(consentfile)
+    hdrdata = pd.read_csv(hdrdatafile)
+    # code.interact(local = dict(globals(), **locals()))
+
+    # print approved participants without task data 
+    tmp = pd.merge(selfdata, consentdata, how = "left", left_on = "id", right_on = "id")
+    print(tmp.loc[~np.isin(selfdata.id, hdrdata.id), ["id", "worker_id"]])
+
+    # check whether any participant signed the consent for multiple times
+    # Qualtrics should prevent it from happening though 
+    # if any(consentdata.worker_id.duplicated()):
+    #     consentdata[consentdata.worker_id.duplicated(keep = False), :]
+    #     print("Some participants completed the consent for multiple times!")
+
+    # check whether any participant completed questionaires for multiple times 
+    # this is problematic 
+
+    # check whether all participants who completed the task also completed questionaires
+    # if not, then there might be something wrong with the payment 
+    
+    # this is ok
+
 
 if __name__ == "__main__":
     print("Parse data files for SESS1")
