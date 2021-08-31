@@ -44,7 +44,6 @@ def parsedata(sess):
 
     taskdata_dir = os.path.join(taskdir, "data")
     hdrdata_out = os.path.join("data", "hdrdata_sess%d.csv"%sess)
-    bonusdata_out = os.path.join("data", "bonus_sess%d.csv"%sess)
     ##################### sub functions ###########################
     def parse_consent_data():
         """Parse consent data for the given session. 
@@ -239,7 +238,8 @@ def parsedata(sess):
                 cleandata.to_csv(os.path.join(taskdata_outdir, "task-" + thisid + "-sess%s.csv"%sess), index = False)
                 thisbonusentry = pd.DataFrame({
                     "worker_id": worker_id,
-                    "bonus": max(cleandata.totalEarnings) / 100
+                    "bonus": max(cleandata.totalEarnings) / 100,
+                    "cb": cb
                     }, index = [0])
                 bonusdata = pd.concat([bonusdata, thisbonusentry])
             # if the file is empty, add an entry to ./log/hdrdata_empty.csv
@@ -275,9 +275,10 @@ def parsedata(sess):
         # save hdrdata and bonus data
         # yeah I need to change bonus data as well..
         hdrdata.to_csv(hdrdata_out, index = False)
+        for i in ['A', 'B', 'C', 'D']:
+            bonusdata_out = os.path.join("data", "bonus_sess%d_%s.csv"%(sess, i))
+            bonusdata.loc[bonusdata.cb == i].iloc[:, 0:2].to_csv(bonusdata_out, index=False, header = False)
 
-        bonusdata = pd.DataFrame(bonusdata)
-        bonusdata.to_csv(bonusdata_out, index=False, header = False)
 
     ############### main function #########
     parse_consent_data()
@@ -300,6 +301,7 @@ def parsedata(sess):
 
     # print approved participants without task data 
     tmp = pd.merge(selfdata, consentdata, how = "left", left_on = "id", right_on = "id")
+    # code.interact(local = dict(globals(), **locals()))
     print(tmp.loc[~np.isin(selfdata.id, hdrdata.id), ["id", "worker_id"]])
 
     # check whether any participant signed the consent for multiple times
