@@ -3,7 +3,7 @@ analysis-code/data/consent*.csv
 analysis-code/data/bonus*.csv
 analysis-code/parse_data.py
 analysis-code/manual_check.py
-original_data_backup
-original_data_backup/*
-analysis-code/subFxs/__pycache__/*
-analysis-code/.ipynb_checkpoints/*
+original_data_backup/
+**/__pycache__/
+**/.ipynb_checkpoints/*
+/others/
