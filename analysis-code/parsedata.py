@@ -11,12 +11,13 @@ from subFxs import expParas
 from datetime import datetime
 
 
-
 ############################# parse_original data files ############################
 def parsedata(sess):
     ############### input variables ###############
     taskdir  = os.path.join("..", "task-code", "task-sess%d"%sess)
     taskdata_outdir = os.path.join("data")
+    taskdata_dir = os.path.join(taskdir, "manual_check", "data_ok") # parse files that we have manually checked
+    hdrdata_out = os.path.join("data", "hdrdata_sess%d.csv"%sess)
     if not os.path.exists(taskdata_outdir):
         os.makedirs(taskdata_outdir) 
 
@@ -43,9 +44,6 @@ def parsedata(sess):
         "3": "Disagree somewhat",
         "4": "Disagree strongly"
     }
-
-    taskdata_dir = os.path.join(taskdir, "manual_check", "data_ok") # parse files that we have manually checked
-    hdrdata_out = os.path.join("data", "hdrdata_sess%d.csv"%sess)
     ##################### sub functions ###########################
     def parse_consent_data():
         """Parse consent data for the given session. 
@@ -64,7 +62,7 @@ def parsedata(sess):
                                                       "demo4": "handness",
                                                       "demo5": "language",
                                                       "demo7": "race"})
-            # add batch information.
+            # for the second batch
             # for this experiment, all data before 09/01/2021 are batch1, and the rest are batch2.
             consentdata['batch'] = [1 if datetime.strptime(x, '%m/%d/%y %H:%M') < datetime.strptime("09/1/21", "%m/%d/%y") else 2 for x in consentdata.consent_date] 
             # delete duplicated entries. Sometimes a participant can sign a consent multiple times. 
@@ -82,13 +80,22 @@ def parsedata(sess):
             # rm assignmentId 
             consentdata.pop("assignmentId")
         else:
-            # Yeah I need to debug this issue later
+            # read consent data
             consentdata = consentdata[['workerId', "EndDate"]]
             consentdata = consentdata.rename(columns={"workerId": "worker_id", 
                                                       "EndDate": "consent_date"})
-            # match unidentifiable IDs
+            # delete duplicated entries. Sometimes a participant can sign a consent multiple times. 
+            dup = consentdata.worker_id.duplicated(keep = 'last')
+            if any(dup):
+                print("Some participants signed the consent multiple times.")
+                print("Please check whether they took multiple HITs and whether their answers were consistent.")
+                print(consentdata.loc[consentdata.worker_id.duplicated(keep = False)])
+                print("Deleting duplicated entries.....")
+                consentdata = consentdata.loc[~dup]
+                print("Duplicated entries deleted!")
+            # join by consentdata_sess1
             consentdata_sess1 = pd.read_csv(consentfile_sess1)
-            consentdata = consentdata.join(consentdata_sess1.drop("consent_date", axis = 1).set_index("worker_id"), on = "worker_id").drop("worker_id", axis = 1)
+            consentdata = consentdata.join(consentdata_sess1.drop("consent_date", axis = 1).set_index("worker_id"), on = "worker_id")
             tmp = consentdata.pop("id"); consentdata.insert(0, "id", tmp)
             consentdata.sort_values(by = "id", inplace = True)
         ################## save data #######################
@@ -110,8 +117,8 @@ def parsedata(sess):
         ## sort entries by date
         selfreportdata = selfreportdata.sort_values("selfreport_date", ignore_index = True)
 
-        ## match id and delete worker_id
-        # code.interact(local = dict(globals(), **locals()))
+                ## match id and delete worker_id
+                # code.interact(local = dict(globals(), **locals()))
         selfreportdata = pd.merge(selfreportdata, consentdata[['worker_id', 'id']], how = "left", left_on = ["worker_id"], right_on = ["worker_id"])
         selfreportdata.pop("worker_id")
         tmp = selfreportdata.pop("id"); selfreportdata.insert(0, "id", tmp) # 
@@ -158,7 +165,6 @@ def parsedata(sess):
             cb = "unknown"
             if verbose: print("No counterbalance group is recorded!") 
             
-
         # record blockdurations 
         blockdurations = []
 
@@ -231,7 +237,13 @@ def parsedata(sess):
                 thisid = consentdata['id'][np.where(consentdata['worker_id'] == worker_id)[0]].values[0]
                 thisbatch = consentdata['batch'][np.where(consentdata['worker_id'] == worker_id)[0]].values[0]
             except:
-                code.interact(local = dict(globals(), **locals()))
+                if worker_id == 'A35S5YV2XL971J':
+                    print("delete one participant")
+                    continue
+                else:
+                    print(worker_id)
+                    # I can't use consentdata from the second session since I don't have batch info and id info
+                    code.interact(local = dict(globals(), **locals()))
 
             thisentry = pd.DataFrame({
                 "id": thisid,
@@ -269,7 +281,7 @@ def parsedata(sess):
         # only assign bonus to participants who completed the task, the assumption is that whoever completed self-report is approved...
         selfreportdata = pd.read_csv(selfreportfile)
         bonusdata = bonusdata[np.isin(bonusdata.worker_id, selfreportdata.workerId)] 
-        code.interact(local = dict(globals(), **locals()))
+        # code.interact(local = dict(globals(), **locals()))
         for i in ['A', 'B', 'C', 'D']:
             for j in [1, 2]:
                 bonusdata_out = os.path.join("data", "bonus_sess%d_batch%d_%s.csv"%(sess, j, i))
@@ -288,8 +300,8 @@ def parsedata(sess):
         -------------------------------------------------------
     """)   
     print("Parse selfreport data")
-    if sess == 1:
-        parse_selfreport_data()
+    
+    parse_selfreport_data()
     print("Please compare selfreport data with CloudResearch records.")
     print("Each approved participant should have completed the selfreport questionaires.")
     print("""
@@ -300,50 +312,33 @@ def parsedata(sess):
     parse_task_data(sess)
 
     ######################## initial quality check ###############
+    # if numbers don't match
     # I want to use these as global variables 
-    selfreportfile = os.path.join("data", "selfreport_sess%d.csv"%sess)
-    consentfile = os.path.join("data", "consent_sess%d.csv"%sess)
-    hdrdatafile = os.path.join("data", "hdrdata_sess%d.csv"%sess)
+    # selfreportfile = os.path.join("data", "selfreport_sess%d.csv"%sess)
+    # consentfile = os.path.join("data", "consent_sess%d.csv"%sess)
+    # hdrdatafile = os.path.join("data", "hdrdata_sess%d.csv"%sess)
     
-    ################## read in data #############
-    selfdata = pd.read_csv(selfreportfile)
-    # code.interact(local = dict(locals(), **globals()))
-    consentdata = pd.read_csv(consentfile)
-    hdrdata = pd.read_csv(hdrdatafile)
-    # code.interact(local = dict(globals(), **locals()))
+    # ################## read in data #############
+    # selfdata = pd.read_csv(selfreportfile)
+    # consentdata = pd.read_csv(consentfile)
+    # hdrdata = pd.read_csv(hdrdatafile)
 
-    # print approved participants without task data 
-    tmp = pd.merge(selfdata, consentdata, how = "left", left_on = "id", right_on = "id")
-    alldata = pd.merge(hdrdata, consentdata, how = "left", left_on = "id", right_on = "id")
-    # code.interact(local = dict(globals(), **locals()))
-    print(tmp.loc[~np.isin(selfdata.id, hdrdata.id), ["id", "worker_id"]])
+    # # print approved participants without task data 
+    # tmp = pd.merge(selfdata, consentdata, how = "left", left_on = "id", right_on = "id")
+    # alldata = pd.merge(hdrdata, consentdata, how = "left", left_on = "id", right_on = "id")
+    # print(tmp.loc[~np.isin(selfdata.id, hdrdata.id), ["id", "worker_id"]])
 
     # 
-    df_all = pd.DataFrame()
-    for i in ["A", "B", "C", "D"]:
-        df = pd.read_csv("~/Downloads/approve_batch2_%s.csv"%i)
-        df_all = pd.concat([df_all, df])
-    df_all.loc[df_all.AmazonIdentifier.duplicated(keep = False),]
-    # so a participant, "A1ROEDVMTO9Y3X" is probably a hacker... since he was approved twice, even though no one should be allowed to do so
-    # he only signed the consent once and he only fill the questionaires once. 
-
-    # check whether any participant signed the consent for multiple times
-    # Qualtrics should prevent it from happening though 
-    # if any(consentdata.worker_id.duplicated()):
-    #     consentdata[consentdata.worker_id.duplicated(keep = False), :]
-    #     print("Some participants completed the consent for multiple times!")
-
-    # check whether any participant completed questionaires for multiple times 
-    # this is problematic 
-
-    # check whether all participants who completed the task also completed questionaires
-    # if not, then there might be something wrong with the payment 
-    
-    # this is ok
-
+    # df_all = pd.DataFrame()
+    # for i in ["A", "B", "C", "D"]:
+    #     df = pd.read_csv("~/Downloads/approve_batch2_%s.csv"%i)
+    #     df_all = pd.concat([df_all, df])
+    # df_all.loc[df_all.AmazonIdentifier.duplicated(keep = False),]
+    # so a participant, "A35S5YV2XL971J" is probably a hacker... since he didn't fill the consent, he didn't have task data and he didn't fill the selfreport...
+    # we deleted it from both self-report and task data in the second session
 
 if __name__ == "__main__":
-    print("Parse data files for SESS1")
-    parsedata(1)
+    print("Parse data files for SESS2")
+    parsedata(2)
     # print("Parse data files for SESS2")
     # parsedata(2)

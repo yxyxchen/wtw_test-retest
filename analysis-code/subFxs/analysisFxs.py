@@ -18,6 +18,9 @@ import code
 def calc_se(x):
     """calculate standard error after removing na values 
     """
+    # if not isinstance(x, pd.Series):
+    #     x = pd.Series(x)
+
     if not isinstance(x, np.ndarray):
         x = np.array(x)
     size = len(x)
@@ -30,6 +33,30 @@ def calc_se(x):
 
 
 ####################################################
+def score_PANAS(choices, isplot = True):
+    """score PANAS questionaire answers
+
+    Inputs:
+        choices: choice data, from 1 to 4
+        isplot: whether to plot figures or not
+    """
+    # questionaire inputs: items and reversed items for each component 
+    PAS_items = [1, 3, 5, 9, 10, 12, 14, 16, 17, 19] # positive affect items. Scores can range from 10-50, higher scores -> higher lvels of positive affect
+    NAS_items  = [2, 4, 6, 7, 8, 11, 13, 15, 18, 20] # negative affect items. higher scores -> higher lvels of positive affect
+
+    # calculate PAS and NAS scores
+    PAS = choices.loc[['PA-' + str(x) for x in PAS_items]].sum()
+    NAS = choices.loc[['PA-' + str(x) for x in NAS_items]].sum()
+
+    # plot
+    if isplot:
+        fig, ax = plt.subplots()
+        ax.plot(np.arange(0, len(choices), 1), choices)
+        ax.set_ylabel("PANAS Choice")
+        ax.set_xlabel("# Choice")
+
+    return PAS, NAS
+
 def score_BIS(choices, isplot = True):
     """score BIS questionaire answers
 
@@ -65,7 +92,14 @@ def score_BIS(choices, isplot = True):
     Motor = motor + perseverance
     Nonplanning  = selfcontrol + cogcomplex
 
-    BIS = Attentional + Motor + Nonplanning\
+    BIS = Attentional + Motor + Nonplanning
+
+    # plot 
+    if isplot:
+        fig, ax = plt.subplots()
+        ax.plot(np.arange(0, len(choices), 1), choices)
+        ax.set_ylabel("BIS Choice")
+        ax.set_xlabel("# Choice")
 
     return (attention, cogstable, motor, perseverance, selfcontrol, cogcomplex), Attentional, Motor, Nonplanning, BIS
 
@@ -108,7 +142,9 @@ def score_upps(choices, isplot = True):
     # determine data quality 
     if isplot:
         fig, ax = plt.subplots()
-        ax.plot(choices.values) 
+        ax.plot(np.arange(0, len(choices), 1), choices)
+        ax.set_ylabel("UPPS Choice")
+        ax.set_xlabel("# Choice")
     # c = collections.Counter(choices.values)
     
     return NU, PU, PM, PS, SS, UPPS
@@ -140,7 +176,7 @@ def calc_k(ddchoices, isplot = True):
     R = Vi / Vd #reward ratio
     TR = 1 - 1/R # transformed reward ratio
     pD = ddchoices.values.astype("float") - 1 # prob of choosing delayed rewards
-    
+    percentD = pD.sum() / len(pD)
     
     # logistic regression
     np.column_stack((pD,TR, T))
@@ -153,38 +189,50 @@ def calc_k(ddchoices, isplot = True):
         "pD": pD,
         
     })
-    results = smf.glm("pD ~ -1 + TR + T",data = regdf, family=sm.families.Binomial()).fit()
-    
-    # calculate k and related stats
-    k = results.params[1]/results.params[0]
-    logk = np.log(k)
-    g = np.array([-1 / results.params[0], 1 / results.params[1]]) # first order derivative of logk on betas 
-    var_logk = g.dot(results.cov_params()).dot(g.T)
-    se_logk = np.sqrt(var_logk)
-    
-    # calculate SV
-    regdf['SV'] = regdf.eval("Vd / (1 + @k * T) / Vi")
-    
-    # bin the SV variable
-    regdf['SV_bin'] = pd.qcut(regdf['SV'], 5)
+    if all(pD == 1) or all(pD == 0) or sum(abs(np.diff(regdf.sort_values(by = 'TR').pD))) <= 1 \
+    or sum(abs(np.diff(regdf.sort_values(by = 'T').pD))) <= 1: 
+        print("All the same intertemporal choices.")
+        k = np.nan
+        logk = np.nan
+        var_logk = np.nan
+        se_logk = np.nan
+    else:
+        try:
+            results = smf.glm("pD ~ -1 + TR + T",data = regdf, family=sm.families.Binomial()).fit()
+        except:
+            print("Use Bayesian Methods here")
+            code.interact(local = dict(locals(), **globals()))
 
-    # if plot figures 
-    if isplot:
-        fig, ax = plt.subplots(1,2)
-        # check data quality
-        ax[0].plot(pD)
+        # calculate k and related stats
+        k = results.params[1]/results.params[0]
+        logk = np.log(k)
+        g = np.array([-1 / results.params[0], 1 / results.params[1]]) # first order derivative of logk on betas 
+        var_logk = g.dot(results.cov_params()).dot(g.T)
+        se_logk = np.sqrt(var_logk)
+    
+        # calculate SV
+        regdf['SV'] = regdf.eval("Vd / (1 + @k * T) / Vi")
         
-        # check model fit 
-        plotdf = regdf.groupby("SV_bin").mean()
-        plotdf.plot("SV", "pD", ax = ax[1])
-        ax[1].vlines(1,0,1, color = "r", linestyles ="dotted")
-        ax[1].hlines(0.5,0,3, color = "r", linestyles ="dotted")
-        ax[1].set_xlabel("SV (fraction of the immediate reward)")
-        ax[1].set_ylabel("P(delayed)")
-        ax[1].set_title("k = %.3f, logk_se = %.3f"%(k, se_logk))
-        ax[1].set_ylim([-0.1, 1.1])
+        # bin the SV variable
+        regdf['SV_bin'] = pd.qcut(regdf['SV'], 5)
+
+        # if plot figures 
+        if isplot:
+            fig, ax = plt.subplots(1,2)
+            # check data quality
+            ax[0].plot(pD)
+            
+            # check model fit 
+            plotdf = regdf.groupby("SV_bin").mean()
+            plotdf.plot("SV", "pD", ax = ax[1])
+            ax[1].vlines(1,0,1, color = "r", linestyles ="dotted")
+            ax[1].hlines(0.5,0,3, color = "r", linestyles ="dotted")
+            ax[1].set_xlabel("SV (fraction of the immediate reward)")
+            ax[1].set_ylabel("P(delayed)")
+            ax[1].set_title("k = %.3f, logk_se = %.3f"%(k, se_logk))
+            ax[1].set_ylim([-0.1, 1.1])
         
-    return k, logk, se_logk
+    return k, logk, se_logk, percentD
 
 
 def resample(ys, xs, Xs):
@@ -219,7 +267,7 @@ def kmsc(data, tMax, Time, plot_KMSC = False):
         std_wtw: std of willingness to wait across trials. 
     """
     durations = [row.timeWaited if row.trialEarnings == 0 else row.scheduledDelay for index, row in data.iterrows()]
-    event_observed = np.not_equal(data.trialEarnings, 0) # 1 if the participant quits and 0 otherwise 
+    event_observed = np.equal(data.trialEarnings, 0) # 1 if the participant quits and 0 otherwise 
     
     time, psurv = km(event_observed, durations)
     
@@ -256,13 +304,13 @@ def rtplot_multiblock(trialdata):
     """ Plot figures to visually check RT, for multiple blocks
     """ 
     # calc ready_RT
-    trialdata['ready_RT'] = trialdata.eval("trialStartTime - trialReadyTime")
+    trialdata.eval("ready_RT = trialStartTime - trialReadyTime", inplace = True)
     blockbounds = [max(trialdata.totalTrialIdx[trialdata.blockIdx == i]) for i in np.unique(trialdata.blockIdx)]
 
     # plot
     fig, ax = plt.subplots(1,6)
     # ready RT timecourse
-    trialdata.plot("totalTrialIdx",  "ready_RT", ax = ax[0], label = '_nolegend_')
+    trialdata.plot("totalTrialIdx",  "ready_RT", ax = ax[0])
     ax[0].set_ylabel("Ready RT (s)")
     ax[0].set_xlabel("Trial")
     ax[0].get_legend().remove()
@@ -289,10 +337,10 @@ def trialplot_multiblock(trialdata):
 
     """
     fig, ax = plt.subplots()
-    trialdata[trialdata.trialEarnings != 0].plot('totalTrialIdx', 'timeWaited', ax = ax, color = "blue", label = "_nolegend_")
+    trialdata[trialdata.trialEarnings != 0].plot('totalTrialIdx', 'timeWaited', ax = ax, color = "blue")
     trialdata[trialdata.trialEarnings != 0].plot.scatter('totalTrialIdx', 'timeWaited', ax = ax, color = "blue", label = "rwd")
 
-    trialdata[trialdata.trialEarnings == 0].plot('totalTrialIdx', 'timeWaited', ax = ax, color = "red", label = "_nolegend_")
+    trialdata[trialdata.trialEarnings == 0].plot('totalTrialIdx', 'timeWaited', ax = ax, color = "red")
     trialdata[trialdata.trialEarnings == 0].plot.scatter('totalTrialIdx', 'timeWaited', ax = ax, color = "red", label = "unrwd")
 
     trialdata[trialdata.trialEarnings == 0].plot.scatter('totalTrialIdx', 'scheduledDelay', ax = ax, color = "black", label = "scheduled")
@@ -359,18 +407,19 @@ def wtwTS(data, tMax, TaskTime, plot_WTW = False):
 def desc_RT(trialdata):
     """Return descriptive stats of sell_RT and ready_RT, pooling all data together
     """
-    # calc ready_RT
-    trialdata['ready_RT'] = trialdata.eval("trialStartTime - trialReadyTime")
+    # calc 
+    trialdata.eval("ready_RT = trialStartTime - trialReadyTime", inplace = True)
     # calc summary stats
     out = trialdata.agg({
             "ready_RT": ["median", "mean", calc_se]
         })
     ready_RT_median, ready_RT_mean, ready_RT_se = out.ready_RT
-
+    # code.interact(local = dict(globals(), **locals()))
     out = trialdata.loc[trialdata.trialEarnings != 0, :].agg({
-            "RT": ["median", "mean", calc_se]
+            "RT": ["median", "mean"]
         })
 
-    sell_RT_median,  sell_RT_mean, sell_RT_se = out.RT
+    sell_RT_median,  sell_RT_mean = out.RT
+    sell_RT_se  = calc_se(trialdata.loc[trialdata.trialEarnings != 0, :].RT)
     return ready_RT_median, ready_RT_mean, ready_RT_se, sell_RT_median, sell_RT_mean, sell_RT_se
 
