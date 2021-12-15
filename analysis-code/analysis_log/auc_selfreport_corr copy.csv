@@ -1,0 +1,5 @@
+,NU (Negative Urgency),PU (Positive Urgency),PM (Premediation),PS (Perseverance),SS (Sensation Seaking),attention,cogstable,motor,perseverance,selfcontrol,cogcomplex
+LP_AUC_1,p = 0.2501,p = 0.5898,p = 0.8289,p = 0.0845,"r = 0.1524, p = 0.0399",p = 0.82,p = 0.3338,"r = 0.218, p = 0.0031",p = 0.5438,p = 0.7289,p = 0.4416
+HP_AUC_1,p = 0.5341,p = 0.9484,p = 0.2508,p = 0.2525,p = 0.1521,p = 0.8563,p = 0.9743,"r = 0.2381, p = 0.0012",p = 0.705,p = 0.3354,p = 0.5713
+LP_AUC_2,p = 0.5896,p = 0.8366,p = 0.9548,p = 0.2166,p = 0.4245,p = 0.5471,p = 0.6216,p = 0.556,p = 0.4031,p = 0.3519,p = 0.4619
+HP_AUC_2,p = 0.5814,p = 0.8165,p = 0.6143,p = 0.1915,p = 0.5676,p = 0.6035,p = 0.3623,p = 0.2717,p = 0.5851,p = 0.6598,p = 0.4357

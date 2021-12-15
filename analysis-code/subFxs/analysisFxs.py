@@ -4,6 +4,11 @@ import os
 import glob
 import re
 import matplotlib.pyplot as plt
+import seaborn as sns
+# plot styles
+plt.style.use('classic')
+sns.set(font_scale = 1.5)
+sns.set_style("white")
 import itertools
 import copy # pay attention to copy 
 import statsmodels.api as sm
@@ -30,8 +35,6 @@ def calc_se(x):
         print("Remove NaN values in calculating standard error"%ndrop)
     return np.nanstd(x) / np.sqrt(len(x))
 
-
-
 ####################################################
 def score_PANAS(choices, isplot = True):
     """score PANAS questionaire answers
@@ -51,9 +54,9 @@ def score_PANAS(choices, isplot = True):
     # plot
     if isplot:
         fig, ax = plt.subplots()
-        ax.plot(np.arange(0, len(choices), 1), choices)
-        ax.set_ylabel("PANAS Choice")
-        ax.set_xlabel("# Choice")
+        ax.acorr(choices, maxlags = 10)
+        ax.set_ylabel("PANAS Autocorrelation")
+        ax.set_xlabel("Lags")
 
     return PAS, NAS
 
@@ -91,21 +94,18 @@ def score_BIS(choices, isplot = True):
     Attentional = attention + cogstable
     Motor = motor + perseverance
     Nonplanning  = selfcontrol + cogcomplex
-
     BIS = Attentional + Motor + Nonplanning
 
     # plot 
     if isplot:
         fig, ax = plt.subplots()
-        ax.plot(np.arange(0, len(choices), 1), choices)
-        ax.set_ylabel("BIS Choice")
-        ax.set_xlabel("# Choice")
-
+        ax.acorr(choices, maxlags = 10)
+        ax.set_ylabel("BIS Autocorrelation")
+        ax.set_xlabel("Lags")
     return (attention, cogstable, motor, perseverance, selfcontrol, cogcomplex), Attentional, Motor, Nonplanning, BIS
 
 def score_upps(choices, isplot = True):
     """score upps questionaire answers 
-    
     Inputs:
         choices: choice data, from 1 to 4
         isplot: whether to plot figures or not 
@@ -142,11 +142,10 @@ def score_upps(choices, isplot = True):
     # determine data quality 
     if isplot:
         fig, ax = plt.subplots()
-        ax.plot(np.arange(0, len(choices), 1), choices)
-        ax.set_ylabel("UPPS Choice")
-        ax.set_xlabel("# Choice")
+        ax.acorr(choices, maxlags = 10)
+        ax.set_ylabel("UPPS Autocorrelation")
+        ax.set_xlabel("Lags")
     # c = collections.Counter(choices.values)
-    
     return NU, PU, PM, PS, SS, UPPS
         
     
@@ -251,7 +250,6 @@ def resample(ys, xs, Xs):
 
 def kmsc(data, tMax, Time, plot_KMSC = False):
     """Survival analysis of willingness to wait 
-    
     Inputs:
         data: task data
         tMax: duration of the analysis time window
@@ -266,9 +264,8 @@ def kmsc(data, tMax, Time, plot_KMSC = False):
         auc: area under the survival curve
         std_wtw: std of willingness to wait across trials. 
     """
-    durations = [row.timeWaited if row.trialEarnings == 0 else row.scheduledDelay for index, row in data.iterrows()]
+    durations = data.timeWaited
     event_observed = np.equal(data.trialEarnings, 0) # 1 if the participant quits and 0 otherwise 
-    
     time, psurv = km(event_observed, durations)
     
     # add the first and the last datapoints
@@ -337,67 +334,59 @@ def trialplot_multiblock(trialdata):
 
     """
     fig, ax = plt.subplots()
-    trialdata[trialdata.trialEarnings != 0].plot('totalTrialIdx', 'timeWaited', ax = ax, color = "blue")
-    trialdata[trialdata.trialEarnings != 0].plot.scatter('totalTrialIdx', 'timeWaited', ax = ax, color = "blue", label = "rwd")
+    trialdata[trialdata.trialEarnings != 0].plot('totalTrialIdx', 'timeWaited', ax = ax, color = "blue", label = 'rwd')
+    trialdata[trialdata.trialEarnings != 0].plot.scatter('totalTrialIdx', 'timeWaited', ax = ax, color = "blue", label='_nolegend_', s = 100)
 
-    trialdata[trialdata.trialEarnings == 0].plot('totalTrialIdx', 'timeWaited', ax = ax, color = "red")
-    trialdata[trialdata.trialEarnings == 0].plot.scatter('totalTrialIdx', 'timeWaited', ax = ax, color = "red", label = "unrwd")
+    trialdata[trialdata.trialEarnings == 0].plot('totalTrialIdx', 'timeWaited', ax = ax, color = "red", label = 'unrwd')
+    trialdata[trialdata.trialEarnings == 0].plot.scatter('totalTrialIdx', 'timeWaited', ax = ax, color = "red", label='_nolegend_', s = 100)
 
-    trialdata[trialdata.trialEarnings == 0].plot.scatter('totalTrialIdx', 'scheduledDelay', ax = ax, color = "black", label = "scheduled")
+    trialdata[trialdata.trialEarnings == 0].plot.scatter('totalTrialIdx', 'scheduledDelay', ax = ax, color = "black", label = "scheduled", s = 100)
     blockbounds = [max(trialdata.totalTrialIdx[trialdata.blockIdx == i]) for i in np.unique(trialdata.blockIdx)]
     ax.vlines(blockbounds, 0, max(expParas.tMaxs), color = "grey", linestyles = "dotted")
     ax.set_ylabel("Time (s)")
     ax.set_xlabel("Trial")
-    ax.set_ylim([-1, max(expParas.tMaxs) + 1])
+    ax.set_ylim([-2, max(expParas.tMaxs) + 2])
+    ax.set_xlim([-2, trialdata.shape[0] + 2])
+    ax.legend(loc='upper right', frameon=False)
 
-def wtwTS(data, tMax, TaskTime, plot_WTW = False):
+def wtwTS(trialEarnings_, timeWaited_, sellTime_, blockIdx_, tMax, TaskTime, plot_WTW = False):
     """
+    sellTime_ here is a continous time.
+    I uppack data here since the required inputs are different sometimes
     """
-    # ensure timeWaited = scheduledWait on rewarded trials
-    data.timeWaited =  [row.timeWaited if row.trialEarnings == 0 else row.scheduledDelay for index, row in data.iterrows()]
-    
+    # check whether they are values 
+
     # For trials before the first quit trial, wtw = the largest timeWaited value 
-    if any(data.trialEarnings == 0):
-        first_quit_idx = data.query('trialEarnings == 0').index[0] # in case there is no quitting 
+    if any(trialEarnings_ == 0):
+        first_quit_idx = np.where(trialEarnings_ == 0)[0][0] # in case there is no quitting 
     else:
-        first_quit_idx = data.shape[0]-1
-    wtw_now = max(data.timeWaited[:first_quit_idx+1])
+        first_quit_idx = len(trialEarnings_) - 1
+    wtw_now = max(timeWaited_[:first_quit_idx+1])
     wtw = [wtw_now for i in range(first_quit_idx+1)]
 
     # For trials after the first quit trial, quitting indicates a new wtw value 
     # Otherwise, only update wtw if the current timeWaited is larger 
-    for i, row in data.iloc[first_quit_idx+1:,:].iterrows():
-        if row.trialEarnings == 0:
-            wtw_now = row.timeWaited
+    for i in range(first_quit_idx+1, len(trialEarnings_)):
+        if trialEarnings_[i] == 0:
+            wtw_now = timeWaited_[i]
         else:
-            wtw_now = max(row.timeWaited, wtw_now)
+            wtw_now = max(timeWaited_[i], wtw_now)
         wtw.append(wtw_now)
 
-    ############# sanity check ############### 
-    # code.interact(local=dict(globals(), **locals()))
-    # plotdf = pd.DataFrame({
-    #     "wtw": wtw,
-    #     "timeWaited": data.timeWaited,
-    #     "trialEarnings": data.trialEarnings,
-    #     "trialIdx": data.totalTrialIdx
-    #     })
-    # fig, ax = plt.subplots()
-    # plotdf.plot("trialIdx", "wtw", ax = ax)
-    # plotdf.plot("trialIdx", "timeWaited", ax = ax, color = "black")
-    # ax.scatter(data.totalTrialIdx[data.trialEarnings == 0], data.timeWaited[data.trialEarnings == 0], color = "red")
-
+    # code.interact(local = dict(locals(), **globals()))
     # cut off
     wtw = np.array([min(x, tMax) for x in wtw])
 
     # upsample 
-    WTW = resample(wtw, data.accumSellTime, TaskTime)
+    WTW = resample(wtw, sellTime_, TaskTime)
 
-    # plot
+    # plot 
     if plot_WTW:
         fig, ax = plt.subplots()
-        ax.plot(data.totalTrialIdx, wtw)
-        blockbounds = [max(data.totalTrialIdx[data.blockIdx == i]) for i in np.unique(data.blockIdx)]
-        ax.vlines(blockbounds, 0, tMax, color = "grey", linestyles = "dotted", linewidth = 2)
+        trialIdx_ = np.arange(len(trialEarnings_))
+        ax.plot(trialIdx_, wtw)
+        blockbounds = [max(trialIdx_[blockIdx_ == i]) for i in np.unique(blockIdx_)]
+        ax.vlines(blockbounds, 0, tMax, color = "grey", linestyles = "dotted", linewidth = 3)
         ax.set_ylabel("WTW (s)")
         ax.set_xlabel("Trial")
         ax.set_ylim([-0.5, tMax + 0.5]) 
@@ -422,4 +411,293 @@ def desc_RT(trialdata):
     sell_RT_median,  sell_RT_mean = out.RT
     sell_RT_se  = calc_se(trialdata.loc[trialdata.trialEarnings != 0, :].RT)
     return ready_RT_median, ready_RT_mean, ready_RT_se, sell_RT_median, sell_RT_mean, sell_RT_se
+
+############################ individual level analysis functions ###############
+def ind_MF(trialdata, key, isTrct = True, plot_RT = False, plot_trial = False, plot_KMSC = False, plot_WTW = False):
+    """Conduct model-free (MF) analysis for a single participant 
+    Inputs:
+        trialdata: a pd dataframe that contains task data
+        key: in the format of (id, sessIdx). For example, ("s0001", 1)
+        plot_RT: whether to plot 
+        plot_trial:
+    """
+    # initialize the output
+    stats = [] # for scalar outputs
+    objs = {} # for others
+
+    # RT visual check
+    if plot_RT:
+        rtplot_multiblock(trialdata)
+
+    # trial-by-trial behavior visual check
+    if plot_trial:
+        trialplot_multiblock(trialdata)
+
+    # WTW timecourse
+    wtw, WTW, TaskTime = wtwTS(trialdata['trialEarnings'].values, trialdata['timeWaited'].values, trialdata['accumSellTime'].values, trialdata['blockIdx'].values, expParas.tMax, expParas.TaskTime, plot_WTW)
+    objs['WTW'] = WTW
+
+    ################## calculate summary stats for each block ###############
+    if isTrct:
+        trialdata = trialdata[trialdata.sellTime <= expParas.blocksec - np.max(expParas.tMaxs)]
+
+    ################## this part of code  can be modified for different experiments ##########
+    # initialize the figure 
+    if plot_KMSC:
+        fig, ax = plt.subplots()
+        ax.set_xlim([0, expParas.tMax])
+        ax.set_ylim([-0.1, 1.1])
+        ax.set_xlabel("Elapsed time (s)")
+        ax.set_ylabel("Survival rate")
+        
+    nBlock = len(np.unique(trialdata.blockIdx))
+    for i in range(nBlock):
+        blockdata = trialdata[trialdata.blockIdx == i + 1]
+        condition = blockdata.condition.values[0]
+        conditionColor = expParas.conditionColors[condition]
+        # Survival analysis
+        time, psurv, Time, Psurv, block_auc, block_std_wtw = kmsc(blockdata, expParas.tMax, expParas.Time, False)
+        if plot_KMSC:
+            ax.plot(time, psurv, color = conditionColor, label = condition)
+
+        # Survival analysis into subblocks 
+        sub_aucs = []
+        sub_std_wtws = []
+        for k in range(4):
+            # code.interact(local = dict(locals(), **globals()))
+            filter = np.logical_and(blockdata['sellTime'] >= k * expParas.blocksec / 4, blockdata['sellTime'] < (k + 1) * expParas.blocksec / 4)
+            try:
+                time, psurv, Time, Psurv, auc, std_wtw = kmsc(blockdata.loc[filter, :], expParas.tMax, Time, False)
+            except:
+                code.interact(local = dict(locals(), **globals()))
+            sub_aucs.append(auc) 
+            sub_std_wtws.append(std_wtw)
+
+        # RT stats 
+        ready_RT_median, ready_RT_mean, ready_RT_se, sell_RT_median, sell_RT_mean, sell_RT_se = desc_RT(blockdata)
+        
+        # organize the output
+        tmp = pd.DataFrame({"id": key[0], "sess": key[1], "key": str(key), "block": i + 1, "auc": block_auc, "std_wtw": block_std_wtw,\
+            "auc1": sub_aucs[0], "auc2": sub_aucs[1], "auc3": sub_aucs[2], "auc4": sub_aucs[3], \
+            "std_wtw1": sub_std_wtws[0], "std_wtw2": sub_aucs[1], "std_wtw3": sub_std_wtws[2], "std_wtw4": sub_std_wtws[3], \
+            "ready_RT_mean": ready_RT_mean,"ready_RT_se": ready_RT_se,"sell_RT_median": sell_RT_median,\
+            "sell_RT_mean": sell_RT_mean, "sell_RT_se": sell_RT_se,\
+            "condition": condition}, index = [i])
+        stats.append(tmp) 
+        objs['Psurv_block'+str(i+1)] = Psurv
+
+    stats = pd.concat(stats, ignore_index = True)
+        
+    ############ return  ############# y
+    return stats, objs
+
+
+def ind_sim_MF(simdata, key, plot_trial = False, plot_KMSC = False, plot_WTW = False):
+    """ 
+        # this is for replication simulation though
+        using wtw analysis here will be risky because balabala time longer will be truncated
+        AUC for a block will not change 
+        AUC analysis for subblocks will be affected
+    """
+    # initialize the output
+    stats = [] # for scalar outputs
+    objs = {} # for others
+    wtw = [] # wtw for each trial
+    WTW = [] # wtw resampled, trials beyond 600s are included
+
+    # code.interact(local = dict(locals(), **globals()))
+    # trial-by-trial behavior visual check
+    if plot_trial:
+        trialplot_multiblock(simdata)
+
+    if plot_KMSC:
+        fig, ax = plt.subplots()
+
+    # calc AUC values and WTW for each block
+    nBlock = len(np.unique(simdata.blockIdx))
+    for i in range(nBlock):
+        blockdata = simdata[simdata.blockIdx == i + 1]
+        condition = blockdata.condition.values[0]
+        conditionColor = expParas.conditionColors[condition]
+        # code.interact(local = dict(locals(), **globals()))
+
+        # Survival analysis
+        time, psurv, Time, Psurv, block_auc, block_std_wtw = kmsc(blockdata, expParas.tMax, expParas.Time, False)
+        if plot_KMSC:
+            ax.plot(time, psurv, color = conditionColor, label = condition)
+
+        # save results
+        tmp = pd.DataFrame({"key": str(key), "block": i + 1, "auc": block_auc, "std_wtw": block_std_wtw,\
+            "condition": condition}, index = [i])
+        stats.append(tmp) 
+        objs['Psurv_block'+str(i+1)] = Psurv
+
+        # WTW analysis
+        block_wtw, block_WTW, block_TaskTime = \
+        wtwTS(
+            blockdata['trialEarnings'].values,
+            blockdata['timeWaited'].values,
+            blockdata['sellTime'].values,
+            blockdata['blockIdx'].values,
+            expParas.tMax, 
+            np.linspace(0, expParas.blocksec, 600),
+            False
+        )
+        wtw.append(block_wtw)
+        WTW.append(block_WTW)
+
+    wtw = np.concatenate(wtw)
+    if plot_WTW:
+        fig, ax = plt.subplots()
+        ax.plot(simdata.totalTrialIdx, wtw)
+
+    # combine results from blocks
+    WTW = np.concatenate(WTW)
+    objs['WTW'] = WTW
+    stats = pd.concat(stats, ignore_index = True)
+        
+    ############ return  ############# 
+    return stats, objs
+
+########################## group-level analysis functions ##############
+def group_MF(trialdata_, plot_each = False):
+    # check sample sizes 
+    nsub = len(trialdata_)
+    print("Analyze %d valid participants"%nsub)
+    print("\n")
+    # analysis constants
+    Time = expParas.Time
+    TaskTime = expParas.TaskTime
+    stats_ = []
+    # initialize outputs 
+    Psurv_block1_ = np.empty([nsub, len(Time)])
+    Psurv_block2_ = np.empty([nsub, len(Time)])
+    WTW_ = np.empty([nsub, len(TaskTime)])
+
+    # run MF for each participant 
+    idx = 0
+    for key, trialdata in trialdata_.items():
+        if plot_each:
+            stats, objs  = ind_MF(trialdata, key, plot_RT = True, plot_trial = True, plot_KMSC = False, plot_WTW = True)
+            plt.show()
+            input("Press Enter to continue...")
+            plt.clf()
+        else:
+            stats, objs  = ind_MF(trialdata, key)
+            stats_.append(stats)
+        Psurv_block1_[idx, :] = objs['Psurv_block1']
+        Psurv_block2_[idx, :] = objs['Psurv_block2']
+        WTW_[idx, :] = objs['WTW']
+        idx += 1
+
+    # plot the group-level results
+    # if plot_group:
+    #   fig1, ax1 = plot_group_WTW(WTW_, TaskTime)
+    #   fig2, ax2 = plot_group_KMSC(Psurv_block1_, Psurv_block2_, Time)
+
+    stats_ = pd.concat(stats_)
+    stats_.to_csv(os.path.join('..', 'analysis_results', 'taskstats', 'emp_sess%d.csv'%key[1]), index = None)
+    # save some data 
+    # code.interact(local = dict(globals(), **locals()))
+    # stats_.to_csv(os.path.join(logdir, "stats_sess%d.csv"%sess), index = False)
+
+    return stats_, Psurv_block1_, Psurv_block2_, WTW_
+
+def group_sim_MF(simdata_, plot_each = False):
+    """
+        conduct MF analysis for multiple participants/simulated datasets
+    """
+    # tGrid constants
+    Time = expParas.Time
+    TaskTime = expParas.TaskTime
+
+    # initialize outputs
+    # code.interact(local = dict(locals(), **globals()))
+    stats_ = []
+    Psurv_block1_ = np.empty((len(simdata_), len(Time)))
+    Psurv_block2_ = np.empty((len(simdata_), len(Time)))
+    WTW_ = np.empty((len(simdata_), len(TaskTime)))
+
+
+    # loop over participants 
+    for i, simdata in enumerate(simdata_):
+        if plot_each:
+            stats, objs  = stats, objs  = ind_sim_MF(simdata, 'sim_%d'%i, plot_trial = True, plot_KMSC = False, plot_WTW = True)
+            plt.show()
+            input("Press Enter to continue...")
+            plt.clf()
+        else:
+            stats, objs  = stats, objs  = ind_sim_MF(simdata, 'sim_%d'%i)
+        
+        # append data
+        stats_.append(stats)
+        Psurv_block1_[i, :] = objs['Psurv_block1']
+        Psurv_block2_[i, :] = objs['Psurv_block2']
+        WTW_[i, :] = objs['WTW']
+
+    stats_ = pd.concat(stats_)
+    # plot for the group level 
+    # if plot_group:
+    #   fig1, ax1 = plot_group_WTW(WTW_, TaskTime)
+    #   fig2, ax2 = plot_group_KMSC(Psurv_block1_, Psurv_block2_, Time)
+
+    return stats_, Psurv_block1_, Psurv_block2_, WTW_
+
+
+def plot_group_WTW(WTW_, TaskTime, ax):
+    """Plot group-level WTW timecourse 
+    """
+    # fig, ax = plt.subplots()
+    df = pd.DataFrame({
+            "mu": np.apply_along_axis(np.mean, 0, WTW_),
+            "se": np.apply_along_axis(calc_se, 0, WTW_),
+            "TaskTime": TaskTime
+        })
+    # code.interact(local = dict(globals(), **locals()))
+    df = df.assign(ymin = df.mu - df.se, ymax = df.mu + df.se)
+    df.plot("TaskTime", "mu", color = "black", ax = ax, label = '_nolegend_')
+    ax.fill_between(df.TaskTime, df.ymin, df.ymax, facecolor='grey', edgecolor = "none",alpha = 0.4, interpolate=True)
+    ax.set_xlabel("")
+    ax.set_ylabel("WTW (s)")
+    ax.set_xlabel("Task time (s)")
+    ax.vlines(expParas.blocksec, 0, expParas.tMax, color = "red", linestyles = "dotted") # I might want to change it later
+    ax.get_legend().remove()
+    # plt.savefig(savepath)
+
+def plot_group_AUC(stats, ax):
+    ax.scatter(stats.loc[stats['condition'] == 'LP', 'auc'], stats.loc[stats['condition'] == 'HP', 'auc'], color = 'grey')
+    ax.plot([-0.5, expParas.tMax + 0.5], [-0.5, expParas.tMax + 0.5], color = 'red', ls = "--")
+    ax.set_ylim([-0.5, expParas.tMax + 0.5])
+    ax.set_xlim([-0.5, expParas.tMax + 0.5])
+    ax.set_xlabel("LP AUC (s)")
+    ax.set_ylabel("HP AUC (s)")
+
+def plot_group_KMSC(Psurv_block1_, Psurv_block2_, Time, ax):
+    """ Plot group-level survival curves 
+    """
+    # fig, ax = plt.subplots()
+    df1 = pd.DataFrame({
+            "mu": np.apply_along_axis(np.mean, 0, Psurv_block1_),
+            "se": np.apply_along_axis(calc_se, 0, Psurv_block1_),
+            "Time": Time
+        })
+    df1 = df1.assign(ymin = lambda df: df.mu - df.se, ymax = lambda df: df.mu + df.se)
+    df2 = pd.DataFrame({
+            "mu": np.apply_along_axis(np.mean, 0, Psurv_block2_),
+            "se": np.apply_along_axis(calc_se, 0, Psurv_block2_),
+            "Time": Time
+        })
+    df2 = df2.assign(ymin = lambda df: df.mu - df.se, ymax = lambda df: df.mu + df.se)
+
+    df1.plot("Time", "mu", color = expParas.conditionColors['LP'], ax = ax)
+    ax.fill_between(df1.Time, df1.ymin, df1.ymax, facecolor= expParas.conditionColors['LP'], edgecolor = "none",alpha = 0.4, interpolate=True)
+    df2.plot("Time", "mu", color = expParas.conditionColors['HP'], ax = ax)
+    ax.fill_between(df2.Time, df2.ymin, df2.ymax, facecolor= expParas.conditionColors['HP'], edgecolor = "none",alpha = 0.4, interpolate=True)
+    ax.set_xlabel("Elapsed time (s)")
+    ax.set_ylabel("Survival rate (%)")
+    ax.set_ylim((0, 1))
+    ax.set_xlim((0, expParas.tMax))
+    ax.get_legend().remove()
+    # plt.savefig(savepath)
+
 
