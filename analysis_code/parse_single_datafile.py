@@ -1,17 +1,3 @@
-import pandas as pd
-import numpy as np
-import os
-import glob
-import re
-import matplotlib.pyplot as plt
-import itertools
-import copy # pay attention to copy 
-import statsmodels.api as sm
-import statsmodels.formula.api as smf
-from sksurv.nonparametric import kaplan_meier_estimator as km
-from scipy.interpolate import interp1d
-from subFxs import expParas
-import code
 
 def parse_data(rawdatapath, cleandatadir):
     """ Script to parse data of online experiments
@@ -39,17 +25,7 @@ def parse_data(rawdatapath, cleandatadir):
         print("No worker ID is recorded!")
         workerId = "unknown"
         
-    # check counterbalance group
-    cb = np.unique(rawdata['cb'])[0]
-    if cb:
-        print("Counterbalance group: " + cb)
-    else:
-        print("No counterbalance group is recorded!")
-        cb = "unknown"
-
-    # record blockdurations 
-    blockdurations = []
-
+        
     # find rows that record task data
     taskdata = rawdata[[bool(re.search("wtw-.*-block", x)) for x in rawdata.trial_type]]
 
@@ -94,11 +70,15 @@ def parse_data(rawdatapath, cleandatadir):
         else:
             blockduration = max(cleandata_in_this_block['sellTime']) - cleandata_in_this_block['trialStartTime'][0]
         print('The block duration, measured by last sellTime - first trialStartTime, is %.2f s'%blockduration)
-        blockdurations.append(blockdurations)
-    if numblock > 0:
-        cleandata = pd.concat(cleandata)
+    cleandata = pd.concat(cleandata)
 
     # save clean data 
-    # cleandata.to_csv(os.path.join(cleandatadir, workerId+".csv"))
-    return cleandata, workerId, cb, numblock, blockdurations
-    
+    cleandata.to_csv(os.path.join(cleandatadir, workerId+".csv"))
+
+
+
+if __name__ == "__main__":
+    import sys
+    rawdatapath = sys.argv[1]
+    cleandatadir = sys.argv[2]
+    parse_data(sys.argv[1], sys.argv[2])
