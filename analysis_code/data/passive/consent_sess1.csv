@@ -1,0 +1,42 @@
+id,worker_id,consent_date,age,gender,education,handness,language,race,batch
+s0001,A3HW4QDJB63OQ2,1/11/22 16:59,31,Male,16,Right-handed,English,White,1
+s0002,A1S9I3WF8GG4RG,1/11/22 17:01,21,Female,10,Left-handed,english,White,1
+s0003,A11F3MA5FWH6SJ,1/11/22 17:01,35,Male,12,Right-handed,English,White,1
+s0004,A38OPVI04AH4JG,1/11/22 17:02,54,Male,16,Right-handed,English,White,1
+s0005,A1G187YBG0DVMQ,1/11/22 17:05,30,Male,16,Right-handed,english,White,1
+s0006,A230GPTWWF3SE7,1/11/22 17:05,30,Female,14,Right-handed,English,"Asian,White",1
+s0007,A37OUZOGQKGMW0,1/11/22 17:05,71,Female,14,Right-handed,English,White,1
+s0008,A2M183CETUMR96,1/11/22 17:05,39,Male,8,Left-handed,english,White,1
+s0009,A2J51BI7XS5ZYU,1/11/22 17:05,43,Male,17,Right-handed,English,White,1
+s0010,A1WZY0K6IE3ASG,1/11/22 17:12,37,Male,18,Right-handed,English,White,1
+s0011,A2ELXYKRPPGRPB,1/11/22 17:18,36,Female,16,Right-handed,English,White,1
+s0012,A27VK38SRSSHV3,1/11/22 17:19,33,Female,18,Right-handed,english,Asian,1
+s0013,AD1WGUMVD6KED,1/11/22 17:20,40,Female,12,Right-handed,English,White,1
+s0014,A3K9GTQBOI7O5A,1/11/22 17:32,30,Female,16,Right-handed,English,White,1
+s0015,A1AZGP16G9TURZ,1/11/22 17:39,40,Neither/Do not wish to disclose,18,Right-handed,english,Do not wish to answer,1
+s0016,A39VZ93N96XB6O,1/11/22 17:45,33,Female,21,Right-handed,English,Black or African American,1
+s0017,A8C3WNWRBWUXO,1/11/22 17:53,50,Male,14,Right-handed,English,White,1
+s0018,A2MS1GQLGAX9FZ,1/11/22 18:42,23,Female,16,Right-handed,English,Asian,1
+s0019,A222R4PNCF08OF,1/11/22 18:43,37,Female,16,Right-handed,english,White,1
+s0020,A2196WCNDZULFS,1/11/22 18:50,41,Female,14,Right-handed,English,White,1
+s0021,A3H32595TVJ34Q,1/11/22 18:54,36,Female,13,Right-handed,English,White,1
+s0022,A1M1E62KXCDNL0,1/11/22 19:06,27,Male,15,Right-handed,English,White,1
+s0023,A3KF6O09H04SP7,1/11/22 19:12,37,Male,16,Right-handed,English,White,1
+s0024,ARYL3C6N9SVV1,1/11/22 19:20,35,Male,16,Left-handed,English,White,1
+s0025,A27O7H19C0WQ7T,1/11/22 19:43,39,Female,16,Right-handed,ENGLISH,White,1
+s0026,A2GV9WSNSPX53,1/11/22 20:25,29,Male,16,Left-handed,English,White,1
+s0027,A2QTL039A5VV3I,1/11/22 21:23,31,Male,17,Right-handed,English,"Asian,White",1
+s0028,A3L2XKXABNO0N5,1/11/22 22:10,37,Female,16,Right-handed,English,White,1
+s0029,A1PMZUBGXFANCI,1/11/22 22:36,29,Male,12,Left-handed,English,White,1
+s0030,A1S2NQYJGZ0C5F,1/11/22 23:03,42,Male,18,Right-handed,English,White,1
+s0031,A2LT6KC1X51FVW,1/11/22 23:10,30,Male,14,Left-handed,English,White,1
+s0032,A8KX1HFH8NE2Q,1/11/22 23:26,55,Male,18,Right-handed,English,White,1
+s0033,A1CH3TODZNQCES,1/11/22 23:28,32,Male,16,Right-handed,English,White,1
+s0034,A5WWHKD82I8UE,1/11/22 23:35,38,Male,16,Right-handed,English,White,1
+s0035,A2GYGCLTMIGDJT,1/12/22 01:04,39,Male,16,Right-handed,English,Asian,1
+s0036,A13WTEQ06V3B6D,1/12/22 03:45,29,Male,18,Right-handed,English,Asian,1
+s0037,A2CEGS0NVDBCPT,1/12/22 04:11,26,Female,14,Right-handed,english,Black or African American,1
+s0038,ABW8U1U74P8MI,1/12/22 05:03,28,Male,16,Right-handed,Amharic,Black or African American,1
+s0039,A2RCYLKY072XXO,1/12/22 05:07,38,Male,16,Right-handed,English,Asian,1
+s0040,A2PWUACCQI97J8,1/12/22 05:11,27,Female,16,Right-handed,english,White,1
+s0041,A29AF16RLMI0ES,1/12/22 08:27,71,Male,16,Right-handed,English,White,1

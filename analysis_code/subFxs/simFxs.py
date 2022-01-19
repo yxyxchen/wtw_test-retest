@@ -46,14 +46,14 @@ def QL2_learn(Qwaits, Qquit, ts, timeWaited, trialEarnings, paras, empirical_iti
 	if trialEarnings > 0:
 		Qwaits[update_filter] = Qwaits[update_filter] + paras['alpha'] * (Gts[update_filter] - Qwaits[update_filter])
 	else:
-		Qwaits[update_filter] = Qwaits[update_filter] + paras['alpha'] * paras['rho'] * (Gts[update_filter] - Qwaits[update_filter])
+		Qwaits[update_filter] = Qwaits[update_filter] + paras['alpha'] * paras['nu'] * (Gts[update_filter] - Qwaits[update_filter])
 
 	# update Qquit
 	Gt = np.exp(np.log(paras['gamma']) * (timeWaited - (-empirical_iti))) * (trialEarnings + Qquit)
 	if trialEarnings > 0:
 		Qquit = Qquit + paras['alpha'] * (Gt - Qquit)
 	else:
-		Qquit = Qquit + paras['alpha'] *  paras['rho'] * (Gt - Qquit)
+		Qquit = Qquit + paras['alpha'] *  paras['nu'] * (Gt - Qquit)
 	return Qwaits, Qquit
 
 def QL1_learn(Qwaits, Qquit, ts, timeWaited, trialEarnings, paras, empirical_iti = expParas.iti):
@@ -126,7 +126,7 @@ def RL2_learn(Qwaits, Qquit, reward_rate, ts, timeWaited, trialEarnings, paras, 
 	if trialEarnings > 0:
 		Qwaits[update_filter] = Qwaits[update_filter] + paras['alpha'] * (Gts[update_filter] - Qwaits[update_filter])
 	else:
-		Qwaits[update_filter] = Qwaits[update_filter] + paras['alpha'] * paras['rho'] * (Gts[update_filter] - Qwaits[update_filter])
+		Qwaits[update_filter] = Qwaits[update_filter] + paras['alpha'] * paras['nu'] * (Gts[update_filter] - Qwaits[update_filter])
 
 	 # update Qquit
 	Gt = - reward_rate * (timeWaited - (-empirical_iti)) + (trialEarnings + Qquit)
@@ -134,7 +134,7 @@ def RL2_learn(Qwaits, Qquit, reward_rate, ts, timeWaited, trialEarnings, paras, 
 	if trialEarnings > 0:
 		Qquit = Qquit + paras['alpha'] * delta
 	else:
-		Qquit = Qquit + paras['alpha'] * paras['rho'] * delta
+		Qquit = Qquit + paras['alpha'] * paras['nu'] * delta
 
 	 # update reward rate 
 	reward_rate = reward_rate + paras['beta'] * delta

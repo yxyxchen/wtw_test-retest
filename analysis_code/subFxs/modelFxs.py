@@ -31,11 +31,11 @@ def getModelParas(modelname):
     if modelname == 'QL1':
         return ['alpha', 'tau', 'gamma', 'eta']
     elif modelname == 'QL2':
-        return ['alpha', 'rho', 'tau', 'gamma', 'eta']
+        return ['alpha', 'nu', 'tau', 'gamma', 'eta']
     elif modelname == 'RL1':
         return ['alpha', 'tau', 'eta', 'beta']
     elif modelname == 'RL2':
-        return ['alpha', 'rho', 'tau', 'eta', 'beta']
+        return ['alpha', 'nu', 'tau', 'eta', 'beta']
 
 def ind_model_fit(trialdata, modelname, paranames, config, outfile_stem):
     """Function to fit a model for a single partiicipant 
@@ -152,7 +152,11 @@ def ind_model_rep(modelname, paras, trialdata, key, nsim, plot_each):
         ax.plot(expParas.TaskTime, WTW, label = 'Simulated')
     return stats, Psurv_block1, Psurv_block2, WTW
 
-def group_model_rep(trialdata_, modelname, isTrct = True, plot_each = False):
+
+
+#############
+# hmm I kinda want to rewrite it later, ... but whatever
+def group_model_rep(trialdata_, paradf, modelname, isTrct = True, plot_each = False):
     # set random seed
     random.seed(10)
 
@@ -163,25 +167,26 @@ def group_model_rep(trialdata_, modelname, isTrct = True, plot_each = False):
     stats_ = []
     # loop over participants
     for key, trialdata in trialdata_.items():
-        # print(key)
-        # skip if the parameter estimates are not valid
-        try:
-            fit_summary = pd.read_csv(os.path.join('..', 'analysis_results', 'modelfit', modelname, '%s_sess%s_summary.txt'%key), header = None)
-        except:
-            print("the file for %s, sess%d not found"%key)
+        # try:
+        #     fit_summary = pd.read_csv(os.path.join('..', 'analysis_results', expname, 'modelfit', modelname, '%s_sess%s_summary.txt'%key), header = None)
+        # except:
+        #     print("the file for %s, sess%d not found"%key)
+        #     continue
+        # fit_summary.index = paranames + ['totalLL']
+        # fit_summary.columns = ['mean', 'se_mean', 'sd', '2.5%', '25%', '50%', '75%', '97.5%', 'n_effe', 'Rhat', 'n_divergent']
+        # # yeah for this R version I need to add several more lines
+
+        # if not check_stan_diagnosis(fit_summary):
+        #     print(key, "not valid")
+        #     continue
+        # code.interact(local = dict(locals(), **globals()))
+        # # extract mean parameter estimates
+        # paravals = fit_summary['mean'].iloc[:-1]
+        if key[0] in paradf['id'].values:
+            # code.interact(local = dict(locals(), **globals()))
+            paravals = paradf.loc[paradf['id'] == key[0], paranames].values
+        else:
             continue
-        fit_summary.index = paranames + ['totalLL']
-        fit_summary.columns = ['mean', 'se_mean', 'sd', '2.5%', '25%', '50%', '75%', '97.5%', 'n_effe', 'Rhat', 'n_divergent']
-        # yeah for this R version I need to add several more lines
-
-        if not check_stan_diagnosis(fit_summary):
-            print(key, "not valid")
-            continue
-
-        # extract mean parameter estimates
-        # paravals = fit_summary.loc[paranames, 'mean'] change this later
-        paravals = fit_summary['mean'].iloc[:-1]
-
         # prepare inputs
         if isTrct:        
             trialdata = trialdata[trialdata.sellTime <= expParas.blocksec - np.max(expParas.tMaxs)]
@@ -205,7 +210,7 @@ def group_model_rep(trialdata_, modelname, isTrct = True, plot_each = False):
     stats_ = stats_.reset_index()
     # code.interact(local = dict(locals(), **globals()))
     # temporarily let's save it to save time
-    stats_.to_csv(os.path.join('..', 'analysis_results', 'taskstats', 'rep_%s_sess%d.csv'%(modelname, key[1])), index = None)
+    # stats_.to_csv(os.path.join('..', 'analysis_results', 'taskstats', 'rep_%s_sess%d.csv'%(modelname, key[1])), index = None)
     return stats_
        
 

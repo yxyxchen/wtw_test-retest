@@ -26,12 +26,15 @@ from subFxs import normFxs
 from subFxs import loadFxs
 from subFxs import figFxs
 import os
+import importlib
 from datetime import datetime as dt
+import importlib
 
 # plot styles
 plt.style.use('classic')
 sns.set(font_scale = 1.5)
 sns.set_style("white")
+condition_palette = ["#762a83", "#1b7837"]
 
 
 # Create an array with the colors you want to use
@@ -41,26 +44,34 @@ sns.set_palette(sns.color_palette(condition_colors))
 
 
 # generate output results 
-if not os.path.isdir(os.path.join("..", "analysis_results", "excluded")):
-    os.makedirs(os.path.join("..", "analysis_results", "excluded"))
+def generate_output_dirs(expname):
+    if not os.path.isdir(os.path.join("..", 'analysis_results')):
+        os.makedirs(os.path.join("..", 'analysis_results'))
 
-if not os.path.isdir(os.path.join('..', 'analysis_results', 'taskstats')):
-    os.makedirs(os.path.join('..', 'analysis_results', 'taskstats'))
+    if not os.path.isdir(os.path.join("..", 'analysis_results', expname)):
+        os.makedirs(os.path.join("..", 'analysis_results', expname))
 
-if not os.path.isdir(os.path.join("..", 'analysis_results')):
-    os.makedirs(os.path.join("..", 'analysis_results'))
+    if not os.path.isdir(os.path.join("..", "analysis_results", expname, "excluded")):
+        os.makedirs(os.path.join("..", "analysis_results", expname, "excluded"))
 
-if not os.path.isdir(os.path.join("..", 'analysis_results', 'modelfit')):
-    os.makedirs(os.path.join("..", 'analysis_results', 'modelfit'))
+    if not os.path.isdir(os.path.join('..', 'analysis_results', expname, 'taskstats')):
+        os.makedirs(os.path.join('..', 'analysis_results', expname, 'taskstats'))
 
-if not os.path.isdir(os.path.join("..", 'analysis_results', 'crossvalid')):
-    os.makedirs(os.path.join("..", 'analysis_results', 'crossvalid'))
+    if not os.path.isdir(os.path.join("..", 'analysis_results', expname, 'modelfit')):
+        os.makedirs(os.path.join("..", 'analysis_results',expname, 'modelfit'))
 
-if not os.path.isdir(os.path.join("..", 'analysis_results', 'figures')):
-    os.makedirs(os.path.join("..", 'analysis_results', 'figures'))
+    if not os.path.isdir(os.path.join("..", 'analysis_results', expname, 'crossvalid')):
+        os.makedirs(os.path.join("..", 'analysis_results', expname, 'crossvalid'))
 
-if not os.path.isdir(os.path.join("..", 'analysis_results', 'figures')):
-    os.makedirs(os.path.join("..", 'analysis_results', 'selfreport'))
+    if not os.path.isdir(os.path.join("..", 'analysis_results', expname, 'selfreport')):
+        os.makedirs(os.path.join("..", 'analysis_results', expname, 'selfreport'))
+
+    if not os.path.isdir(os.path.join("..", "figures")):
+        os.makedirs(os.path.join("..", "figures"))
+
+    if not os.path.isdir(os.path.join("..", "figures", expname)):
+        os.makedirs(os.path.join("..", "figures", expname))
+
 
 def plot_parameter_selfreport_corr(modelname, hdrdata_sess1, hdrdata_sess2):
     # get parameter names
@@ -108,57 +119,6 @@ def plot_parameter_selfreport_corr(modelname, hdrdata_sess1, hdrdata_sess2):
     #     r_table[i,:] = [x[0] for x in tmp]
     #     p_table[i,:] = [x[1] for x in tmp]
     # code.interact(local = dict(locals(), **globals()))
-
-################ 
-def plot_parameter_reliability(modelname, hdrdata_sess1, hdrdata_sess2):
-    # get model parameters
-    paranames = modelFxs.getModelParas(modelname)
-    npara = len(paranames)
-
-    # merge sess1 and sess2 data
-    paradf_sess1 = loadFxs.load_parameter_estimates(1, hdrdata_sess1, modelname)
-    paradf_sess2 = loadFxs.load_parameter_estimates(2, hdrdata_sess2, modelname)
-    paradf = paradf_sess1.drop('sess', axis = 1).merge(paradf_sess2.drop('sess', axis = 1), left_on = 'id', right_on = 'id', suffixes = ['_sess1', '_sess2'])
-    # plot reliability 
-    fig, axes = plt.subplots(1, npara)
-    for i, ax in enumerate(axes.flat):
-        paraname = paranames[i]
-        # filter = np.logical_and(paradf['alpha_sess1'] < 0.02, paradf['alpha_sess2'] < 0.02)
-        if paraname == 'alpha':
-            sess1_vals = np.log(paradf[paraname + '_sess1'].values)
-            sess2_vals = np.log(paradf[paraname + '_sess2'].values)
-        else:
-            sess1_vals = paradf[paraname + '_sess1']
-            sess2_vals = paradf[paraname + '_sess2']
-        sns.regplot(sess1_vals, sess2_vals, ax = ax)
-        # set x and y limits 
-        corr_res = spearmanr(sess1_vals, sess2_vals, nan_policy = 'omit')
-        ax.text(0.7, 0.2, 'r = %.3f\np =%.3f'%corr_res, size=15, color='red', transform=ax.transAxes)
-        ax.set_xlabel("SESS1 Value")
-        ax.set_ylabel("SESS2 Value")
-        if paraname == 'alpha':
-            ax.set_title('log(alpha)')
-        else:
-            ax.set_title(paraname)
-    plt.gcf().set_size_inches(5 * npara, 6)
-    fig.savefig(os.path.join("..", 'figures', 'para_reliability_%s.pdf'%modelname))
-    return fig, axes
-
-def plot_parameter_distribution(modelname, hdrdata_sess1, hdrdata_sess2, ax):
-    # get model parameters
-    paranames = modelFxs.getModelParas(modelname)
-    npara = len(paranames)
-
-    # merge sess1 and sess2 data
-    paradf_sess1 = loadFxs.load_parameter_estimates(1, hdrdata_sess1, modelname)
-    paradf_sess2 = loadFxs.load_parameter_estimates(2, hdrdata_sess2, modelname)
-    tmp = pd.concat([paradf_sess1, paradf_sess2])
-    # paradf = paradf_sess1.drop('sess', axis = 1).merge(paradf_sess2.drop('sess', axis = 1), left_on = 'id', right_on = 'id', suffixes = ['_sess1', '_sess2'])
-    plotdf = tmp.melt(id_vars = ['id', 'sess'], value_vars = paranames)
-    g = sns.FacetGrid(plotdf, col= "variable", row = 'sess', sharex = 'col', ax = ax)
-    g.map(sns.histplot, "value", bins = 10) # this works, but low flexibility
-    # plt.gcf().set_size_inches(10, 5)
-    # plt.savefig(os.path.join("..", "figures", "para_dist_%s.eps"%modelname))
 
 #################################
 def selfreport_selfcorr():
@@ -208,6 +168,7 @@ def selfreport_selfcorr():
     # sns.pairplot(self_sess1[['attention', 'cogstable', 'motor', 'perseverance', 'selfcontrol', 'cogcomplex']], kind="reg", corner=True, plot_kws={'line_kws':{'color':'red'}})
 
 
+# I need to write new functions to load selfreport measures as well
 def selfreport_task_corr():
     # load selfreport data
     self_sess1 = pd.read_csv(os.path.join(logdir, "selfreport_sess1.csv"))
@@ -378,8 +339,6 @@ def selfreport_task_corr():
     plt.show()
     # sns.relplot(data=plotdf, x="DeltaN", y="delta_auc", col = "condition")
 
-
-
 def corr_analysis():
     # load summary statistics 
     stats_sess1 = pd.read_csv(os.path.join("..", "analysis_results", "taskstats", "emp_sess1.csv"))
@@ -387,7 +346,7 @@ def corr_analysis():
     stats_sess2 = pd.read_csv(os.path.join("..", "analysis_results", "taskstats", "emp_sess2.csv"))
     stats_sess2['sess'] = 2
     stats = stats_sess1.merge(stats_sess2, on = ["id", "block", "condition"], suffixes = ['_sess1', '_sess2'])
-    code.interact(local = dict(locals(), **globals()))
+    # code.interact(local = dict(locals(), **globals()))
 
 
     # 
@@ -496,134 +455,157 @@ def corr_analysis():
 ############################## main ##########################
 if __name__ == "__main__":
     
-    ########### load data #############
-    hdrdata_sess1, trialdata_sess1_ = loadFxs.group_quality_check(1, plot_quality_check = False)
-    hdrdata_sess2, trialdata_sess2_ = loadFxs.group_quality_check(2, plot_quality_check = False)
+    # expname = 'passive'
 
-    ############### model free analysis ###########
-    # s1_stats, s1_Psurv_b1_, s1_Psurv_b2_, s1_WTW_ = analysisFxs.group_MF(trialdata_sess1_, plot_each = False)
-
-    # # plot for session 1
-    # fig, ax = plt.subplots()
-    # analysisFxs.plot_group_WTW(s1_WTW_, expParas.TaskTime, ax)
-    # plt.savefig(os.path.join('..', 'figures', 'WTW_sess1.pdf'))
-    
-    # fig, ax = plt.subplots()
-    # analysisFxs.plot_group_AUC(s1_stats, ax)
-    # fig.savefig(os.path.join('..', 'figures', 'AUC_sess1.pdf'))
+    # hdrdata_sess1, trialdata_sess1_ = loadFxs.group_quality_check(expname, 1, plot_quality_check = True)
 
     # fig, ax = plt.subplots()
     # analysisFxs.plot_group_KMSC(s1_Psurv_b1_, s1_Psurv_b2_, expParas.Time, ax)
-    # plt.savefig(os.path.join('..', 'figures', 'KMSC_sess1.pdf'))
+    # plt.savefig(os.path.join('..', 'figures', expname, 'sess1_KMSC.pdf'))
 
-    # s2_stats, s2_Psurv_b1_, s2_Psurv_b2_, s2_WTW_ = analysisFxs.group_MF(trialdata_sess2_, plot_each = False)
-
-    # # plot for session 2
     # fig, ax = plt.subplots()
-    # analysisFxs.plot_group_WTW(s2_WTW_, expParas.TaskTime, ax)
-    # plt.savefig(os.path.join('..', 'figures', 'WTW_sess2.pdf'))
+    # analysisFxs.plot_group_WTW(s1_WTW_, expParas.TaskTime, ax)
+    # plt.savefig(os.path.join('..', 'figures', expname, 'sess1_WTW.pdf'))
+
+
     
+    ########### load data #############
+    expname = 'active'
+    hdrdata_sess1, trialdata_sess1_ = loadFxs.group_quality_check(expname, 1, plot_quality_check = False)
+    hdrdata_sess2, trialdata_sess2_ = loadFxs.group_quality_check(expname, 2, plot_quality_check = False)
+    code.interact(local = dict(globals(), **locals()))
+    # ############### model free analysis ###########
+    s1_stats, s1_Psurv_b1_, s1_Psurv_b2_, s1_WTW_ = analysisFxs.group_MF(trialdata_sess1_, plot_each = False)
+    s2_stats, s2_Psurv_b1_, s2_Psurv_b2_, s2_WTW_ = analysisFxs.group_MF(trialdata_sess2_, plot_each = False)
+
+    s1_stats.to_csv(os.path.join('..', 'analysis_results', expname, 'taskstats', 'emp_sess1.csv'), index = None)
+    s2_stats.to_csv(os.path.join('..', 'analysis_results', expname, 'taskstats', 'emp_sess2.csv'), index = None)
+    
+    # # plot for KMSC 
     # fig, ax = plt.subplots()
-    # analysisFxs.plot_group_AUC(s2_stats, ax)
-    # fig.savefig(os.path.join('..', 'figures', 'AUC_sess2.pdf'))
-
-    # fig, ax = plt.subplots()
-    # analysisFxs.plot_group_KMSC(s2_Psurv_b1_, s2_Psurv_b2_, expParas.Time, ax)
-    # plt.savefig(os.path.join('..', 'figures', 'KMSC_sess2.pdf'))
-
-    # # plot AUC values
+    # figFxs.plot_group_KMSC_both(s1_Psurv_b1_, s1_Psurv_b2_, s2_Psurv_b1_, s2_Psurv_b2_, hdrdata_sess1, hdrdata_sess2, ax)
+    # plt.savefig(os.path.join('..', 'figures', expname, 'KMSC.pdf'))
 
 
-    # # plot WTW of both sessions together
-    # code.interact(local = dict(locals(), **globals()))
+    # # plot for WTW 
     # fig, ax = plt.subplots()
     # figFxs.plot_group_WTW_both(s1_WTW_, s2_WTW_, hdrdata_sess1, hdrdata_sess2, ax)
-    # analysisFxs.plot_group_WTW(s1_WTW_[np.isin(hdrdata_sess1['id'], hdrdata_sess2['id'])], expParas.TaskTime, ax)
-    # analysisFxs.plot_group_WTW(s2_WTW_, expParas.TaskTime, ax)
-    # line1 = ax.get_lines()[0]
-    # line1.set_color("black")
-    # line2 = ax.get_lines()[1]
-    # line2.set_color("#999999")
-    # ax.legend([line1, line2], ['SESS1', 'SESS2'])
-    # fig.savefig(os.path.join("..", "figures", "WTW_both.pdf"))
+    # plt.savefig(os.path.join('..', 'figures', expname, 'WTW.pdf'))
 
+    # ################## reliability analysis of model-free measures ###################
     # # reliability of WTW
     # fig, ax = plt.subplots()
-    # WTW_reliability(sess1_WTW_, sess2_WTW_, ax)
-    # fig.savefig(os.path.join("..", "figures", "WTW_reliability.pdf"))
+    # figFxs.WTW_reliability(s1_WTW_, s2_WTW_, hdrdata_sess1, hdrdata_sess2, ax)
+    # fig.savefig(os.path.join("..", "figures", expname, "WTW_reliability.pdf"))
 
-    ######################## 
-    modelnames = ['RL1', 'RL2']
-    # emp_sess1 = pd.read_csv(os.path.join("..", "analysis_results", "taskstats", "emp_sess1.csv"))
-    # emp_sess2 = pd.read_csv(os.path.join("..", "analysis_results", "taskstats", "emp_sess2.csv"))
-    ################ modeling replication ###########
-    # for modelname in modelnames:
-    #     # code.interact(local = dict(locals(), **globals()))
-    #     rep_sess1 = modelFxs.group_model_rep(trialdata_sess1_, modelname, isTrct = True, plot_each = False)
-    #     rep_sess2 = modelFxs.group_model_rep(trialdata_sess2_, modelname, isTrct = True, plot_each = False)
-    #     figFxs.plot_group_emp_rep(modelname, rep_sess1, rep_sess2, emp_sess1, emp_sess2)
-    #     plt.savefig(os.path.join("..", "figures", "emp_rep_%s.eps"%modelname))
-    
-    ################ modeling parameters ############
-    # loop over models 
+    # # reliability of AUC
+    # figFxs.AUC_reliability(s1_stats, s2_stats)
+    # plt.gcf().set_size_inches(10, 5)
+    # plt.savefig(os.path.join("..", "figures", expname, "AUC_reliability.pdf"))
+
+    ################## modeling analysis #############
+    modelnames = ['QL1', 'QL2', 'RL1', 'RL2']
+    s1_stats = pd.read_csv(os.path.join("..", "analysis_results", expname, "taskstats", "emp_sess1.csv"))
+    s2_stats = pd.read_csv(os.path.join("..", "analysis_results", expname, "taskstats", "emp_sess2.csv"))
+
+    ################ load model parameters and waic estimates ##########
+    s1_paradf_ = dict()
+    s2_paradf_ = dict()
     for modelname in modelnames:
-        sns.set(font_scale = 1)
-        sns.set_style('white')
-        # # plot parameter distributions
-        # g = figFxs.plot_parameter_distribution(modelname, hdrdata_sess1, hdrdata_sess2)
-        # plt.gcf().set_size_inches(10, 5)
-        # plt.savefig(os.path.join("..", 'figures', "%s_para_dist.pdf"%modelname))
+        s1_paradf  = loadFxs.load_parameter_estimates(expname, 1, hdrdata_sess1, modelname)
+        s2_paradf  = loadFxs.load_parameter_estimates(expname, 2, hdrdata_sess2, modelname)
+        s1_paradf_[modelname] = s1_paradf 
+        s2_paradf_[modelname] = s2_paradf
 
-        # # compare estimates in sess1 vs estimtes in sess2
-        # g = figFxs.plot_parameter_distribution(modelname, hdrdata_sess1, hdrdata_sess2)
-        # plt.savefig(os.path.join("..", "figures", "%s_para_compare.pdf"))
-
-
-        # plot parameter reliability 
-        # figFxs.plot_parameter_compare(modelname, hdrdata_sess1, hdrdata_sess2)
-        g = figFxs.plot_parameter_reliability(modelname, hdrdata_sess1, hdrdata_sess2)
-        plt.savefig(os.path.join("..", "figures", "para_reliability_%s.pdf"%modelname))
-
-
-
-
-    # APT 
-    # stats_, Psurv_block1_, Psurv_block2_, WTW_ = analysisFxs.group_MF(trialdata_sess2_, plot_each = False)
-    # analysisFxs.plot_group_WTW(WTW_, expParas.TaskTime)
-    # analysisFxs.plot_group_KMSC(Psurv_block1_, Psurv_block2_, expParas.Time)
+    s1_waic_df = s1_paradf_['QL1'][['id', 'waic']].rename(columns = {'waic':'waic_QL1'})
+    s2_waic_df = s2_paradf_['QL1'][['id', 'waic']].rename(columns = {'waic':'waic_QL1'})
+    for modelname in ['QL2', 'RL1', 'RL2']:
+        s1_waic_df = s1_waic_df.merge(s1_paradf_[modelname][['id', 'waic']], on = 'id').rename(columns = {'waic':'waic_' + modelname})
+        s2_waic_df = s2_waic_df.merge(s2_paradf_[modelname][['id', 'waic']], on = 'id').rename(columns = {'waic':'waic_' + modelname})
+    
+    s1_waic_df.to_csv(os.path.join('..', 'analysis_results', expname, 'modelfit', 'waic_sess1.csv'), index = None)
+    s2_waic_df.to_csv(os.path.join('..', 'analysis_results', expname, 'modelfit', 'waic_sess2.csv'), index = None)
     # code.interact(local = dict(locals(), **globals()))
 
-    ############ model parameter reliability ################
-    # plot_parameter_reliability('QL1', hdrdata_sess1, hdrdata_sess2)
 
-    ############ model rep #############
-    # # load emp_stats
-
-
+    ################ modeling replication ###########
     # for modelname in modelnames:
-    #   # rep_sess1 = modelFxs.group_model_rep(trialdata_sess1_, modelname, isTrct = True, plot_each = False)
-    #   # rep_sess2 = modelFxs.group_model_rep(trialdata_sess2_, modelname, isTrct = True, plot_each = False)
-    #   rep_sess1 = pd.read_csv(os.path.join("..", "analysis_results", "taskstats", "rep_%s_sess1.csv"%modelname))
-    #   rep_sess2 = pd.read_csv(os.path.join("..", "analysis_results", "taskstats", "rep_%s_sess2.csv"%modelname))
-    #   plot_group_emp_rep(modelname, rep_sess1, rep_sess2, emp_sess1, emp_sess2)
+    #     s1_paradf = loadFxs.load_parameter_estimates(expname, 1, hdrdata_sess1, modelname)
+    #     s2_paradf = loadFxs.load_parameter_estimates(expname, 2, hdrdata_sess2, modelname)
+    #     s1_stats_rep = modelFxs.group_model_rep(trialdata_sess1_, s1_paradf, modelname, isTrct = True, plot_each = False)
+    #     s2_stats_rep = modelFxs.group_model_rep(trialdata_sess2_, s2_paradf, modelname, isTrct = True, plot_each = False)
+    #     s1_stats_rep.to_csv(os.path.join('..', 'analysis_results', expname, 'taskstats', 'rep_%s_sess1.csv'%modelname), index = None)
+    #     s2_stats_rep.to_csv(os.path.join('..', 'analysis_results', expname, 'taskstats', 'rep_%s_sess2.csv'%modelname), index = None)
 
-    # plot_parameter_distribution(modelname, hdrdata_sess1, hdrdata_sess2)
-    # fit is good for some participants
-    # rep_stats_ = modelFxs.group_model_rep(trialdata_sess1_, modelname, isTrct = True, plot_each = False)
-    # rep_stats_ = rep_stats_.reset_index()
-    # I think it is better to read this one right?
-    # emp_stats_, _, _, _ = analysisFxs.group_MF(trialdata_sess1_, plot_each = False)
-    # # compare 
-    # plotdf = rep_stats_[['auc', 'id', 'condition']].merge(emp_stats_[['auc', 'id', 'condition']], left_on = ('id', 'condition'), right_on = ('id', 'condition'), suffixes = ('_rep', '_emp'))
-    # # until 57 is fine
-    # fig, ax = plt.subplots()
-    # ax.scatter(plotdf['auc_emp'], plotdf['auc_rep'])
-    # rep_stats_ = pd.read_csv(os.path.join("..", "analysis_results", "taskstats", "rep_QL1_sess1.csv"))
-    # emp_stats_ = 
-    # fig, ax = plt.subplots()
-    # fig, ax = plot_group_emp_rep(rep_stats_, emp_stats_)
-# latter I want to calc correlations between 
-# compare differences later
+    #     # plot replication 
+    #     figFxs.plot_group_emp_rep(modelname, s1_stats_rep, s2_stats_rep, s1_stats, s2_stats)
+    #     plt.savefig(os.path.join("..", "figures",expname, "emp_rep_%s.eps"%modelname))
+    
+    ################ model comparison ################3
+    # the results look reasonable
+
+    ################ parameter reliability ##############
+    # loop over models 
+    # for modelname in modelnames:
+    #     sns.set(font_scale = 1)
+    #     sns.set_style('white')
+    #     # code.interact(local = dict(locals(), **globals()))
+    #     paranames = modelFxs.getModelParas(modelname)
+    #     npara = len(paranames)
+    #     # plot parameter distributions
+    #     figFxs.plot_parameter_distribution(modelname, s1_paradf_[modelname].iloc[:,:-1], s2_paradf_[modelname].iloc[:,:-1])
+    #     plt.gcf().set_size_inches(5 * npara, 5 * 2)
+    #     plt.savefig(os.path.join("..", 'figures', expname, "%s_para_dist.pdf"%modelname))
+
+    #     # plot parameter correlations
+    #     figFxs.plot_parameter_reliability(modelname, s1_paradf_[modelname].iloc[:,:-1], s2_paradf_[modelname].iloc[:,:-1])
+    #     plt.gcf().set_size_inches(5 * npara, 5)
+    #     plt.savefig(os.path.join("..", 'figures', expname, "%s_para_reliability.pdf"%modelname))
+        
+    ### for late fitting method
+    s1_paradf  = loadFxs.load_parameter_estimates(expname, 1, hdrdata_sess1, 'QL2', 'QL2_late')
+    s2_paradf = loadFxs.load_parameter_estimates(expname, 2, hdrdata_sess2, 'QL2', 'QL2_late')
+
+
+
+    ################## correlations between self-report measures and ########
+    s1_selfdf = loadFxs.parse_group_selfreport(expname, 1, isplot = False)
+    s1_selfdf.to_csv(os.path.join("..", "analysis_results", "active", "selfreport", "selfreport_sess1.csv"))
+    s2_selfdf = loadFxs.parse_group_selfreport(expname, 2, isplot = False)
+    s2_selfdf.to_csv(os.path.join("..", "analysis_results", "active", "selfreport", "selfreport_sess2.csv"))
+
+    # add MCQ here, I want to improve that piece of code in the future...
+
+    ######## correlations between AUC and self-report measures
+    # prepare the aucdf
+    s1_aucdf = s1_stats.pivot(index = 'id', columns = 'condition', values = ['auc'])
+    s1_aucdf = s1_aucdf.rename_axis(columns = [None] * 2)
+    s1_aucdf = s1_aucdf.droplevel(0, axis=1) 
+    s1_aucdf = s1_aucdf.reset_index()
+    s2_aucdf = s2_stats.pivot(index = 'id', columns = 'condition', values = ['auc'])
+    s2_aucdf = s2_aucdf.rename_axis(columns = [None] * 2)
+    s2_aucdf = s2_aucdf.droplevel(0, axis=1) 
+    s2_aucdf = s2_aucdf.reset_index()
+
+    aucdf = s1_aucdf.merge(s2_aucdf, how = 'left', on = "id", suffixes = ["_sess1", "_sess2"])
+
+    # prepare for the corr analysis
+    row_vars = ['HP_sess1', 'LP_sess1', 'HP_sess2', 'LP_sess2']
+    col_vars = ['NU', 'PU', 'PM', 'PS', 'SS', 'attention', 'cogstable', 'motor', 'perseverance', 'selfcontrol', 'cogcomplex'] # hmm I might want to add several more later
+    r_table, p_table, perm_r_ = figFxs.corr_analysis(aucdf[row_vars], s1_selfdf.loc[np.isin(s1_selfdf.id, aucdf.id), col_vars], 1000)
+
+    ##################### correlations between init_wtw and selfreport measures ###########
+    s1_init_wtw_df = s1_stats.loc[s1_stats['block'] == 1, ['id', 'init_wtw']]
+    s2_init_wtw_df = s2_stats.loc[s2_stats['block'] == 1, ['id', 'init_wtw']]
+    init_wtw_df = s1_init_wtw_df.merge(s2_init_wtw_df, how = 'left', on = 'id', suffixes = ['_sess1', '_sess2'])
+
+    # prepare for the corr analysis
+    row_vars = ['init_wtw_sess1', 'init_wtw_sess2']
+    col_vars = ['NU', 'PU', 'PM', 'PS', 'SS', 'attention', 'cogstable', 'motor', 'perseverance', 'selfcontrol', 'cogcomplex'] # hmm I might want to add several more later
+    r_table, p_table, perm_r_ = figFxs.corr_analysis(init_wtw_df[row_vars], s1_selfdf.loc[np.isin(s1_selfdf.id, init_wtw_df.id), col_vars], 10)
+
+    ##################### correlations between parameters and selfreport measures
+    
 ############
 
     

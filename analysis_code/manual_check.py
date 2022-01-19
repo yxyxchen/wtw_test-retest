@@ -14,7 +14,7 @@ from datetime import datetime
 def manual_check(sess):
     """ rm task files where participants didn't star the task and list task files with duplicated worker IDs
     """
-    taskdata_dir  = os.path.join("..", "task-code", "task-sess%d"%sess, "manual_check", "data_ok")
+    taskdata_dir  = os.path.join("..", "task_code", "active_sess%d"%sess, "manual_check", "data_ok")
     files = glob.glob(os.path.join(taskdata_dir, "*"))
     hdrdata = pd.DataFrame()
     hdrdata_empty = pd.DataFrame()
@@ -50,8 +50,8 @@ def manual_check(sess):
 
     # code.interact(local = dict(globals(), **locals()))
     hdrdata['duptask'] = hdrdata['worker_id'].duplicated(keep = False)
-    hdrdata.loc[hdrdata.duptask, :].to_csv(os.path.join("..", "task-code", "task-sess%d"%sess, "manual_check", "duplicated.csv"))
-    hdrdata_empty.to_csv(os.path.join("..", "task-code", "task-sess%d"%sess, "manual_check", "empty.csv"))
+    hdrdata.loc[hdrdata.duptask, :].to_csv(os.path.join("..", "task_code", "active_sess%d"%sess, "manual_check", "duplicated.csv"))
+    hdrdata_empty.to_csv(os.path.join("..", "task_code", "active_sess%d"%sess, "manual_check", "empty.csv"))
 
 if __name__ == "__main__":
     print("check data files for SESS1")

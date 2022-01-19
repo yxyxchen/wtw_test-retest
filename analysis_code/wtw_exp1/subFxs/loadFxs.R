@@ -1,4 +1,4 @@
-loadAllData = function(sess){
+loadAllData = function(expname, sess){
   # loads hdrData and trialData
   # outputs:
   # hdrData: exp info for each participant, like ID, condition, questionnaire measurements
@@ -20,15 +20,15 @@ loadAllData = function(sess){
   # load('expParas.RData')
   
   # load hdrData
-  hdrData = read.csv(file.path("..", 'data', sprintf('hdrdata_sess%d.csv', sess)), comment = "#")
+  hdrData = read.csv(file.path("..", 'data', expname, sprintf('hdrdata_sess%d.csv', sess)), comment = "#")
   hdrData = hdrData[hdrData$quit_midway == 'False',]
   
   # exclude low quality data
   if(sess == 1){
-    tmp = read.csv(file.path("..", "..", "analysis_results", "excluded", "excluded_participants_sess1.csv"))
+    tmp = read.csv(file.path("..", "..", "analysis_results", expname, "excluded", "excluded_participants_sess1.csv"))
     excluded_ids = tmp$id
   }else if(sess == 2){
-    tmp = read.csv(file.path("..", "..", "analysis_results", "excluded", "excluded_participants_sess2.csv"))
+    tmp = read.csv(file.path("..", "..", "analysis_results", expname, "excluded", "excluded_participants_sess2.csv"))
     excluded_ids = tmp$id
   }
   hdrData = hdrData[!(hdrData$id %in% excluded_ids),]
@@ -38,7 +38,7 @@ loadAllData = function(sess){
   nSub = nrow(hdrData)
   for (sIdx in 1:nSub) {
     id = hdrData$id[sIdx]
-    trialdata = read.csv(file.path("..", 'data', sprintf("task-%s-sess%d.csv", id, sess)), header = T)
+    trialdata = read.csv(file.path("..", 'data', expname, sprintf("task-%s-sess%d.csv", id, sess)), header = T)
     trialdata['scheduledWait'] = trialdata['scheduledDelay']
     trialdata['trialNum'] = trialdata['trialIdx']
     trialdata["trialIdx"] = NULL

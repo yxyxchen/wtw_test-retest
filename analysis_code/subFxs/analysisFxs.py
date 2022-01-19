@@ -397,21 +397,20 @@ def desc_RT(trialdata):
     """Return descriptive stats of sell_RT and ready_RT, pooling all data together
     """
     # calc 
-    trialdata.eval("ready_RT = trialStartTime - trialReadyTime", inplace = True)
-    # calc summary stats
-    out = trialdata.agg({
-            "ready_RT": ["median", "mean", calc_se]
-        })
-    ready_RT_median, ready_RT_mean, ready_RT_se = out.ready_RT
-    # code.interact(local = dict(globals(), **locals()))
+    # if trialReadyTime in trialdata:
+    #     trialdata.eval("ready_RT = trialStartTime - trialReadyTime", inplace = True)
+    #     # calc summary stats
+    #     out = trialdata.agg({
+    #             "ready_RT": ["median", "mean", calc_se]
+    #         })
+    #     ready_RT_median, ready_RT_mean, ready_RT_se = out.ready_RT
+
     out = trialdata.loc[trialdata.trialEarnings != 0, :].agg({
             "RT": ["median", "mean"]
         })
-
     sell_RT_median,  sell_RT_mean = out.RT
     sell_RT_se  = calc_se(trialdata.loc[trialdata.trialEarnings != 0, :].RT)
-    return ready_RT_median, ready_RT_mean, ready_RT_se, sell_RT_median, sell_RT_mean, sell_RT_se
-
+    return sell_RT_median, sell_RT_mean, sell_RT_se
 ############################ individual level analysis functions ###############
 def ind_MF(trialdata, key, isTrct = True, plot_RT = False, plot_trial = False, plot_KMSC = False, plot_WTW = False):
     """Conduct model-free (MF) analysis for a single participant 
@@ -455,6 +454,7 @@ def ind_MF(trialdata, key, isTrct = True, plot_RT = False, plot_trial = False, p
         blockdata = trialdata[trialdata.blockIdx == i + 1]
         condition = blockdata.condition.values[0]
         conditionColor = expParas.conditionColors[condition]
+
         # Survival analysis
         time, psurv, Time, Psurv, block_auc, block_std_wtw = kmsc(blockdata, expParas.tMax, expParas.Time, False)
         if plot_KMSC:
@@ -474,13 +474,18 @@ def ind_MF(trialdata, key, isTrct = True, plot_RT = False, plot_trial = False, p
             sub_std_wtws.append(std_wtw)
 
         # RT stats 
-        ready_RT_median, ready_RT_mean, ready_RT_se, sell_RT_median, sell_RT_mean, sell_RT_se = desc_RT(blockdata)
+        # ready_RT_median, ready_RT_mean, ready_RT_se
+        sell_RT_median, sell_RT_mean, sell_RT_se = desc_RT(blockdata)
         
         # organize the output
-        tmp = pd.DataFrame({"id": key[0], "sess": key[1], "key": str(key), "block": i + 1, "auc": block_auc, "std_wtw": block_std_wtw,\
+        if i == 0:
+            init_wtw = wtw[0] # initial wtw measure
+        else:
+            init_wtw = np.nan
+        tmp = pd.DataFrame({"id": key[0], "sess": key[1], "key": str(key), "block": i + 1, "auc": block_auc, "std_wtw": block_std_wtw, "init_wtw": init_wtw, \
             "auc1": sub_aucs[0], "auc2": sub_aucs[1], "auc3": sub_aucs[2], "auc4": sub_aucs[3], \
-            "std_wtw1": sub_std_wtws[0], "std_wtw2": sub_aucs[1], "std_wtw3": sub_std_wtws[2], "std_wtw4": sub_std_wtws[3], \
-            "ready_RT_mean": ready_RT_mean,"ready_RT_se": ready_RT_se,"sell_RT_median": sell_RT_median,\
+            "std_wtw1": sub_std_wtws[0], "std_wtw2": sub_aucs[1], "std_wtw3": sub_std_wtws[2], "std_wtw4": sub_std_wtws[3],\
+            "sell_RT_median": sell_RT_median,\
             "sell_RT_mean": sell_RT_mean, "sell_RT_se": sell_RT_se,\
             "condition": condition}, index = [i])
         stats.append(tmp) 
@@ -596,7 +601,7 @@ def group_MF(trialdata_, plot_each = False):
     #   fig2, ax2 = plot_group_KMSC(Psurv_block1_, Psurv_block2_, Time)
 
     stats_ = pd.concat(stats_)
-    stats_.to_csv(os.path.join('..', 'analysis_results', 'taskstats', 'emp_sess%d.csv'%key[1]), index = None)
+    # stats_.to_csv(os.path.join('..', 'analysis_results', expname, 'taskstats', 'emp_sess%d.csv'%key[1]), index = None)
     # save some data 
     # code.interact(local = dict(globals(), **locals()))
     # stats_.to_csv(os.path.join(logdir, "stats_sess%d.csv"%sess), index = False)
@@ -644,7 +649,7 @@ def group_sim_MF(simdata_, plot_each = False):
     return stats_, Psurv_block1_, Psurv_block2_, WTW_
 
 
-def plot_group_WTW(WTW_, TaskTime, ax):
+def plot_group_WTW(WTW_, TaskTime, ax, **kwargs):
     """Plot group-level WTW timecourse 
     """
     # fig, ax = plt.subplots()
@@ -655,13 +660,14 @@ def plot_group_WTW(WTW_, TaskTime, ax):
         })
     # code.interact(local = dict(globals(), **locals()))
     df = df.assign(ymin = df.mu - df.se, ymax = df.mu + df.se)
-    df.plot("TaskTime", "mu", color = "black", ax = ax, label = '_nolegend_')
-    ax.fill_between(df.TaskTime, df.ymin, df.ymax, facecolor='grey', edgecolor = "none",alpha = 0.4, interpolate=True)
+    df.plot("TaskTime", "mu", color = "black", ax = ax, label = '_nolegend_', **kwargs)
+    ax.fill_between(df.TaskTime, df.ymin, df.ymax, facecolor='grey', edgecolor = "none",alpha = 0.4, interpolate=True, linewidth = 2)
     ax.set_xlabel("")
     ax.set_ylabel("WTW (s)")
     ax.set_xlabel("Task time (s)")
     ax.vlines(expParas.blocksec, 0, expParas.tMax, color = "red", linestyles = "dotted") # I might want to change it later
     ax.get_legend().remove()
+    ax.set_ylim(3, 12)
     # plt.savefig(savepath)
 
 def plot_group_AUC(stats, ax):
@@ -672,7 +678,7 @@ def plot_group_AUC(stats, ax):
     ax.set_xlabel("LP AUC (s)")
     ax.set_ylabel("HP AUC (s)")
 
-def plot_group_KMSC(Psurv_block1_, Psurv_block2_, Time, ax):
+def plot_group_KMSC(Psurv_block1_, Psurv_block2_, Time, ax, **kwargs):
     """ Plot group-level survival curves 
     """
     # fig, ax = plt.subplots()
@@ -689,10 +695,10 @@ def plot_group_KMSC(Psurv_block1_, Psurv_block2_, Time, ax):
         })
     df2 = df2.assign(ymin = lambda df: df.mu - df.se, ymax = lambda df: df.mu + df.se)
 
-    df1.plot("Time", "mu", color = expParas.conditionColors['LP'], ax = ax)
-    ax.fill_between(df1.Time, df1.ymin, df1.ymax, facecolor= expParas.conditionColors['LP'], edgecolor = "none",alpha = 0.4, interpolate=True)
-    df2.plot("Time", "mu", color = expParas.conditionColors['HP'], ax = ax)
-    ax.fill_between(df2.Time, df2.ymin, df2.ymax, facecolor= expParas.conditionColors['HP'], edgecolor = "none",alpha = 0.4, interpolate=True)
+    df1.plot("Time", "mu", color = expParas.conditionColors['LP'], ax = ax, linewidth=3, **kwargs)
+    ax.fill_between(df1.Time, df1.ymin, df1.ymax, facecolor= expParas.conditionColors['LP'], edgecolor = "none",alpha = 0.25, interpolate=True)
+    df2.plot("Time", "mu", color = expParas.conditionColors['HP'], ax = ax, linewidth=3, **kwargs)
+    ax.fill_between(df2.Time, df2.ymin, df2.ymax, facecolor= expParas.conditionColors['HP'], edgecolor = "none",alpha = 0.25, interpolate=True)
     ax.set_xlabel("Elapsed time (s)")
     ax.set_ylabel("Survival rate (%)")
     ax.set_ylim((0, 1))

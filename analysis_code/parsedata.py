@@ -7,26 +7,27 @@ import re
 import itertools
 import copy # pay attention to copy 
 import code
-from subFxs import expParas
+import math
 from datetime import datetime
 
 
 ############################# parse_original data files ############################
-def parsedata(sess):
+def parsedata(expname, sess):
     ############### input variables ###############
-    taskdir  = os.path.join("..", "task-code", "task-sess%d"%sess)
-    taskdata_outdir = os.path.join("data")
-    taskdata_dir = os.path.join(taskdir, "manual_check", "data_ok") # parse files that we have manually checked
-    hdrdata_out = os.path.join("data", "hdrdata_sess%d.csv"%sess)
-    if not os.path.exists(taskdata_outdir):
-        os.makedirs(taskdata_outdir) 
+    taskdir = os.path.join("..", "task_code", "%s_sess%d"%(expname, sess))
+    outdir = os.path.join("data", expname)
+    if not os.path.exists(outdir):
+        os.makedirs(outdir) 
+
+    checked_data_dir = os.path.join(taskdir, "manual_check", "data_ok") # parse files that we have manually checked
+    hdrdata_out = os.path.join(outdir, "hdrdata_sess%d.csv"%sess)
 
     consentfile = os.path.join(taskdir, "consent.csv")
-    consent_out = os.path.join(taskdata_outdir, "consent_sess%d.csv"%sess)
-    consentfile_sess1 = os.path.join(taskdata_outdir, "consent_sess1.csv")
+    consent_out = os.path.join(outdir, "consent_sess%d.csv"%sess)
+    consentfile_sess1 = os.path.join(outdir, "consent_sess1.csv")
 
     selfreportfile = os.path.join(taskdir, "selfreport.csv")
-    selfreport_out = os.path.join(taskdata_outdir, "selfreport_sess%d.csv"%sess)
+    selfreport_out = os.path.join(outdir, "selfreport_sess%d.csv"%sess)
 
     DD_choices = {
         "1": "smaller",
@@ -62,9 +63,12 @@ def parsedata(sess):
                                                       "demo4": "handness",
                                                       "demo5": "language",
                                                       "demo7": "race"})
-            # for the second batch
-            # for this experiment, all data before 09/01/2021 are batch1, and the rest are batch2.
-            consentdata['batch'] = [1 if datetime.strptime(x, '%m/%d/%y %H:%M') < datetime.strptime("09/1/21", "%m/%d/%y") else 2 for x in consentdata.consent_date] 
+            # for the active experiment, all data before 09/01/2021 are batch1, and the rest are batch2.
+            if expname == 'active':
+                consentdata['batch'] = [1 if datetime.strptime(x, '%m/%d/%y %H:%M') < datetime.strptime("09/1/21", "%m/%d/%y") else 2 for x in consentdata.consent_date] 
+            else: 
+                consentdata['batch'] = [1 if datetime.strptime(x, '%m/%d/%y %H:%M') < datetime.strptime("01/14/22", "%m/%d/%y") else 2 for x in consentdata.consent_date] 
+
             # delete duplicated entries. Sometimes a participant can sign a consent multiple times. 
             dup = consentdata.worker_id.duplicated(keep = 'last')
             if any(dup):
@@ -93,12 +97,15 @@ def parsedata(sess):
                 print("Deleting duplicated entries.....")
                 consentdata = consentdata.loc[~dup]
                 print("Duplicated entries deleted!")
+            else:
+                print('No participants signed the consent multiple times.')
             # join by consentdata_sess1
             consentdata_sess1 = pd.read_csv(consentfile_sess1)
             consentdata = consentdata.join(consentdata_sess1.drop("consent_date", axis = 1).set_index("worker_id"), on = "worker_id")
             tmp = consentdata.pop("id"); consentdata.insert(0, "id", tmp)
             consentdata.sort_values(by = "id", inplace = True)
         ################## save data #######################
+        print("Save consent data for %d participants."%consentdata.shape[0])
         consentdata.to_csv(consent_out, index = False)
 
     def parse_selfreport_data():
@@ -132,7 +139,10 @@ def parsedata(sess):
             print("Deleting duplicated entries.....")
             selfreportdata = selfreportdata.loc[~dup]
             print("Duplicated entries deleted!")
+        else:
+            print('No participants fill the questionaires multiple times.')
         # save data
+        print("Save selfreport data for %d participants."%selfreportdata.shape[0])
         selfreportdata.to_csv(selfreport_out,  index = False)
 
     def parse_data(rawdatapath, cleandatadir):
@@ -164,9 +174,6 @@ def parsedata(sess):
         if not cb:
             cb = "unknown"
             if verbose: print("No counterbalance group is recorded!") 
-            
-        # record blockdurations 
-        blockdurations = []
 
         # find rows that record task data
         taskdata = rawdata[[bool(re.search("wtw-.*-block", x)) for x in rawdata.trial_type]]
@@ -174,12 +181,18 @@ def parsedata(sess):
         # check the number of saved task blocks 
         numblock = taskdata.shape[0]
 
+        # initialize outputs 
+        cleandata = []
+        blockduration_ = np.full(2, 0)
+        screenExitTime_ = np.full(2, np.nan)
+        screenEnterTime_ = np.full(2, np.nan)
+
         # parse task data 
         def parse_task_variable(variable, data):
             """Parse a given task variable from rawdata
             """
             vals = [x for x in data[variable].split(",")]
-            if variable != "condition":
+            if variable != 'condition':
                 vals = [float(x) for x in vals]
             if variable in ['scheduledDelay', 'RT', 'timeWaited', 'rewardedTime', 'sellTime', 'trialStartTime', 'trialReadyTime']:
                 vals = [float(x) / 1000 for x in vals] # convert ms into s
@@ -189,13 +202,13 @@ def parsedata(sess):
         variables = ['trialIdx', 'condition', 'scheduledDelay', 'scheduledReward', 'rewardedTime', 'RT', 'timeWaited', 'trialEarnings', 'totalEarnings', 'sellTime', 'trialStartTime', 'trialReadyTime']
 
         # loop over blocks
-        cleandata = []
         for i in range(numblock):
             taskdata_in_this_block = taskdata.iloc[i]
             cleandata_in_this_block = dict()
             num_valid_entry = 10000000000 # keep track of the number of valid entries. Notice that sometimes a trial ends midway 
             for variable in variables:
                 if variable in taskdata_in_this_block:
+                    # code.interact(local = dict(globals(), **locals()))
                     cleandata_in_this_block[variable] = parse_task_variable(variable, taskdata_in_this_block)
                     if len(cleandata_in_this_block[variable]) < num_valid_entry:
                         num_valid_entry = len(cleandata_in_this_block[variable])
@@ -210,38 +223,64 @@ def parsedata(sess):
                 blockduration = max(cleandata_in_this_block['sellTime']) - cleandata_in_this_block['trialReadyTime'][0]
             else:
                 blockduration = max(cleandata_in_this_block['sellTime']) - cleandata_in_this_block['trialStartTime'][0]
-            # print('The block duration, measured by last sellTime - first trialStartTime, is %.2f s'%blockduration)
-            blockdurations.append(blockduration)
+            blockduration_[i] = blockduration
+            if expname == 'passive':
+                tmp = taskdata_in_this_block['screenEnterTime']
+                if not math.isnan(tmp):
+                    screenEnterTime_[i] = tmp
+
+                tmp = taskdata_in_this_block['screenExitTime']
+                if not math.isnan(tmp):
+                    screenExitTime_[i] = tmp
+
+        # stack cleandata
         if numblock > 0:
             cleandata = pd.concat(cleandata)
 
         # save clean data 
         # cleandata.to_csv(os.path.join(cleandatadir, workerId+".csv"))
-        return cleandata, workerId, cb, numblock, blockdurations
+        if expname == 'active':
+            return cleandata, workerId, cb, numblock, blockduration_
+        else:
+            return cleandata, workerId, cb, numblock, blockduration_, screenEnterTime_, screenExitTime_
     
     def parse_task_data(sess):
-        """Loop over all taskdata files under ../task-code/task-sess*/manual_check/data_ok. Convert all taskdata files that are not empty
+        """Loop over all taskdata files under ../task_code/passive_sess*/manual_check/data_ok. Convert all taskdata files that are not empty
         """
         consentdata = pd.read_csv(consentfile_sess1) # for batch and id information
         
-        files = glob.glob(os.path.join(taskdata_dir, "*"))
+        files = glob.glob(os.path.join(checked_data_dir, "*"))
         hdrdata = pd.DataFrame()
         bonusdata = pd.DataFrame()
 
-        # Loop over all taskdata files under ../task-code/task-sess*
+        # print out what this function does
+        print("Loop over all taskdata files. Generate a hdrdata file, a bonus file, and all processed taskdata files." )
+        print("In the hdrdata file, record whether the participant quit midway." )
+        print("For the bonus file, don't exclude IDs that don't exit in the selfreport file, which means those participant didn't get paid.")
+
+        # Loop over all taskdata files under ../task_code/passive_sess*
         if os.path.exists(os.path.join('log','hdrdata_empty_sess%d.csv'%sess)):
             os.remove(os.path.join('log','hdrdata_empty_sess%d.csv'%sess))
         for file in files:
-            cleandata, worker_id, cb, numblock, blockdurations = parse_data(file, taskdata_outdir)
-            try:
-                thisid = consentdata['id'][np.where(consentdata['worker_id'] == worker_id)[0]].values[0]
-                thisbatch = consentdata['batch'][np.where(consentdata['worker_id'] == worker_id)[0]].values[0]
-            except:
-                if worker_id == 'A35S5YV2XL971J':
-                    print("delete one participant")
-                    continue
-                else:
-                    print(worker_id)
+            if expname == 'active':
+                cleandata, worker_id, cb, numblock, blockduration_ = parse_data(file, outdir)
+            else:
+                cleandata, worker_id, cb, numblock, blockduration_, screenEnterTime_, screenExitTime_ = parse_data(file, outdir)
+            
+            # mannually exclude some participants
+            if worker_id == 'A35S5YV2XL971J':
+                print("delete participant A35S5YV2XL971J, who didn't sign the consent yet got paid")
+                continue 
+            elif expname == 'active' and sess == 2 and worker_id in ['A235DXY5FJN0IW', 'A1F2APQMJSQVFK', 'AU849EHZNGV2Z', 'A1FVXS8IM5QYO8', 'AU34T9OMHN4Z4', 'A2NBBQ3DKW5MV3', 'AQ1PTX596CKUH']:
+                # mannually exclude participants who I shouldn't invite for the second session
+                print("remove participant " + worker_id + " who I shouldn't invite for the second session.")
+                continue
+            else:
+                try:
+                    thisid = consentdata['id'][np.where(consentdata['worker_id'] == worker_id)[0]].values[0]
+                    thisbatch = consentdata['batch'][np.where(consentdata['worker_id'] == worker_id)[0]].values[0]
+                except:
+                    print("We can't find " + worker_id + 'in consent data.')
                     # I can't use consentdata from the second session since I don't have batch info and id info
                     code.interact(local = dict(globals(), **locals()))
 
@@ -253,18 +292,17 @@ def parsedata(sess):
                 "batch": thisbatch,
                 "quit_midway": numblock < 2,
                 }, index = [0])
-            if numblock == 0:
-                thisentry["block1_duration"] = 0 
-                thisentry["block2_duration"] = 0
-            elif numblock == 1:
-                thisentry["block1_duration"] = blockdurations[0]
-                thisentry["block2_duration"] = 0
-            else:
-                thisentry["block1_duration"] = blockdurations[0]
-                thisentry["block2_duration"] = blockdurations[1]
+            # 
+            thisentry["block1_duration"] = blockduration_[0] 
+            thisentry["block2_duration"] = blockduration_[1] 
+            if expname == 'passive':
+                thisentry["block1_screenEnterTime"] = screenEnterTime_[0]
+                thisentry["block2_screenEnterTime"] = screenEnterTime_[1]
+                thisentry["block1_screenExitTime"] = screenExitTime_[0]
+                thisentry["block2_screenExitTime"] = screenExitTime_[1]
             hdrdata = pd.concat([hdrdata, thisentry])
             if numblock > 0:
-                cleandata.to_csv(os.path.join(taskdata_outdir, "task-" + thisid + "-sess%s.csv"%sess), index = False)
+                cleandata.to_csv(os.path.join(outdir, "task-" + thisid + "-sess%s.csv"%sess), index = False)
             thisbonusentry = pd.DataFrame({
                 "worker_id": worker_id,
                 "bonus": max(cleandata.totalEarnings) / 100 if numblock > 0 else 0,
@@ -284,13 +322,16 @@ def parsedata(sess):
         # code.interact(local = dict(globals(), **locals()))
         for i in ['A', 'B', 'C', 'D']:
             for j in [1, 2]:
-                bonusdata_out = os.path.join("data", "bonus_sess%d_batch%d_%s.csv"%(sess, j, i))
+                bonusdata_out = os.path.join(outdir, "bonus_sess%d_batch%d_%s.csv"%(sess, j, i))
                 bonusdata.loc[np.logical_and(bonusdata.cb == i, bonusdata.batch == j)].iloc[:, 0:2].to_csv(bonusdata_out, index=False, header = False)
 
         # print summary messages
+        print("/////////////////////////////")
         print("Loop over %d participants"%len(files))
+        print("hdrdata size: %d"%hdrdata.shape[0])
         print("%d participants completed this task"%np.sum(~hdrdata.quit_midway))
-
+        print("bonusdata size: %d"%bonusdata.shape[0])
+        print("%d participants completed this task and the questionaires."%bonusdata.shape[0])
 
     ############### main function #########
     print("Parse consent data")
@@ -338,7 +379,15 @@ def parsedata(sess):
     # we deleted it from both self-report and task data in the second session
 
 if __name__ == "__main__":
+
+    expname = 'active'
+    # print("Parse data files for SESS1")
+    # parsedata(expname, 1)
     print("Parse data files for SESS2")
-    parsedata(2)
-    # print("Parse data files for SESS2")
-    # parsedata(2)
+    parsedata(expname, 2)
+
+    # expname = 'passive'
+    # print("Parse data files for SESS1")
+    # parsedata(expname, 1)
+    # print("Parse data files for SESS1")
+    # parsedata(expname, 2)
