@@ -98,6 +98,10 @@ def AUC_reliability(sess1_stats, sess2_stats):
     g.map(my_regplot, 'auc_sess1', "auc_sess2")
     g.set(ylim=(-0.5, expParas.tMax + 0.5), xlim = (-0.5, expParas.tMax + 0.5))
 
+# def plot_reliability(sess1_df, sess2_df, varname, ax, **kwargs):
+#     df = sess1_df.merge(sess2_df, on = 'id', suffixes = ['_sess1', '_sess2']) 
+#     my_regplot(df[varname + '_sess1'], df[varname + '_sess2'], **kwargs)
+
 
 ######################### parameter analysis ###############
 def log_transform_parameter(paradf, selected_paranames):
@@ -215,8 +219,9 @@ def corr_analysis(row_df, col_df, n_perm):
 ################ 
 # reliability functions
 # plot
-def my_regplot(x, y, **kwargs):  
-    ax = plt.gca()
+def my_regplot(x, y, ax = None, **kwargs):  
+    if(ax is None):
+        ax = plt.gca()
     # calc correlation with all data points
     corr_res = spearmanr(x, y, nan_policy = 'omit')
     # set boundaries to exclude outliers: either based on the min/max value or the 1.5 iqr limit

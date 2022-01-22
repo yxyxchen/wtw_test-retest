@@ -49,7 +49,7 @@ expModelFit = function(expname, sess, modelName, isFirstFit, batchIdx = NULL, fi
       }else if(batchIdx == 2){
         trialData = trialData[58 : 114]
       }else if(batchIdx == 3){
-        trialData[115 : length(trialData)]
+        trialData = trialData[115 : length(trialData)]
       }
     }
   }

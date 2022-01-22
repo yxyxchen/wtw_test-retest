@@ -66,6 +66,9 @@ def generate_output_dirs(expname):
     if not os.path.isdir(os.path.join("..", 'analysis_results', expname, 'selfreport')):
         os.makedirs(os.path.join("..", 'analysis_results', expname, 'selfreport'))
 
+    if not os.path.isdir(os.path.join("..", 'analysis_results', expname, 'correlation')):
+        os.makedirs(os.path.join("..", 'analysis_results', expname, 'correlation'))
+
     if not os.path.isdir(os.path.join("..", "figures")):
         os.makedirs(os.path.join("..", "figures"))
 
@@ -478,30 +481,94 @@ if __name__ == "__main__":
     s1_stats, s1_Psurv_b1_, s1_Psurv_b2_, s1_WTW_ = analysisFxs.group_MF(trialdata_sess1_, plot_each = False)
     s2_stats, s2_Psurv_b1_, s2_Psurv_b2_, s2_WTW_ = analysisFxs.group_MF(trialdata_sess2_, plot_each = False)
 
-    s1_stats.to_csv(os.path.join('..', 'analysis_results', expname, 'taskstats', 'emp_sess1.csv'), index = None)
-    s2_stats.to_csv(os.path.join('..', 'analysis_results', expname, 'taskstats', 'emp_sess2.csv'), index = None)
+    # s1_stats.to_csv(os.path.join('..', 'analysis_results', expname, 'taskstats', 'emp_sess1.csv'), index = None)
+    # s2_stats.to_csv(os.path.join('..', 'analysis_results', expname, 'taskstats', 'emp_sess2.csv'), index = None)
+    s1_stats = pd.read_csv(os.path.join('..', 'analysis_results', expname, 'taskstats', 'emp_sess1.csv'))
+    s2_stats = pd.read_csv(os.path.join('..', 'analysis_results', expname, 'taskstats', 'emp_sess2.csv'))
     
-    # # plot for KMSC 
-    # fig, ax = plt.subplots()
-    # figFxs.plot_group_KMSC_both(s1_Psurv_b1_, s1_Psurv_b2_, s2_Psurv_b1_, s2_Psurv_b2_, hdrdata_sess1, hdrdata_sess2, ax)
-    # plt.savefig(os.path.join('..', 'figures', expname, 'KMSC.pdf'))
+    # plot for KMSC 
+    fig, ax = plt.subplots()
+    figFxs.plot_group_KMSC_both(s1_Psurv_b1_, s1_Psurv_b2_, s2_Psurv_b1_, s2_Psurv_b2_, hdrdata_sess1, hdrdata_sess2, ax)
+    plt.savefig(os.path.join('..', 'figures', expname, 'KMSC.pdf'))
 
 
-    # # plot for WTW 
-    # fig, ax = plt.subplots()
-    # figFxs.plot_group_WTW_both(s1_WTW_, s2_WTW_, hdrdata_sess1, hdrdata_sess2, ax)
-    # plt.savefig(os.path.join('..', 'figures', expname, 'WTW.pdf'))
+    # plot for WTW 
+    fig, ax = plt.subplots()
+    figFxs.plot_group_WTW_both(s1_WTW_, s2_WTW_, hdrdata_sess1, hdrdata_sess2, ax)
+    plt.savefig(os.path.join('..', 'figures', expname, 'WTW.pdf'))
 
     # ################## reliability analysis of model-free measures ###################
-    # # reliability of WTW
-    # fig, ax = plt.subplots()
-    # figFxs.WTW_reliability(s1_WTW_, s2_WTW_, hdrdata_sess1, hdrdata_sess2, ax)
-    # fig.savefig(os.path.join("..", "figures", expname, "WTW_reliability.pdf"))
+    # reliability of WTW
+fig, ax = plt.subplots()
+figFxs.WTW_reliability(s1_WTW_, s2_WTW_, hdrdata_sess1, hdrdata_sess2, ax)
+fig.savefig(os.path.join("..", "figures", expname, "WTW_reliability.pdf"))
 
-    # # reliability of AUC
-    # figFxs.AUC_reliability(s1_stats, s2_stats)
-    # plt.gcf().set_size_inches(10, 5)
-    # plt.savefig(os.path.join("..", "figures", expname, "AUC_reliability.pdf"))
+# reliability of AUC
+figFxs.AUC_reliability(s1_stats, s2_stats)
+plt.gcf().set_size_inches(10, 5)
+plt.savefig(os.path.join("..", "figures", expname, "AUC_reliability.pdf"))
+
+
+    # maybe later I want to write a function to automatically pivot this table
+    colvars = ['auc', 'auc1', 'auc2']
+    s1_HP = s1_stats.loc[s1_stats['condition'] == 'HP', colvars + ['id']]
+    s1_LP = s1_stats.loc[s1_stats['condition'] == 'LP', colvars + ['id']]
+    s1_aucdf = s1_HP.merge(s1_LP, left_on = 'id', right_on = 'id', suffixes = ['_HP', "_LP"])
+    s1_aucdf = pd.concat([s1_aucdf, s1_aucdf.filter(like='HP', axis=1).set_axis([x+'_delta' for x in colvars], axis = 1) - s1_aucdf.filter(like='LP', axis=1).set_axis([x+'_delta' for x in colvars], axis = 1)], axis = 1)
+
+    s2_HP = s2_stats.loc[s2_stats['condition'] == 'HP', colvars + ['id']]
+    s2_LP = s2_stats.loc[s2_stats['condition'] == 'LP', colvars + ['id']]
+    s2_aucdf = s2_HP.merge(s2_LP, left_on = 'id', right_on = 'id', suffixes = ['_HP', "_LP"])
+    s2_aucdf = pd.concat([s2_aucdf, s2_aucdf.filter(like='HP', axis=1).set_axis([x+'_delta' for x in colvars], axis = 1) - s2_aucdf.filter(like='LP', axis=1).set_axis([x+'_delta' for x in colvars], axis = 1)], axis = 1)
+
+    # 
+    df = s1_aucdf.merge(s2_aucdf, on = 'id', suffixes = ['_sess1', '_sess2']) 
+    fig, axs = plt.subplots(1,3)
+    figFxs.my_regplot(df['auc_LP_sess1'], df['auc_LP_sess2'], axs[0], color = condition_palette[0])
+    # figFxs.my_regplot(df['auc1_LP_sess1'], df['auc1_LP_sess2'], axs[0], color = condition_palette[0], line_kws={"linestyle": ":"})
+    figFxs.my_regplot(df['auc_HP_sess1'], df['auc_HP_sess2'], axs[1], color = condition_palette[1])
+    figFxs.my_regplot(df['auc_delta_sess1'], df['auc_delta_sess2'], axs[2], color = 'grey')
+
+    # plot reliability as a function of time
+    # in this wide format, all condition information is stored within the column name
+conditions = ['LP', 'HP']
+measures = ['auc1', 'auc2'] # if it is only one variable maybe it is easy enough to use summary functions...
+r_vals = []
+p_vals = []
+r_se_vals = []
+condition_vals = []
+measure_vals = []
+n_vals = []
+for condition, measure in itertools.product(conditions, measures):
+    x = df[measure + '_' + condition + '_sess1']
+    y = df[measure + '_' + condition + '_sess2']
+    tmp = spearmanr(x, y, nan_policy = 'omit')
+    r_vals.append(tmp[0])
+    p_vals.append(tmp[1])
+    r_se_vals.append(np.sqrt(1 - tmp[0]**2) / np.sqrt(x.shape[0] - 2))
+    n_vals.append(x.shape[0])
+    condition_vals.append(condition)
+    measure_vals.append(measure)
+
+    plotdf = pd.DataFrame({"r": r_vals, "se": r_se_vals, "p": p_vals, "condition": condition_vals, "measure": measure_vals})
+    # plotdf = plotdf.loc[np.isin(plotdf.measure, ['auc1', 'auc2']),:]
+    def my_errorbar(x, y, yerr, **kwargs):
+        ax = plt.gca()
+        data = kwargs.pop("data")
+        data.plot(x=x, y=y, yerr=yerr, kind="bar", ax=ax, **kwargs)
+    g = sns.FacetGrid(data = plotdf, col = "condition", hue = "condition", palette = condition_palette)
+    g.map_dataframe(my_errorbar, "measure", "r", "se")
+
+    # calculate z score; I think eventually I want to use some bootstraps or permutations...
+    two_tail_p_vals = {}
+    for condition in ['HP', 'LP']:
+        sess1_se = plotdf.loc[np.logical_and(plotdf.condition == condition, plotdf.measure == 'auc1'),'se'].values[0]
+        sess2_se = plotdf.loc[np.logical_and(plotdf.condition == condition, plotdf.measure == 'auc2'),'se'].values[0]
+        se_comb = np.sqrt((sess1_se **2 + sess2_se**2)/ 2)
+        r_diff = plotdf.loc[np.logical_and(plotdf.condition == condition, plotdf.measure == 'auc1'),'r'].values[0] - plotdf.loc[np.logical_and(plotdf.condition == condition, plotdf.measure == 'auc2'),'r'].values[0]
+        zscore = r_diff / se_comb
+        p_two_tail = 2 * (1 - norm.cdf(abs(zscore)))
+        two_tail_p_vals[condition] = p_two_tail
 
     ################## modeling analysis #############
     modelnames = ['QL1', 'QL2', 'RL1', 'RL2']
@@ -563,9 +630,9 @@ if __name__ == "__main__":
     #     plt.savefig(os.path.join("..", 'figures', expname, "%s_para_reliability.pdf"%modelname))
         
     ### for late fitting method
-    s1_paradf  = loadFxs.load_parameter_estimates(expname, 1, hdrdata_sess1, 'QL2', 'QL2_late')
-    s2_paradf = loadFxs.load_parameter_estimates(expname, 2, hdrdata_sess2, 'QL2', 'QL2_late')
-
+    s1_paradf  = loadFxs.load_parameter_estimates(expname, 1, hdrdata_sess1, 'QL2', 'QL2_trct')
+    s2_paradf = loadFxs.load_parameter_estimates(expname, 2, hdrdata_sess2, 'QL2', 'QL2_trct')
+    figFxs.plot_parameter_reliability('QL2', s1_paradf.iloc[:,:-1], s2_paradf.iloc[:,:-1])
 
 
     ################## correlations between self-report measures and ########
@@ -591,7 +658,7 @@ if __name__ == "__main__":
 
     # prepare for the corr analysis
     row_vars = ['HP_sess1', 'LP_sess1', 'HP_sess2', 'LP_sess2']
-    col_vars = ['NU', 'PU', 'PM', 'PS', 'SS', 'attention', 'cogstable', 'motor', 'perseverance', 'selfcontrol', 'cogcomplex'] # hmm I might want to add several more later
+    col_vars = ['NU', 'PU', 'PM', 'PS', 'SS', 'attention', 'cogstable', 'motor', 'perseverance', 'selfcontrol', 'cogcomplex', 'UPPS', 'BIS', 'GMK'] # hmm I might want to add several more later
     r_table, p_table, perm_r_ = figFxs.corr_analysis(aucdf[row_vars], s1_selfdf.loc[np.isin(s1_selfdf.id, aucdf.id), col_vars], 1000)
 
     ##################### correlations between init_wtw and selfreport measures ###########
@@ -601,11 +668,21 @@ if __name__ == "__main__":
 
     # prepare for the corr analysis
     row_vars = ['init_wtw_sess1', 'init_wtw_sess2']
-    col_vars = ['NU', 'PU', 'PM', 'PS', 'SS', 'attention', 'cogstable', 'motor', 'perseverance', 'selfcontrol', 'cogcomplex'] # hmm I might want to add several more later
+    col_vars = ['NU', 'PU', 'PM', 'PS', 'SS', 'attention', 'cogstable', 'motor', 'perseverance', 'selfcontrol', 'cogcomplex', 'UPPS', 'BIS', 'GMK'] # hmm I might want to add several more later
     r_table, p_table, perm_r_ = figFxs.corr_analysis(init_wtw_df[row_vars], s1_selfdf.loc[np.isin(s1_selfdf.id, init_wtw_df.id), col_vars], 10)
 
-    ##################### correlations between parameters and selfreport measures
+    # maybe disscociate batch 1 and batch 2 later?
     
+    ##################### correlations between late parameters and selfreport measures #############
+row_vars = modelFxs.getModelParas('QL2')
+col_vars = ['NU', 'PU', 'PM', 'PS', 'SS', 'attention', 'cogstable', 'motor', 'perseverance', 'selfcontrol', 'cogcomplex']
+s1_paradf  = loadFxs.load_parameter_estimates(expname, 1, hdrdata_sess1, 'QL2', 'QL2')
+s2_paradf = loadFxs.load_parameter_estimates(expname, 2, hdrdata_sess2, 'QL2', 'QL2')
+r_table, p_table, perm_r_ = figFxs.corr_analysis(s1_paradf[row_vars], s1_selfdf.loc[np.isin(s1_selfdf.id, s1_paradf.id), col_vars], 10)
+p_table.to_csv(os.path.join("..", "analysis_results", "active", "correlation", "selfreport_para_sess1.csv"))
+
+r_table, p_table, perm_r_ = figFxs.corr_analysis(s2_paradf[row_vars], s1_selfdf.loc[np.isin(s1_selfdf.id, s2_paradf.id), col_vars], 10)
+p_table.to_csv(os.path.join("..", "analysis_results", "active", "correlation", "selfreport_para_sess2.csv"))
 ############
 
     

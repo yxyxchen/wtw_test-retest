@@ -212,6 +212,12 @@ def parse_group_selfreport(expname, sess, isplot):
 			plt.show()
 			input("Press Enter to continue...")
 			plt.clf()
+	# read the MCQ file
+	if sess == 1:
+		# code.interact(local = dict(locals(), **globals()))
+		mcqdata = pd.read_csv(os.path.join("..", "analysis_results", expname, "selfreport", 'MCQ.csv'))
+		mcqdata = mcqdata.loc[np.logical_and.reduce([mcqdata.SmlCons >= 0.8, mcqdata.MedCons >= 0.8, mcqdata.LrgCons > 0.8]),:]
+		selfdata = selfdata.merge(mcqdata[['GMK', 'SubjID']], how = 'outer', right_on = 'SubjID', left_on = 'id').drop("SubjID", axis = 1)
 	selfdata.reset_index(inplace = True, drop = True)
 	return selfdata 
 
@@ -227,6 +233,7 @@ def load_parameter_estimates(expname, sess, hdrdata, modelname, foldername):
 			fit_summary = pd.read_csv(os.path.join("..", "analysis_results", expname, "modelfit", foldername, '%s_sess%d_summary.txt'%(subj_id, sess)), header = None)
 		except:
 			print("can't find the file for %s, sess%d"%(subj_id, sess))
+			continue
 			# code.interact(local = dict(locals(), **globals()))
 		# currently I didn't save index and columns 
 		fit_summary.index = paranames + ['totalLL']
@@ -243,7 +250,7 @@ def load_parameter_estimates(expname, sess, hdrdata, modelname, foldername):
 			waic = robjects.r['WAIC'][4][0]
 		except:
 			print("can't find the WAIC file for %s, sess%d"%(subj_id, sess))
-
+			continue
 		# 
 		this_row = pd.DataFrame(dict(zip(paranames, fit_summary.iloc[:-1, 0])), index = [0])
 		this_row['id'] = subj_id
