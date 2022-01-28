@@ -16,10 +16,26 @@ import statsmodels.formula.api as smf
 from sksurv.nonparametric import kaplan_meier_estimator as km
 from scipy.interpolate import interp1d
 from subFxs import expParas
+from scipy import stats
 import code
-
+import importlib
+import random
 
 #############  some basic helper functions 
+
+def pivot_by_condition(df, columns, index):
+    """ pivot a table of summary statistics based on condition 
+    """
+    if "id" not in index:
+        print("Please always include 'id' in index!")
+        return 
+    # code.interact(local = dict(locals(), **globals()))
+    HP_df = df.loc[df['condition'] == 'HP', columns + index]
+    LP_df = df.loc[df['condition'] == 'LP', columns+ index]
+    out_df = HP_df.merge(LP_df, left_on = index, right_on = index, suffixes = ['_HP', "_LP"])
+    out_df = pd.concat([out_df, out_df.filter(like='HP', axis=1).set_axis([x+'_delta' for x in columns], axis = 1) - out_df.filter(like='LP', axis=1).set_axis([x+'_delta' for x in columns], axis = 1)], axis = 1)
+    return out_df
+
 def calc_se(x):
     """calculate standard error after removing na values 
     """
@@ -34,6 +50,89 @@ def calc_se(x):
     if ndrop > 0:
         print("Remove NaN values in calculating standard error"%ndrop)
     return np.nanstd(x) / np.sqrt(len(x))
+
+#########
+def my_bootstrap_corr(x, y, n_perm = 1000, alpha = 0.95, n = None):
+    """ calc Spearman r, bootstrapped CI and distribution. 
+        Notice here using the bootstrap we are constructing the distribution of r, rather than the NULL distribution 
+    """
+    # 
+    if not isinstance(x, np.ndarray):
+        x = np.array(x)
+
+    if not isinstance(y, np.ndarray):
+        y = np.array(y)
+    # calc the observed r
+    r = stats.spearmanr(x, y, nan_policy = 'omit')[0]
+
+    # determine the sample size
+    if n is None:
+        n = len(x)
+
+    # bootstrap 
+    random.seed(123)
+    r_ = np.zeros(n_perm)
+    for i in range(n_perm):
+        idxs = np.random.choice(len(x), n, replace=True)
+        r_[i] = stats.spearmanr(x[idxs], y[idxs], nan_policy = 'omit')[0]
+
+    # calc confidence intervals
+    ci_lower = np.percentile(r_, (1 - alpha) / 2 * 100)
+    ci_upper = np.percentile(r_, 100 - (1 - alpha) / 2 * 100)
+
+    return r, (ci_lower, ci_upper), r_
+
+# I think I can first focus on paired permustations first
+def my_paired_permutation(x, y, func, n_perm = 1000):
+    # calculate the observed critical stats
+    observed_t = func(x, y)
+
+    # save the distribution of the critical statistics 
+    permutated_t_ = np.zeros(n_perm)
+
+    for i in range(n_perm):
+        # flip random data points
+        flipped_idxs = np.random.choice([True, False], len(x))
+        x_prime = x
+        y_prime = y
+        x_prime[flipped_idxs], y_prime[flipped_idxs] = y_prime[flipped_idxs], x_prime[flipped_idxs]
+
+        permutated_t_[i] = func(x_prime, y_prime)
+
+    # calculate p value 
+    p = np.mean(np.absolute(permutated_t_) > abs(observed_t))
+
+    # return outputs
+    return observed_t, permutated_t_, p
+
+def my_paired_multiple_permuation(X, Y, func, n_perm = 1000):
+    # constants 
+    n_obs = X.shape[0]
+    n_var = X.shape[1]
+
+    # save the distribution of the critical statistics 
+    permutated_abs_t_max_ = np.zeros(n_perm)
+    for i in range(n_perm):
+        print(i)
+        flipped_idxs = np.random.choice([True, False], n_obs)
+        permutated_abs_t_max = -10; # I think I should focus on absolute values here
+        for j in range(n_var):
+            x_prime = X[:, j]
+            y_prime = Y[:, j]
+            x_prime[flipped_idxs], y_prime[flipped_idxs] = y_prime[flipped_idxs], x_prime[flipped_idxs]
+            t = func(x_prime, y_prime)
+            if abs(t) > permutated_abs_t_max:
+                permutated_abs_t_max = abs(t)
+        permutated_abs_t_max_[i] = permutated_abs_t_max
+
+    # calc the observed critical statistics and pvals
+    observed_t_ = np.zeros(n_var)
+    p_ = np.zeros(n_var)
+    for i in range(n_var):
+        observed_t_[i] = func(X[:,i], Y[:, i])
+        p_[i] = np.mean(permutated_abs_t_max_ > abs(observed_t_[i]))
+
+    return observed_t_, permutated_abs_t_max_, p_
 
 ####################################################
 def score_PANAS(choices, isplot = True):

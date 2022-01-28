@@ -29,6 +29,8 @@ expModelFit = function(expname, sess, modelName, isFirstFit, batchIdx = NULL, fi
       thisTrialData = thisTrialData[thisTrialData$trialStartTime >= 300 | thisTrialData$blockNum > 1,]
       trialData[[id]] = thisTrialData
     }
+  }else{
+    outputDir = sprintf("../../analysis_results/%s/modelfit/%s", expname, modelName)
   }
   
   
@@ -36,7 +38,7 @@ expModelFit = function(expname, sess, modelName, isFirstFit, batchIdx = NULL, fi
   if(isFirstFit){
     config = list(
       nChain = 4,
-      nIter = 4000,
+      nIter = 100,
       adapt_delta = 0.99,
       max_treedepth = 11,
       warningFile = sprintf("stanWarnings/exp_%s.txt", modelName)

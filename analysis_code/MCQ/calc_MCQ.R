@@ -9,9 +9,9 @@ calc_MCA = function(MCQdata){
 	# load MCQ data (make sure to update all file paths accordingly)
 
 	# load lookup tables
-	lookup1 <- read.table("/Users/cyx/Documents/wtw_test-retest/analysis-code/MCQ/lookup1MCQ.txt", header = TRUE)
-	lookup2 <- read.table("/Users/cyx/Documents/wtw_test-retest/analysis-code/MCQ/lookup2MCQ.txt", header = TRUE)
-	lookup3 <- read.table("/Users/cyx/Documents/wtw_test-retest/analysis-code/MCQ/lookup3MCQ.txt", header = TRUE)
+	lookup1 <- read.table("/Users/cyx/Documents/wtw_test-retest/analysis_code/MCQ/lookup1MCQ.txt", header = TRUE)
+	lookup2 <- read.table("/Users/cyx/Documents/wtw_test-retest/analysis_code/MCQ/lookup2MCQ.txt", header = TRUE)
+	lookup3 <- read.table("/Users/cyx/Documents/wtw_test-retest/analysis_code/MCQ/lookup3MCQ.txt", header = TRUE)
 
 	#Calculate unique value for each sequence of responses
 	MCQdata$MCQ13 <- MCQdata$MCQ13*1

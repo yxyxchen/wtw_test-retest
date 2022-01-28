@@ -143,15 +143,16 @@ def parse_ind_selfreport(sess, row, isplot):
 	# the hyperbolic discounting parameter is calculated in R scripts under the MCQ folder
 
 	# score BIS
+	# code.interact(local = dict(locals(), **globals()))
 	if sess == 1:
-		BIS_subscores, Attentional, Motor, Nonplanning, BIS = analysisFxs.score_BIS(row[31:61], isplot)
+		BIS_subscores, Attentional, Motor, Nonplanning, BIS = analysisFxs.score_BIS(row.filter(like = 'BIS'), isplot)
 
 		# score UPPS
-		NU, PU, PM, PS, SS, UPPS  = analysisFxs.score_upps(row[61:120], isplot)
+		NU, PU, PM, PS, SS, UPPS  = analysisFxs.score_upps(row.filter(like = 'UP'), isplot)
 
 		# score PANAS
-		if not np.isnan(row[120]): # the first batch doesn't have PANAS choices
-			PAS, NAS = analysisFxs.score_PANAS(row[120:140], isplot)
+		if not np.isnan(row['PA-1']): # the first batch doesn't have PANAS choices
+			PAS, NAS = analysisFxs.score_PANAS(row.filter(like = 'PA'), isplot)
 		else:
 			PAS = np.nan
 			NAS = np.nan

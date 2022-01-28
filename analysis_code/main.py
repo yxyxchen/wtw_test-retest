@@ -19,6 +19,7 @@ from subFxs import analysisFxs
 from subFxs import expParas
 from subFxs import modelFxs
 import seaborn as sns
+import scipy.stats as stats
 from scipy.stats import pearsonr
 from scipy.stats import spearmanr
 from subFxs import simFxs 
@@ -32,15 +33,9 @@ import importlib
 
 # plot styles
 plt.style.use('classic')
-sns.set(font_scale = 1.5)
+sns.set(font_scale = 2)
 sns.set_style("white")
 condition_palette = ["#762a83", "#1b7837"]
-
-
-# Create an array with the colors you want to use
-condition_colors = ["#762a83", "#1b7837"]
-# Set your custom color palette
-sns.set_palette(sns.color_palette(condition_colors))
 
 
 # generate output results 
@@ -457,11 +452,16 @@ def corr_analysis():
 
 ############################## main ##########################
 if __name__ == "__main__":
+
+    expname = 'passive'
+    hdrdata_sess1, trialdata_sess1_ = loadFxs.group_quality_check(expname, 1, plot_quality_check = True)
+
     
-    # expname = 'passive'
-
-    # hdrdata_sess1, trialdata_sess1_ = loadFxs.group_quality_check(expname, 1, plot_quality_check = True)
-
+    # s1_stats, s1_Psurv_b1_, s1_Psurv_b2_, s1_WTW_ = analysisFxs.group_MF(trialdata_sess1_, plot_each = False)   
+    # s1_stats.to_csv(os.path.join('..', 'analysis_results', expname, 'taskstats', 'emp_sess1.csv'), index = None)
+    s1_stats = pd.read_csv(os.path.join('..', 'analysis_results', expname, 'taskstats', 'emp_sess1.csv'))
+    code.interact(local = dict(globals(), **locals()))
+    
     # fig, ax = plt.subplots()
     # analysisFxs.plot_group_KMSC(s1_Psurv_b1_, s1_Psurv_b2_, expParas.Time, ax)
     # plt.savefig(os.path.join('..', 'figures', expname, 'sess1_KMSC.pdf'))
@@ -470,13 +470,38 @@ if __name__ == "__main__":
     # analysisFxs.plot_group_WTW(s1_WTW_, expParas.TaskTime, ax)
     # plt.savefig(os.path.join('..', 'figures', expname, 'sess1_WTW.pdf'))
 
+    ################## correlations between self-report measures and ########
+    # s1_selfdf = loadFxs.parse_group_selfreport(expname, 1, isplot = False)
+    # s1_selfdf.to_csv(os.path.join("..", "analysis_results", "active", "selfreport", "selfreport_sess1.csv"))
 
-    
+    # # I might want to calc AUC into four blocks later
+    # s1_aucdf = s1_stats.pivot(index = 'id', columns = 'condition', values = ['auc2'])
+    # s1_aucdf = s1_aucdf.rename_axis(columns = [None] * 2)
+    # s1_aucdf = s1_aucdf.droplevel(0, axis=1) 
+    # s1_aucdf = s1_aucdf.reset_index()
+
+    # row_vars = ['HP', "LP"]
+    # col_vars = ['NU', 'PU', 'PM', 'PS', 'SS', 'attention', 'cogstable', 'motor', 'perseverance', 'selfcontrol', 'cogcomplex', 'UPPS', 'BIS', 'GMK'] # hmm I might want to add several more later
+    # r_table, p_table, perm_r_ = figFxs.corr_analysis(s1_aucdf[row_vars], s1_selfdf.loc[np.isin(s1_selfdf.id, s1_aucdf.id), col_vars], 10)
+
+    ###############################################################################################
+    ###############################################################################################
     ########### load data #############
     expname = 'active'
     hdrdata_sess1, trialdata_sess1_ = loadFxs.group_quality_check(expname, 1, plot_quality_check = False)
     hdrdata_sess2, trialdata_sess2_ = loadFxs.group_quality_check(expname, 2, plot_quality_check = False)
-    code.interact(local = dict(globals(), **locals()))
+    s1_stats = pd.read_csv(os.path.join('..', 'analysis_results', expname, 'taskstats', 'emp_sess1.csv'))
+    s2_stats = pd.read_csv(os.path.join('..', 'analysis_results', expname, 'taskstats', 'emp_sess2.csv'))
+    # s1_stats, s1_Psurv_b1_, s1_Psurv_b2_, s1_WTW_ = analysisFxs.group_MF(trialdata_sess1_, plot_each = False)
+    # s2_stats, s2_Psurv_b1_, s2_Psurv_b2_, s2_WTW_ = analysisFxs.group_MF(trialdata_sess2_, plot_each = False)
+    
+    ############## get demographic infomation about the final sample ########
+    # consent_sess1 = pd.read_csv(os.path.join("data", expname, "consent_sess1.csv"))
+    # tmp = hdrdata_sess2.merge(consent_sess1, on = "id")
+    # tmp['batch_x'].value_counts()
+    # tmp['gender'].value_counts()
+    # tmp['age'].mean()
+    
     # ############### model free analysis ###########
     s1_stats, s1_Psurv_b1_, s1_Psurv_b2_, s1_WTW_ = analysisFxs.group_MF(trialdata_sess1_, plot_each = False)
     s2_stats, s2_Psurv_b1_, s2_Psurv_b2_, s2_WTW_ = analysisFxs.group_MF(trialdata_sess2_, plot_each = False)
@@ -485,29 +510,105 @@ if __name__ == "__main__":
     # s2_stats.to_csv(os.path.join('..', 'analysis_results', expname, 'taskstats', 'emp_sess2.csv'), index = None)
     s1_stats = pd.read_csv(os.path.join('..', 'analysis_results', expname, 'taskstats', 'emp_sess1.csv'))
     s2_stats = pd.read_csv(os.path.join('..', 'analysis_results', expname, 'taskstats', 'emp_sess2.csv'))
-    
+
     # plot for KMSC 
     fig, ax = plt.subplots()
     figFxs.plot_group_KMSC_both(s1_Psurv_b1_, s1_Psurv_b2_, s2_Psurv_b1_, s2_Psurv_b2_, hdrdata_sess1, hdrdata_sess2, ax)
     plt.savefig(os.path.join('..', 'figures', expname, 'KMSC.pdf'))
 
-
     # plot for WTW 
     fig, ax = plt.subplots()
     figFxs.plot_group_WTW_both(s1_WTW_, s2_WTW_, hdrdata_sess1, hdrdata_sess2, ax)
-    plt.savefig(os.path.join('..', 'figures', expname, 'WTW.pdf'))
+    fig.savefig(os.path.join('..', 'figures', expname, 'WTW.pdf'))
 
-    # ################## reliability analysis of model-free measures ###################
+    ##### compare auc in different sessions and conditions
+    ##### I think this part can be wrapped up #############
+    stats_df = pd.concat([s1_stats.loc[np.isin(s1_stats['id'], s2_stats['id'])], s2_stats], axis = 0)
+    stats_df['sess_condition'] = (stats_df.sess - 1) * 2 + (stats_df.condition == 'HP') * 1
+
+    # statistical tests/ maybe later I would like to switch to bootstrap
+    stats_df.groupby(['sess', 'condition']).agg({'auc':['median', stats.iqr]})
+    stats_df.groupby(['sess', 'condition']).agg({'auc1':['median', stats.iqr]})
+    # add statistic tests
+    stats.wilcoxon(stats_df.loc[np.logical_and(stats_df.condition == "HP", stats_df.sess == 1), 'auc'],\
+        stats_df.loc[np.logical_and(stats_df.condition == "LP", stats_df.sess == 1), 'auc'])
+    stats.wilcoxon(stats_df.loc[np.logical_and(stats_df.condition == "HP", stats_df.sess == 2), 'auc'],\
+        stats_df.loc[np.logical_and(stats_df.condition == "LP", stats_df.sess == 2), 'auc'])
+    stats.wilcoxon(stats_df.loc[np.logical_and(stats_df.condition == "HP", stats_df.sess == 1), 'auc'],\
+        stats_df.loc[np.logical_and(stats_df.condition == "HP", stats_df.sess == 2), 'auc'])
+    stats.wilcoxon(stats_df.loc[np.logical_and(stats_df.condition == "LP", stats_df.sess == 1), 'auc'],\
+        stats_df.loc[np.logical_and(stats_df.condition == "LP", stats_df.sess == 2), 'auc'])
+
+    stats.wilcoxon(stats_df.loc[np.logical_and(stats_df.condition == "HP", stats_df.sess == 1), 'auc'],\
+        stats_df.loc[np.logical_and(stats_df.condition == "HP", stats_df.sess == 2), 'auc1'])
+
+    stats.wilcoxon(stats_df.loc[np.logical_and(stats_df.condition == "LP", stats_df.sess == 1), 'auc2'],\
+        stats_df.loc[np.logical_and(stats_df.condition == "LP", stats_df.sess == 2), 'auc2'])
+
+    stats.wilcoxon(stats_df.loc[np.logical_and(stats_df.condition == "HP", stats_df.sess == 1), 'auc1'],\
+        stats_df.loc[np.logical_and(stats_df.condition == "HP", stats_df.sess == 2), 'auc1'])
+    stats.wilcoxon(stats_df.loc[np.logical_and(stats_df.condition == "HP", stats_df.sess == 1), 'auc2'],\
+        stats_df.loc[np.logical_and(stats_df.condition == "HP", stats_df.sess == 2), 'auc2'])
+    
+    #################### compare multiple reliability #############
+    s1_pivot_stats = analysisFxs.pivot_by_condition(s1_stats, ['auc'], ['id'])
+    s2_pivot_stats = analysisFxs.pivot_by_condition(s2_stats, ['auc'], ['id'])
+    s1_pivot_stats = s1_pivot_stats[np.isin(s1_pivot_stats.id, s2_pivot_stats.id)]
+
+    # can I add ...
+    resampled_r_ = np.array([])
+    var_ = np.array([])
+    for varname in ['auc_HP', 'auc_LP', 'auc_delta']:
+        r, p, resampled_r = analysisFxs.my_bootstrap_corr(s1_pivot_stats.loc[:, varname], s2_pivot_stats.loc[:, varname], n = 150)
+        var_ = np.concatenate([var_, [varname] * 1000])
+        resampled_r_  = np.concatenate([resampled_r_, resampled_r])
+
+
+    # hmm I don't know what does it mean though
+    resampled_r_ = np.array([])
+    var_ = np.array([])
+    model_ = np.array([])
+
+    s1_paradf  = loadFxs.load_parameter_estimates(expname, 1, hdrdata_sess1, 'QL2', 'QL2')
+    s2_paradf = loadFxs.load_parameter_estimates(expname, 2, hdrdata_sess2, 'QL2', 'QL2')
+    s1_paradf = s1_paradf[np.isin(s1_paradf.id, s2_paradf.id)]
+    s2_paradf = s2_paradf[np.isin(s2_paradf.id, s1_paradf.id)]
+    for paraname in ['alpha', 'nu', 'tau', 'gamma', 'eta']:
+        r, p, resampled_r = analysisFxs.my_bootstrap_corr(s1_paradf.loc[:, paraname], s2_paradf.loc[:, paraname], n = 150)
+        var_ = np.concatenate([var_, [paraname]  * 1000])
+        model_ = np.concatenate([model_, ['QL2']  * 1000])
+        resampled_r_  = np.concatenate([resampled_r_, resampled_r])
+
+
+    # ... make sure it is mutally included, merge is better
+    s1_paradf  = loadFxs.load_parameter_estimates(expname, 1, hdrdata_sess1, 'QL1', 'QL1')
+    s2_paradf = loadFxs.load_parameter_estimates(expname, 2, hdrdata_sess2, 'QL1', 'QL1')
+    s1_paradf = s1_paradf[np.isin(s1_paradf.id, s2_paradf.id)]
+    s2_paradf = s2_paradf[np.isin(s2_paradf.id, s1_paradf.id)]
+    for paraname in ['alpha', 'tau', 'gamma', 'eta']:
+        r, p, resampled_r = analysisFxs.my_bootstrap_corr(s1_paradf.loc[:, paraname], s2_paradf.loc[:, paraname], n = 150)
+        var_ = np.concatenate([var_, [paraname] * 1000])
+        model_ = np.concatenate([model_, ['QL1']  * 1000])
+        resampled_r_  = np.concatenate([resampled_r_, resampled_r])
+
+    plotdf = pd.DataFrame(dict({"var":var_ , "model": model_, "r":resampled_r_}))
+    sns.violinplot(data = plotdf, x = "r", y = "var", hue = 'model', scale="count", inner="quartile")
+    plt.show()
+
+
+
+
+    # ################## reliability analysis of model-free measures, n = 144 always ###################
     # reliability of WTW
-fig, ax = plt.subplots()
-figFxs.WTW_reliability(s1_WTW_, s2_WTW_, hdrdata_sess1, hdrdata_sess2, ax)
-fig.savefig(os.path.join("..", "figures", expname, "WTW_reliability.pdf"))
+    fig, ax = plt.subplots()
+    figFxs.WTW_reliability(s1_WTW_, s2_WTW_, hdrdata_sess1, hdrdata_sess2, ax)
+    fig.savefig(os.path.join("..", "figures", expname, "WTW_reliability.pdf"))
 
-# reliability of AUC
-figFxs.AUC_reliability(s1_stats, s2_stats)
-plt.gcf().set_size_inches(10, 5)
-plt.savefig(os.path.join("..", "figures", expname, "AUC_reliability.pdf"))
-
+    # reliability of AUC
+    fig, ax = plt.subplots()
+    figFxs.AUC_reliability(s1_stats, s2_stats)
+    plt.gcf().set_size_inches(8, 6)
+    plt.savefig(os.path.join("..", "figures", expname, "AUC_reliability.pdf"))
 
     # maybe later I want to write a function to automatically pivot this table
     colvars = ['auc', 'auc1', 'auc2']
@@ -521,54 +622,64 @@ plt.savefig(os.path.join("..", "figures", expname, "AUC_reliability.pdf"))
     s2_aucdf = s2_HP.merge(s2_LP, left_on = 'id', right_on = 'id', suffixes = ['_HP', "_LP"])
     s2_aucdf = pd.concat([s2_aucdf, s2_aucdf.filter(like='HP', axis=1).set_axis([x+'_delta' for x in colvars], axis = 1) - s2_aucdf.filter(like='LP', axis=1).set_axis([x+'_delta' for x in colvars], axis = 1)], axis = 1)
 
-    # 
+    # plot auc reliability 
     df = s1_aucdf.merge(s2_aucdf, on = 'id', suffixes = ['_sess1', '_sess2']) 
-    fig, axs = plt.subplots(1,3)
-    figFxs.my_regplot(df['auc_LP_sess1'], df['auc_LP_sess2'], axs[0], color = condition_palette[0])
+    fig, ax = plt.subplots()
+    # figFxs.my_regplot(df['auc_LP_sess1'], df['auc_LP_sess2'], axs[0], color = condition_palette[0])
     # figFxs.my_regplot(df['auc1_LP_sess1'], df['auc1_LP_sess2'], axs[0], color = condition_palette[0], line_kws={"linestyle": ":"})
-    figFxs.my_regplot(df['auc_HP_sess1'], df['auc_HP_sess2'], axs[1], color = condition_palette[1])
-    figFxs.my_regplot(df['auc_delta_sess1'], df['auc_delta_sess2'], axs[2], color = 'grey')
+    # figFxs.my_regplot(df['auc_HP_sess1'], df['auc_HP_sess2'], axs[1], color = condition_palette[1])
+    figFxs.my_regplot(df['auc_delta_sess1'], df['auc_delta_sess2'], ax, color = 'grey')
+    plt.savefig(os.path.join("..", "figures",expname, "delta_auc_reliability.pdf"))
 
     # plot reliability as a function of time
     # in this wide format, all condition information is stored within the column name
-conditions = ['LP', 'HP']
-measures = ['auc1', 'auc2'] # if it is only one variable maybe it is easy enough to use summary functions...
-r_vals = []
-p_vals = []
-r_se_vals = []
-condition_vals = []
-measure_vals = []
-n_vals = []
-for condition, measure in itertools.product(conditions, measures):
-    x = df[measure + '_' + condition + '_sess1']
-    y = df[measure + '_' + condition + '_sess2']
-    tmp = spearmanr(x, y, nan_policy = 'omit')
-    r_vals.append(tmp[0])
-    p_vals.append(tmp[1])
-    r_se_vals.append(np.sqrt(1 - tmp[0]**2) / np.sqrt(x.shape[0] - 2))
-    n_vals.append(x.shape[0])
-    condition_vals.append(condition)
-    measure_vals.append(measure)
+    conditions = ['LP', 'HP']
+    measures = ['auc1', 'auc2'] # if it is only one variable maybe it is easy enough to use summary functions...
+    r_vals = []
+    ci_vals = []
+    # r_se_vals = []
+    condition_vals = []
+    measure_vals = []
+    n_vals = []
+    for condition, measure in itertools.product(conditions, measures):
+        x = df[measure + '_' + condition + '_sess1']
+        y = df[measure + '_' + condition + '_sess2']
+        r, ci, _ = analysisFxs.my_bootstrap_corr(x, y)
+        r_vals.append(r)
+        ci_vals.append(ci)
+        # r_se_vals.append()
+        n_vals.append(x.shape[0])
+        condition_vals.append(condition)
+        measure_vals.append(measure)
 
-    plotdf = pd.DataFrame({"r": r_vals, "se": r_se_vals, "p": p_vals, "condition": condition_vals, "measure": measure_vals})
-    # plotdf = plotdf.loc[np.isin(plotdf.measure, ['auc1', 'auc2']),:]
-    def my_errorbar(x, y, yerr, **kwargs):
-        ax = plt.gca()
-        data = kwargs.pop("data")
-        data.plot(x=x, y=y, yerr=yerr, kind="bar", ax=ax, **kwargs)
-    g = sns.FacetGrid(data = plotdf, col = "condition", hue = "condition", palette = condition_palette)
-    g.map_dataframe(my_errorbar, "measure", "r", "se")
+
+
+# plotdf = plotdf.loc[np.isin(plotdf.measure, ['auc1', 'auc2']),:]
+def my_errorbar(x, y, yerr, **kwargs):
+    ax = plt.gca()
+    data = kwargs.pop("data")
+    data.plot(x=x, y=y, yerr=yerr, kind="bar", ax=ax, **kwargs)
+plotdf = pd.DataFrame({"Spearman's r": r_vals, "condition": condition_vals, "measure": measure_vals, "ci": ci_vals})
+plotdf['measure'] = plotdf['measure'].replace(['auc1', 'auc2'], ['1', '2'])
+# g = sns.FacetGrid(data = plotdf, col = "condition", hue = "condition", palette = condition_palette)
+# g.map_dataframe(my_errorbar, "measure", "Spearman's r", "se")
+# plt.gcf().set_size_inches(10, 5)
+# plt.savefig(os.path.join("..", "figures",expname, "auc_reliability_compare.pdf"))
+
+
+two_tail_p_vals = {}
+for condition in ['HP', 'LP']:
+    sess1_se = plotdf.loc[np.logical_and(plotdf.condition == condition, plotdf.measure == '1'),'se'].values[0]
+    sess2_se = plotdf.loc[np.logical_and(plotdf.condition == condition, plotdf.measure == '2'),'se'].values[0]
+    se_comb = np.sqrt((sess1_se **2 + sess2_se**2)/ 2)
+    r_diff = plotdf.loc[np.logical_and(plotdf.condition == condition, plotdf.measure == '1'),"Spearman's r"].values[0] - plotdf.loc[np.logical_and(plotdf.condition == condition, plotdf.measure == '2'),"Spearman's r"].values[0]
+    zscore = r_diff / se_comb
+    p_two_tail = 2 * (1 - stats.norm.cdf(abs(zscore)))
+    two_tail_p_vals[condition] = p_two_tail
+
 
     # calculate z score; I think eventually I want to use some bootstraps or permutations...
-    two_tail_p_vals = {}
-    for condition in ['HP', 'LP']:
-        sess1_se = plotdf.loc[np.logical_and(plotdf.condition == condition, plotdf.measure == 'auc1'),'se'].values[0]
-        sess2_se = plotdf.loc[np.logical_and(plotdf.condition == condition, plotdf.measure == 'auc2'),'se'].values[0]
-        se_comb = np.sqrt((sess1_se **2 + sess2_se**2)/ 2)
-        r_diff = plotdf.loc[np.logical_and(plotdf.condition == condition, plotdf.measure == 'auc1'),'r'].values[0] - plotdf.loc[np.logical_and(plotdf.condition == condition, plotdf.measure == 'auc2'),'r'].values[0]
-        zscore = r_diff / se_comb
-        p_two_tail = 2 * (1 - norm.cdf(abs(zscore)))
-        two_tail_p_vals[condition] = p_two_tail
+
 
     ################## modeling analysis #############
     modelnames = ['QL1', 'QL2', 'RL1', 'RL2']
@@ -576,58 +687,76 @@ for condition, measure in itertools.product(conditions, measures):
     s2_stats = pd.read_csv(os.path.join("..", "analysis_results", expname, "taskstats", "emp_sess2.csv"))
 
     ################ load model parameters and waic estimates ##########
-    s1_paradf_ = dict()
-    s2_paradf_ = dict()
-    for modelname in modelnames:
-        s1_paradf  = loadFxs.load_parameter_estimates(expname, 1, hdrdata_sess1, modelname)
-        s2_paradf  = loadFxs.load_parameter_estimates(expname, 2, hdrdata_sess2, modelname)
-        s1_paradf_[modelname] = s1_paradf 
-        s2_paradf_[modelname] = s2_paradf
+# for 
+modelnames = ['QL1', 'QL2', 'RL1', 'RL2']
+s1_paradf_ = dict()
+s2_paradf_ = dict()
+for modelname in modelnames:
+    s1_paradf  = loadFxs.load_parameter_estimates(expname, 1, hdrdata_sess1, modelname, modelname)
+    s2_paradf  = loadFxs.load_parameter_estimates(expname, 2, hdrdata_sess2, modelname, modelname)
+    s1_paradf_[modelname] = s1_paradf 
+    s2_paradf_[modelname] = s2_paradf
 
-    s1_waic_df = s1_paradf_['QL1'][['id', 'waic']].rename(columns = {'waic':'waic_QL1'})
-    s2_waic_df = s2_paradf_['QL1'][['id', 'waic']].rename(columns = {'waic':'waic_QL1'})
-    for modelname in ['QL2', 'RL1', 'RL2']:
-        s1_waic_df = s1_waic_df.merge(s1_paradf_[modelname][['id', 'waic']], on = 'id').rename(columns = {'waic':'waic_' + modelname})
-        s2_waic_df = s2_waic_df.merge(s2_paradf_[modelname][['id', 'waic']], on = 'id').rename(columns = {'waic':'waic_' + modelname})
+# 
+s1_waic_df = s1_paradf_['QL1'][['id', 'waic']].rename(columns = {'waic':'waic_QL1'})
+s2_waic_df = s2_paradf_['QL1'][['id', 'waic']].rename(columns = {'waic':'waic_QL1'})
+for modelname in ['QL2']:
+    s1_waic_df = s1_waic_df.merge(s1_paradf_[modelname][['id', 'waic']], on = 'id').rename(columns = {'waic':'waic_' + modelname})
+    s2_waic_df = s2_waic_df.merge(s2_paradf_[modelname][['id', 'waic']], on = 'id').rename(columns = {'waic':'waic_' + modelname})
     
     s1_waic_df.to_csv(os.path.join('..', 'analysis_results', expname, 'modelfit', 'waic_sess1.csv'), index = None)
     s2_waic_df.to_csv(os.path.join('..', 'analysis_results', expname, 'modelfit', 'waic_sess2.csv'), index = None)
     # code.interact(local = dict(locals(), **globals()))
+    s1_waic_df.melt(id_vars = 'id', value_vars = ['waic_' + x for x in modelnames]).groupby('variable').agg({'value':['mean', lambda x: np.std(x) / np.sqrt(len(x))]}).round(2)
+    s2_waic_df.melt(id_vars = 'id', value_vars = ['waic_' + x for x in modelnames]).groupby('variable').agg({'value':['mean', lambda x: np.std(x) / np.sqrt(len(x))]}).round(2)
 
-
+    # calc n_best_fit
+s1_waic_df = s1_waic_df.iloc[:, 1:3]
+s2_waic_df = s2_waic_df.iloc[:, 1:3]
+s1_lowest_waic = s1_waic_df.apply(min, axis = 1)
+s2_lowest_waic = s2_waic_df.apply(min, axis = 1)
+s1_n_bestfit = dict()
+s2_n_bestfit = dict()
+for i, modelname in enumerate(['QL1', 'QL2']):
+    s1_n_bestfit[modelname] = np.sum(s1_lowest_waic  == s1_waic_df['waic_' + modelname])
+    s2_n_bestfit[modelname] = np.sum(s2_lowest_waic  == s2_waic_df['waic_' + modelname])
+   
     ################ modeling replication ###########
-    # for modelname in modelnames:
-    #     s1_paradf = loadFxs.load_parameter_estimates(expname, 1, hdrdata_sess1, modelname)
-    #     s2_paradf = loadFxs.load_parameter_estimates(expname, 2, hdrdata_sess2, modelname)
-    #     s1_stats_rep = modelFxs.group_model_rep(trialdata_sess1_, s1_paradf, modelname, isTrct = True, plot_each = False)
-    #     s2_stats_rep = modelFxs.group_model_rep(trialdata_sess2_, s2_paradf, modelname, isTrct = True, plot_each = False)
-    #     s1_stats_rep.to_csv(os.path.join('..', 'analysis_results', expname, 'taskstats', 'rep_%s_sess1.csv'%modelname), index = None)
-    #     s2_stats_rep.to_csv(os.path.join('..', 'analysis_results', expname, 'taskstats', 'rep_%s_sess2.csv'%modelname), index = None)
+    for modelname in modelnames:
+        # s1_paradf = loadFxs.load_parameter_estimates(expname, 1, hdrdata_sess1, modelname, modelname)
+        # s2_paradf = loadFxs.load_parameter_estimates(expname, 2, hdrdata_sess2, modelname, modelname)
+        # s1_stats_rep = modelFxs.group_model_rep(trialdata_sess1_, s1_paradf, modelname, isTrct = True, plot_each = False)
+        # s2_stats_rep = modelFxs.group_model_rep(trialdata_sess2_, s2_paradf, modelname, isTrct = True, plot_each = False)
+        s1_stats_rep.to_csv(os.path.join('..', 'analysis_results', expname, 'taskstats', 'rep_%s_sess1.csv'%modelname), index = None)
+        s2_stats_rep.to_csv(os.path.join('..', 'analysis_results', expname, 'taskstats', 'rep_%s_sess2.csv'%modelname), index = None)
 
-    #     # plot replication 
-    #     figFxs.plot_group_emp_rep(modelname, s1_stats_rep, s2_stats_rep, s1_stats, s2_stats)
-    #     plt.savefig(os.path.join("..", "figures",expname, "emp_rep_%s.eps"%modelname))
-    
+        s1_stats_rep = pd.read_csv(os.path.join('..', 'analysis_results', expname, 'taskstats', 'rep_%s_sess1.csv'%modelname))
+        s2_stats_rep = pd.read_csv(os.path.join('..', 'analysis_results', expname, 'taskstats', 'rep_%s_sess2.csv'%modelname))
+        # plot replication 
+        figFxs.plot_group_emp_rep(modelname, s1_stats_rep, s2_stats_rep, s1_stats, s2_stats)
+        plt.gcf().set_size_inches(10, 6)
+        plt.savefig(os.path.join("..", "figures", expname, "emp_rep_%s.pdf"%modelname))
+
     ################ model comparison ################3
     # the results look reasonable
 
     ################ parameter reliability ##############
     # loop over models 
-    # for modelname in modelnames:
-    #     sns.set(font_scale = 1)
-    #     sns.set_style('white')
-    #     # code.interact(local = dict(locals(), **globals()))
-    #     paranames = modelFxs.getModelParas(modelname)
-    #     npara = len(paranames)
-    #     # plot parameter distributions
-    #     figFxs.plot_parameter_distribution(modelname, s1_paradf_[modelname].iloc[:,:-1], s2_paradf_[modelname].iloc[:,:-1])
-    #     plt.gcf().set_size_inches(5 * npara, 5 * 2)
-    #     plt.savefig(os.path.join("..", 'figures', expname, "%s_para_dist.pdf"%modelname))
+    for modelname in modelnames:
+        sns.set(font_scale = 1)
+        sns.set_style('white')
+        # code.interact(local = dict(locals(), **globals()))
+        paranames = modelFxs.getModelParas(modelname)
+        npara = len(paranames)
+        # plot parameter distributions
+        figFxs.plot_parameter_distribution(modelname, s1_paradf_[modelname].iloc[:,:-1], s2_paradf_[modelname].iloc[:,:-1])
+        plt.gcf().set_size_inches(5 * npara, 5 * 2)
+        plt.savefig(os.path.join("..", 'figures', expname, "%s_para_dist.pdf"%modelname))
 
-    #     # plot parameter correlations
-    #     figFxs.plot_parameter_reliability(modelname, s1_paradf_[modelname].iloc[:,:-1], s2_paradf_[modelname].iloc[:,:-1])
-    #     plt.gcf().set_size_inches(5 * npara, 5)
-    #     plt.savefig(os.path.join("..", 'figures', expname, "%s_para_reliability.pdf"%modelname))
+        # plot parameter correlations
+        figFxs.plot_parameter_reliability(modelname, s1_paradf_[modelname].iloc[:,:-1], s2_paradf_[modelname].iloc[:,:-1])
+        plt.gcf().set_size_inches(5 * npara, 5)
+        plt.savefig(os.path.join("..", 'figures', expname, "%s_para_reliability.pdf"%modelname))
         
     ### for late fitting method
     s1_paradf  = loadFxs.load_parameter_estimates(expname, 1, hdrdata_sess1, 'QL2', 'QL2_trct')
@@ -674,15 +803,15 @@ for condition, measure in itertools.product(conditions, measures):
     # maybe disscociate batch 1 and batch 2 later?
     
     ##################### correlations between late parameters and selfreport measures #############
-row_vars = modelFxs.getModelParas('QL2')
-col_vars = ['NU', 'PU', 'PM', 'PS', 'SS', 'attention', 'cogstable', 'motor', 'perseverance', 'selfcontrol', 'cogcomplex']
-s1_paradf  = loadFxs.load_parameter_estimates(expname, 1, hdrdata_sess1, 'QL2', 'QL2')
-s2_paradf = loadFxs.load_parameter_estimates(expname, 2, hdrdata_sess2, 'QL2', 'QL2')
-r_table, p_table, perm_r_ = figFxs.corr_analysis(s1_paradf[row_vars], s1_selfdf.loc[np.isin(s1_selfdf.id, s1_paradf.id), col_vars], 10)
-p_table.to_csv(os.path.join("..", "analysis_results", "active", "correlation", "selfreport_para_sess1.csv"))
+    row_vars = modelFxs.getModelParas('QL2')
+    col_vars = ['NU', 'PU', 'PM', 'PS', 'SS', 'attention', 'cogstable', 'motor', 'perseverance', 'selfcontrol', 'cogcomplex']
+    s1_paradf  = loadFxs.load_parameter_estimates(expname, 1, hdrdata_sess1, 'QL2', 'QL2')
+    s2_paradf = loadFxs.load_parameter_estimates(expname, 2, hdrdata_sess2, 'QL2', 'QL2')
+    r_table, p_table, perm_r_ = figFxs.corr_analysis(s1_paradf[row_vars], s1_selfdf.loc[np.isin(s1_selfdf.id, s1_paradf.id), col_vars], 10)
+    p_table.to_csv(os.path.join("..", "analysis_results", "active", "correlation", "selfreport_para_sess1.csv"))
 
-r_table, p_table, perm_r_ = figFxs.corr_analysis(s2_paradf[row_vars], s1_selfdf.loc[np.isin(s1_selfdf.id, s2_paradf.id), col_vars], 10)
-p_table.to_csv(os.path.join("..", "analysis_results", "active", "correlation", "selfreport_para_sess2.csv"))
-############
+    r_table, p_table, perm_r_ = figFxs.corr_analysis(s2_paradf[row_vars], s1_selfdf.loc[np.isin(s1_selfdf.id, s2_paradf.id), col_vars], 10)
+    p_table.to_csv(os.path.join("..", "analysis_results", "active", "correlation", "selfreport_para_sess2.csv"))
+    ############
 
     

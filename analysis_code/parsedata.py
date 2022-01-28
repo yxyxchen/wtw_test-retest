@@ -271,7 +271,8 @@ def parsedata(expname, sess):
             if worker_id == 'A35S5YV2XL971J':
                 print("delete participant A35S5YV2XL971J, who didn't sign the consent yet got paid")
                 continue 
-            elif expname == 'active' and sess == 2 and worker_id in ['A235DXY5FJN0IW', 'A1F2APQMJSQVFK', 'AU849EHZNGV2Z', 'A1FVXS8IM5QYO8', 'AU34T9OMHN4Z4', 'A2NBBQ3DKW5MV3', 'AQ1PTX596CKUH']:
+            elif expname == 'active' and sess == 2 and worker_id in ['A235DXY5FJN0IW', 'A1F2APQMJSQVFK', 'AU849EHZNGV2Z', 'A1FVXS8IM5QYO8', 'AU34T9OMHN4Z4', 'A2NBBQ3DKW5MV3', 'AQ1PTX596CKUH',\
+            "A2WWYVKGZZXBOB", "AP9WIQ4P78XLH", "A2HHKBW8HQWI66"]:
                 # mannually exclude participants who I shouldn't invite for the second session
                 print("remove participant " + worker_id + " who I shouldn't invite for the second session.")
                 continue
@@ -380,11 +381,11 @@ def parsedata(expname, sess):
 
 if __name__ == "__main__":
 
-    expname = 'active'
-    # print("Parse data files for SESS1")
-    # parsedata(expname, 1)
-    print("Parse data files for SESS2")
-    parsedata(expname, 2)
+    expname = 'passive'
+    print("Parse data files for SESS1")
+    parsedata(expname, 1)
+    # print("Parse data files for SESS2")
+    # parsedata(expname, 2)
 
     # expname = 'passive'
     # print("Parse data files for SESS1")

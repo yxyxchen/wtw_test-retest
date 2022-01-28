@@ -23,6 +23,9 @@ modelFitSingle = function(id, thisTrialData, modelName, paraNames, model, config
     
     ## ensure timeWaited = scheduledWait on rewarded trials
     thisTrialData = within(thisTrialData, {timeWaited[trialEarnings!= 0] = scheduledWait[trialEarnings!= 0]})
+    # cap timeWaited. sometimes a person waited longer than 24s because errors in rewarded time
+    thisTrialData$timeWaited = pmin(thisTrialData$timeWaited, max(delayMaxs)) # not necessary in other analyses since they are capped automatically
+    
     # prepare inputs for fitting the model
     condition = unique(thisTrialData$condition)
     ## number of possible decision points in a trial

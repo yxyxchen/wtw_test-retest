@@ -167,6 +167,7 @@ def group_model_rep(trialdata_, paradf, modelname, isTrct = True, plot_each = Fa
     stats_ = []
     # loop over participants
     for key, trialdata in trialdata_.items():
+        # code.interact(local = dict(locals(), **globals()))
         # try:
         #     fit_summary = pd.read_csv(os.path.join('..', 'analysis_results', expname, 'modelfit', modelname, '%s_sess%s_summary.txt'%key), header = None)
         # except:
@@ -184,7 +185,7 @@ def group_model_rep(trialdata_, paradf, modelname, isTrct = True, plot_each = Fa
         # paravals = fit_summary['mean'].iloc[:-1]
         if key[0] in paradf['id'].values:
             # code.interact(local = dict(locals(), **globals()))
-            paravals = paradf.loc[paradf['id'] == key[0], paranames].values
+            paravals = paradf.loc[paradf['id'] == key[0], paranames].values[0]
         else:
             continue
         # prepare inputs

@@ -26,41 +26,55 @@ from subFxs import normFxs
 from subFxs import loadFxs
 import os
 from datetime import datetime as dt
-
+from scipy import stats
+from scipy.stats import ttest_rel
 
 # plot styles
 plt.style.use('classic')
-sns.set(font_scale = 1.5)
+sns.set(font_scale = 2)
 sns.set_style("white")
 condition_palette = ["#762a83", "#1b7837"]
 
 
 ######## 
-
 def plot_group_emp_rep(modelname, rep_sess1, rep_sess2, emp_sess1, emp_sess2):
     # code.interact(local = dict(locals(), **globals()))
 
     # plot AUC against AUC
+    # code.interact(local = dict(locals(), **globals()))
     rep = pd.concat([rep_sess1[['auc', 'id', 'condition', 'sess']], rep_sess2[['auc', 'id', 'condition', 'sess']]])
     emp = pd.concat([emp_sess1[['auc', 'id', 'condition', 'sess']], emp_sess2[['auc', 'id', 'condition', 'sess']]])
     plotdf = rep.merge(emp, left_on = ('id', 'condition', 'sess'), right_on = ('id', 'condition', 'sess'), suffixes = ('_rep', '_emp'))
-    g = sns.FacetGrid(plotdf, col= "sess", row = 'condition', sharex = True, sharey = True)
+    g = sns.FacetGrid(plotdf, col= "sess", hue = 'condition', sharex = True, sharey = True, palette = condition_palette)
     g.set(ylim=(-0.5, expParas.tMax + 0.5), xlim = (-0.5, expParas.tMax + 0.5))
-    g.map(sns.scatterplot, 'auc_emp', 'auc_rep', color = 'grey')
+    g.map(sns.scatterplot, 'auc_emp', 'auc_rep', s = 50, marker = "+", alpha = 0.8)
     for ax in g.axes.flat:
         ax.set_xlabel('Observed AUC (s)')
         ax.set_ylabel('Generated AUC (s)')
-        ax.plot([0, expParas.tMax], [0, expParas.tMax], ls = '--', color = 'red')
-    plt.gcf().set_size_inches(10, 10)
-    plt.savefig(os.path.join("..", "figures", "emp_rep_%s.eps"%modelname))
+        ax.set_aspect("equal")
+        ax.plot([0, expParas.tMax], [0, expParas.tMax], ls = '--', color = 'grey', zorder = 10)
 
 def plot_group_KMSC_both(s1_Psurv_b1_, s1_Psurv_b2_, s2_Psurv_b1_, s2_Psurv_b2_, hdrdata_sess1, hdrdata_sess2, ax):
     analysisFxs.plot_group_KMSC(s1_Psurv_b1_[np.isin(hdrdata_sess1['id'], hdrdata_sess2['id'])], s1_Psurv_b2_[np.isin(hdrdata_sess1['id'], hdrdata_sess2['id'])], expParas.Time, ax)
     analysisFxs.plot_group_KMSC(s2_Psurv_b1_, s2_Psurv_b2_, expParas.Time, ax, linestyle = '--')
 
 def plot_group_WTW_both(sess1_WTW_, sess2_WTW_, hdrdata_sess1, hdrdata_sess2, ax):
-    analysisFxs.plot_group_WTW(sess1_WTW_[np.isin(hdrdata_sess1['id'], hdrdata_sess2['id'])], expParas.TaskTime, ax)
+    # code.interact(local = dict(locals(), **globals()))
+
+    # filter
+    sess1_WTW_ = sess1_WTW_[np.isin(hdrdata_sess1['id'], hdrdata_sess2['id'])]
+
+    # calc p values
+    # observed_t_, permutated_abs_t_max_, p_ = analysisFxs.my_paired_multiple_permuation(sess1_WTW_, sess2_WTW_, lambda x, y: ttest_rel(x, y)[0], n_perm = 100)
+    p_ = [stats.wilcoxon(sess1_WTW_[:,i], sess2_WTW_[:,i])[1] for i in range(sess1_WTW_.shape[1])]
+    import statsmodels.stats.multitest as multitest
+    _, p_corrected =  multitest.fdrcorrection(p_)
+    sig_ = [11 if p < 0.005 else None for p in p_corrected]
+
+    # fig, ax = plt.subplots()
+    analysisFxs.plot_group_WTW(sess1_WTW_, expParas.TaskTime, ax)
     analysisFxs.plot_group_WTW(sess2_WTW_, expParas.TaskTime, ax, linestyle = ':')
+    ax.plot(expParas.TaskTime, sig_, marker = ".", color = "red")
     # line1 = ax.get_lines()[0]
     # line1.set_color("black")
     # line2 = ax.get_lines()[1]
@@ -216,14 +230,20 @@ def corr_analysis(row_df, col_df, n_perm):
     p_table = pd.DataFrame(p_table, index = row_vars, columns = col_vars)
     return r_table, p_table, perm_r_
 
+# def all_reliability(sess1_stats, sess2_stats):
+
+
+
 ################ 
 # reliability functions
-# plot
 def my_regplot(x, y, ax = None, **kwargs):  
     if(ax is None):
         ax = plt.gca()
+    # code.interact(local = dict(locals(), **globals()))
     # calc correlation with all data points
-    corr_res = spearmanr(x, y, nan_policy = 'omit')
+    # r, ci, _ = analysisFxs.my_bootstrap_corr(x, y) 
+
+    r = spearmanr(x, y, nan_policy = 'omit') 
     # set boundaries to exclude outliers: either based on the min/max value or the 1.5 iqr limit
     # x_min = x.min(); x_max = x.max()
     # y_min = y.min(); y_max = y.max()
@@ -257,8 +277,11 @@ def my_regplot(x, y, ax = None, **kwargs):
     ax.set_ylabel("SESS2 value")
     ax.set_ylim(lims)
     ax.set_xlim(lims)  
+    ax.set_aspect('equal')
 
     # add text
-    ax.text(0.7, 0.2, 'r = %.3f\np =%.3f'%corr_res, size=15, color='red', transform=ax.transAxes)
-    ax.text(0.7, 0.1, 'n_o = %d'%n_outlier, size=15, color='red', transform=ax.transAxes)
+    ax.text(0.7, 0.2, 'r = %.3f\n'%r, size=15, color='red', transform=ax.transAxes)
+    print('n_o = %d'%n_outlier)
+    # print('ci = (%.3f, %.3f)'%ci)
+    # ax.text(0.7, 0.1, 'n_o = %d'%n_outlier, size=15, color='red', transform=ax.transAxes)
 
