@@ -7,3 +7,6 @@
 [submodule "task_code/passive_sess1"]
 	path = task_code/passive_sess1
 	url = https://cdlab@gitlab.pavlovia.org/cdlab/wtw_online_sess1_passive.git
+[submodule "task_code/passive_sess2"]
+	path = task_code/passive_sess2
+	url = https://cdlab@gitlab.pavlovia.org/cdlab/wtw_online_sess2_passive.git
