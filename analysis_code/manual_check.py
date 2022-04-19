@@ -69,16 +69,24 @@ def delete_data_saved_twice(expname, sess):
                 tmp = pd.read_csv(os.path.join("..", "task_code", "%s_sess%d"%(expname, sess), "manual_check", "data_ok", path))
                 print(tmp.shape[0])
                 row_nums[tmp.shape[0]] = path
+            print(row_nums)
             if 19 in row_nums and 20 in row_nums:
                 os.remove(os.path.join("..", "task_code", "%s_sess%d"%(expname, sess), "manual_check", "data_ok", row_nums[19]))
             else:
+                if worker_id == "A2NA6X1SON3KFH" and sess == 2:
+                    # this participant did the task twice. Delete the data for the second time
+                    os.remove(os.path.join("..", "task_code", "%s_sess%d"%(expname, sess), "manual_check", "data_ok", "wtw_online_sess2_passive_A2NA6X1SON3KFH_SESSION_2022-02-09_19h39.17.264.csv"))
+                else:
+                    code.interact(local = dict(locals(), **globals()))
+                # A2NA6X1SON3KFH completed the tasks twice, delete the second one, in pass_sess2
+                # I also need to manually delete my own data
                 print('irregular row numbers for', worker_id)
 
 
 if __name__ == "__main__":
-    print("check data files for SESS1")
-    manual_check('passive', 1)
-    delete_data_saved_twice('passive', 1)
+    print("check data files for SESS2")
+    manual_check('passive', 2)
+    delete_data_saved_twice('passive', 2)
     # print("check data files for SESS2")
     # manual_check(2)
     

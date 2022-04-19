@@ -2,7 +2,7 @@
 # regular packages 
 import re
 import numpy as np
-import random as rd
+import random 
 import math
 import pandas as pd 
 from itertools import chain

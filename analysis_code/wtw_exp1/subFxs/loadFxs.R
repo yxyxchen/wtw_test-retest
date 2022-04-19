@@ -54,11 +54,11 @@ loadAllData = function(expname, sess){
 } 
 
 
-loadExpPara = function(paraNames, dirName){
+loadExpPara = function(paraNames, dirName, sess){
   # number of paraNames 
   nE = length(paraNames) + 1
   # number of files
-  fileNames = list.files(path= dirName, pattern=("*_summary.txt"))
+  fileNames = list.files(path= dirName, pattern=(sprintf("*_sess%d_summary.txt", sess)))
   library("gtools")
   fileNames = mixedsort(sort(fileNames))
   n = length(fileNames) 

@@ -22,7 +22,6 @@ import importlib
 import random
 
 #############  some basic helper functions 
-
 def pivot_by_condition(df, columns, index):
     """ pivot a table of summary statistics based on condition 
     """
@@ -51,12 +50,69 @@ def calc_se(x):
         print("Remove NaN values in calculating standard error"%ndrop)
     return np.nanstd(x) / np.sqrt(len(x))
 
+
+################ I want to write some correlation functions that I can use repeatedly ##########
+# def calc_cross_correlations(df, row_vars, col_vars):
+def calc_zip_correlations(df, vars):
+    n_var = len(vars)
+    rs = np.zeros(n_var)
+    ps = np.zeros(n_var)
+    ns = np.zeros(n_var)
+    for i, var in enumerate(vars):
+        res = stats.spearmanr(df[var[0]], df[var[1]], nan_policy = 'omit')
+        rs[i] = res[0]
+        ps[i] = res[1]
+        ns[i] = min(np.sum(~np.isnan(df[var[0]])), np.sum(~np.isnan(df[var[1]])))
+    report = pd.DataFrame({
+        "Spearman's r": rs,
+        "p": ps,
+        "sample size" : ns
+        }, index = vars)
+    return rs, ps, ns, report
+
+def calc_prod_correlations(df, row_vars, col_vars):
+    nrow = len(row_vars)
+    ncol = len(col_vars)
+    r_ = pd.DataFrame(np.full((nrow, ncol), np.nan), index = row_vars, columns = col_vars)
+    p_ = pd.DataFrame(np.full((nrow, ncol), np.nan), index = row_vars, columns = col_vars)
+    for row_var, col_var in itertools.product(row_vars, col_vars):
+        res = stats.spearmanr(df[row_var], df[col_var], nan_policy = 'omit')
+        r_.loc[row_var, col_var] = res[0]
+        p_.loc[row_var, col_var] = res[1]
+    return r_, p_
+
 #########
-def my_bootstrap_corr(x, y, n_perm = 1000, alpha = 0.95, n = None):
-    """ calc Spearman r, bootstrapped CI and distribution. 
+def calc_icc(x, y):
+    """ a function to calc icc
+        References: Liljequist, D., Elfving, B., & Roaldsen, K. S. (2019). https://doi.org/10.1371/journal.pone.0219854
+    """
+    k = 2
+    n = len(x) # number of measures 
+    gm = np.mean(np.concatenate([x, y])) # grand mean 
+    sm = (x + y) / k # subject-wise mean
+    mm = np.array([x.mean(), y.mean()]) # measure-wise mean
+    ssbs = np.sum((sm - gm)**2 * k) # sum of square between subjects
+    ssbm = np.sum((mm - gm) **2 * n) # sum of square between measures
+    sst = np.sum(np.concatenate([(x - gm)**2, (y - gm)**2]))
+    sse = sst - ssbs - ssbm
+    msbs = ssbs / (n-1)
+    msbm = ssbm / (k-1)
+    mse = sse / (n-1) * (k-1)
+    abs_icc = (msbs - mse)  / (msbs + (k-1) * mse + k / n * (msbm - mse))
+    con_icc = (msbs - mse)  / (msbs + (k-1) * mse)
+
+    return abs_icc, con_icc
+
+def calc_reliability(x, y):
+    spearman_rho = stats.spearmanr(x, y, nan_policy = "omit")[0]
+    pearson_rho = stats.pearsonr(x, y)[0]
+    abs_icc, con_icc = calc_icc(x, y)
+    return spearman_rho, pearson_rho, abs_icc, con_icc
+
+def calc_bootstrap_reliability(x, y, n_perm = 1000, alpha = 0.95, n = None):
+    """ calc reliability measure, bootstrapped CI and distribution. 
         Notice here using the bootstrap we are constructing the distribution of r, rather than the NULL distribution 
     """
-    # 
     if not isinstance(x, np.ndarray):
         x = np.array(x)
 
@@ -71,16 +127,143 @@ def my_bootstrap_corr(x, y, n_perm = 1000, alpha = 0.95, n = None):
 
     # bootstrap 
     random.seed(123)
-    r_ = np.zeros(n_perm)
+    # spearman_rho_ = np.zeros(n_perm)
+    # pearson_rho_ = np.zeros(n_perm)
+    abs_icc_ = np.zeros(n_perm)
+    # con_icc_ = np.zeros(n_perm)
     for i in range(n_perm):
         idxs = np.random.choice(len(x), n, replace=True)
-        r_[i] = stats.spearmanr(x[idxs], y[idxs], nan_policy = 'omit')[0]
+        # spearman_rho_[i] = stats.spearmanr(x[idxs], y[idxs], nan_policy = 'omit')[0]
+        # pearson_rho_[i] = stats.pearsonr(x[idxs], y[idxs])[0]
+        tmp = calc_icc(x[idxs], y[idxs])
+        abs_icc_[i] = tmp[0]
+        # con_icc_[i] = tmp[1]
 
     # calc confidence intervals
-    ci_lower = np.percentile(r_, (1 - alpha) / 2 * 100)
-    ci_upper = np.percentile(r_, 100 - (1 - alpha) / 2 * 100)
+    ci_lower = np.percentile(abs_icc_, (1 - alpha) / 2 * 100)
+    ci_upper = np.percentile(abs_icc_, 100 - (1 - alpha) / 2 * 100)
+    return abs_icc_, ci_lower, ci_upper
 
-    return r, (ci_lower, ci_upper), r_
+
+# def my_bootstrap_corr(x, y, n_perm = 1000, alpha = 0.95, n = None):
+#     """ calc Spearman r, bootstrapped CI and distribution. 
+#         Notice here using the bootstrap we are constructing the distribution of r, rather than the NULL distribution 
+#     """
+#     if not isinstance(x, np.ndarray):
+#         x = np.array(x)
+
+#     if not isinstance(y, np.ndarray):
+#         y = np.array(y)
+#     # calc the observed r
+#     r = stats.spearmanr(x, y, nan_policy = 'omit')[0]
+
+#     # determine the sample size
+#     if n is None:
+#         n = len(x)
+
+#     # bootstrap 
+#     random.seed(123)
+#     r_ = np.zeros(n_perm)
+#     for i in range(n_perm):
+#         idxs = np.random.choice(len(x), n, replace=True)
+#         r_[i] = stats.spearmanr(x[idxs], y[idxs], nan_policy = 'omit')[0]
+
+#     # calc confidence intervals
+#     ci_lower = np.percentile(r_, (1 - alpha) / 2 * 100)
+#     ci_upper = np.percentile(r_, 100 - (1 - alpha) / 2 * 100)
+
+#     return r, (ci_lower, ci_upper), r_
+
+def my_compare_correlations(x1, x2, y1, y2, n_perm = 1000):
+    """
+        assume there are two samples, x:(x1,x2) and y(y1, y2)
+
+        I probably will lost my references here
+
+    """
+    # constants 
+    nx = len(x1)
+    ny = len(y1)
+
+    # create the standardized pooled samples
+    norm_x1 = (x1 - np.mean(x1)) / np.std(x1)
+    norm_y1 = (y1 - np.mean(y1)) / np.std(y1)
+    norm_x2 = (x2 - np.mean(x2)) / np.std(x2)
+    norm_y2 = (y2 - np.mean(y2)) / np.std(y2)
+
+    def calc_T_tilda(s1_x, s2_x, s1_y, s2_y, nx, ny):  
+        """ 
+            nx is the sample size of the first group
+            ny is the sample size of the second group
+            s1 is the first session of the standardized pooled sample
+            s2 is the second session of the standardized pooled sample
+        """ 
+        # 
+        n = nx + ny
+
+        # # spilt the standardized pooled sample
+        # s1_x = s1[:nx]
+        # s1_y = s1[nx:]
+
+        # s2_x = s2[:nx]
+        # s2_y = s2[nx:]
+
+            # calc the testing statistics 
+        r_x = stats.spearmanr(s1_x, s2_x, nan_policy = 'omit')[0]
+        #r_x = stats.pearsonr(s1_x, s2_x, nan_policy = 'omit')[0]
+        r_y = stats.spearmanr(s1_y, s2_y, nan_policy = 'omit')[0]
+        #r_y = stats.pearsonr(s1_y, s2_y, nan_policy = 'omit')[0]
+
+        # 
+        r_avg = (nx / n * r_x + ny / n * r_y)
+        z_x = s1_x * s2_x - 0.5 * r_avg * (s1_x**2 + s2_x**2)
+        z_y = s1_y * s2_y - 0.5 * r_avg * (s1_y**2 + s2_y**2)
+
+        z_bar_x = np.mean(z_x)
+        z_bar_y = np.mean(z_y)
+
+        var_x = 1 / (nx - 1) * np.sum((z_x - z_bar_x)**2)
+        var_y = 1 / (ny - 1) * np.sum((z_y - z_bar_y)**2)
+
+
+        var_T = var_x / nx + var_y / ny
+
+        T = np.sqrt(nx * ny / n) * (r_x - r_y) 
+
+        T_tilda = T / np.sqrt(var_T)
+
+        return r_x, r_y, T_tilda
+
+    # calc the observed test statistics
+    # s1 = np.concatenate((norm_x1, norm_y1))
+    # s2 = np.concatenate((norm_x2, norm_y2))
+
+    # 
+    r_x_observed, r_y_observed, T_tilda_observed = calc_T_tilda(norm_x1, norm_x2, norm_y1, norm_y2, nx, ny)
+
+    # calc test statistics for permuated samples 
+    T_tilda_sampled = np.zeros(n_perm)
+    r_x_sampled= np.zeros(n_perm)
+    r_y_sampled = np.zeros(n_perm)
+    for i in range(n_perm):
+        # idxs = np.random.permutation(nx + ny)
+        s1_x = norm_x1
+        s2_x = norm_x2
+        s1_y = norm_y1
+        s2_y = norm_y2
+        idxs = np.random.choice([True, False], nx)
+        s1_x[idxs], s1_y[idxs] = s1_y[idxs], s1_x[idxs] # switch x and y labels
+        s2_x[idxs], s2_y[idxs] = s2_y[idxs], s2_x[idxs]
+        r_x_sampled[i], r_y_sampled[i], T_tilda_sampled[i] = calc_T_tilda(s1_x, s2_x, s1_y, s2_y, nx, ny)
+
+    # calc p values
+    # r_diff_sampled = r_x_sampled - r_y_sampled
+    p_val = np.mean(np.abs(T_tilda_sampled) > np.abs(T_tilda_observed))
+    # code.interact(local = dict(locals(), **globals()))
+    return r_x_observed, r_y_observed, p_val
+
+# bootstrapped methods to compare two samples
+
 
 # I think I can first focus on paired permustations first
 def my_paired_permutation(x, y, func, n_perm = 1000):
@@ -650,7 +833,7 @@ def ind_sim_MF(simdata, key, plot_trial = False, plot_KMSC = False, plot_WTW = F
             blockdata['sellTime'].values,
             blockdata['blockIdx'].values,
             expParas.tMax, 
-            np.linspace(0, expParas.blocksec, 600),
+            np.linspace(0, expParas.blocksec, int(len(expParas.TaskTime) / 2)),
             False
         )
         wtw.append(block_wtw)

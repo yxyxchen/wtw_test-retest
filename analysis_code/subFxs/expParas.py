@@ -43,3 +43,6 @@ optimRewardRates = [2 / (np.mean(expParas.delayPossVals[0]) + expParas.iti),\
 
 # modeling parameters 
 stepsize = 1
+
+# 
+selfreport_vars = ['NU', 'PU', 'PM', 'PS', 'SS', 'attention', 'cogstable', 'motor', 'perseverance', 'selfcontrol', 'cogcomplex', 'UPPS', 'BIS', 'GMK'] 

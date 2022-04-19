@@ -29,7 +29,7 @@ QL2 = function(paras, condition_, scheduledWait_, normResults){
   optimWaitThresholds = normResults$optimWaitThresholds
   
   # learning parameters
-  alpha = paras[1]; rho = paras[2]; tau = paras[3]; gamma = paras[4]; eta = paras[5]
+  alpha = paras[1]; nu = paras[2]; tau = paras[3]; gamma = paras[4]; eta = paras[5]
   
   # num of trials
   nTrial = length(scheduledWait_) 
@@ -99,7 +99,7 @@ QL2 = function(paras, condition_, scheduledWait_, normResults){
       if(trialEarnings > 0){
         LR = alpha
       }else{
-        LR = alpha * rho
+        LR = alpha * nu
       }
 
       # calculate expected returns for t >= 2

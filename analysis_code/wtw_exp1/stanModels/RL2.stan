@@ -21,7 +21,7 @@ transformed data {
 parameters {
   // parameters:
   // alpha : learning rate
-  // rho: valence-dependent bias
+  // nu: valence-dependent bias
   // tau : action consistency, namely the soft-max temperature parameter
   // eta: prior belief parameter
   // beta : learning rate for the task reward rate
@@ -29,7 +29,7 @@ parameters {
   // for computational efficiency,we sample raw parameters from unif(-0.5, 0.5)
   // which are later transformed into actual parameters
   real<lower = -0.5, upper = 0.5> raw_alpha;
-  real<lower = -0.5, upper = 0.5> raw_rho;
+  real<lower = -0.5, upper = 0.5> raw_nu;
   real<lower = -0.5, upper = 0.5> raw_tau;
   real<lower = -0.5, upper = 0.5> raw_eta;
   real<lower = -0.5, upper = 0.5> raw_beta_alpha;
@@ -37,8 +37,8 @@ parameters {
 transformed parameters{
   // scale raw parameters into real parameters
   real alpha = (raw_alpha + 0.5) * 0.3; // alpha ~ unif(0, 0.3)
-  real alphaU = min([alpha * (raw_rho + 0.5) * 5, 1]');// alphaU
-  real rho = alphaU / alpha;
+  real alphaU = min([alpha * (raw_nu + 0.5) * 5, 1]');// alphaU
+  real nu = alphaU / alpha;
   real tau = (raw_tau + 0.5) * 21.9 + 0.1; // tau ~ unif(0.1, 22)
   real eta = (raw_eta + 0.5) * 6.5; // prior ~ unif(0, 6.5)
   real beta_alpha = (raw_beta_alpha + 0.5) * 1; // the ratio between beta and alpha
@@ -114,7 +114,7 @@ model {
   vector[2] actionValues; 
   // distributions for raw parameters
   raw_alpha ~ uniform(-0.5, 0.5);
-  raw_rho ~ uniform(-0.5, 0.5);
+  raw_nu ~ uniform(-0.5, 0.5);
   raw_tau ~ uniform(-0.5, 0.5);
   raw_eta ~ uniform(-0.5, 0.5);
   raw_beta_alpha ~ uniform(-0.5, 0.5);

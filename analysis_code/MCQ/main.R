@@ -110,16 +110,16 @@ calc_k_lookup_table = function(filepath){
 
 
 # read table and run
-df = read.csv(file.path("data", "active", "selfreport_sess1.csv"), row.names = 1)
+# df = read.csv(file.path("data", "active", "selfreport_sess1.csv"), row.names = 1)
 
 
 ####### main script #########
 if (!interactive()) {
-  expname = "passive"
+  expname = "active"
   sess = 1
   filepath = file.path("data", expname, sprintf("selfreport_sess%d.csv", sess))
   resdf = calc_k_lookup_table(filepath)
-  write_csv(resdf, file.path("..",  "analysis_results", expname, 'selfreport',  'MCQ.csv'))
+  write_csv(resdf, file.path("..",  "analysis_results", expname, 'selfreport',  sprintf('MCQ_sess%d.csv', sess)))
 }
 
 ################# simple GLM，sum(is.na(glm_k)) = 117 ########################

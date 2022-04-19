@@ -1,307 +1,307 @@
 id,worker_id,consent_date,age,gender,education,handness,language,race,batch
-s0001,A3HW4QDJB63OQ2,1/11/22 16:59,31.0,Male,16.0,Right-handed,English,White,1
-s0002,A1S9I3WF8GG4RG,1/11/22 17:01,21.0,Female,10.0,Left-handed,english,White,1
-s0003,A11F3MA5FWH6SJ,1/11/22 17:01,35.0,Male,12.0,Right-handed,English,White,1
-s0004,A38OPVI04AH4JG,1/11/22 17:02,54.0,Male,16.0,Right-handed,English,White,1
-s0005,A1G187YBG0DVMQ,1/11/22 17:05,30.0,Male,16.0,Right-handed,english,White,1
-s0006,A230GPTWWF3SE7,1/11/22 17:05,30.0,Female,14.0,Right-handed,English,"Asian,White",1
-s0007,A37OUZOGQKGMW0,1/11/22 17:05,71.0,Female,14.0,Right-handed,English,White,1
-s0008,A2M183CETUMR96,1/11/22 17:05,39.0,Male,8.0,Left-handed,english,White,1
-s0009,A2J51BI7XS5ZYU,1/11/22 17:05,43.0,Male,17.0,Right-handed,English,White,1
-s0010,A1WZY0K6IE3ASG,1/11/22 17:12,37.0,Male,18.0,Right-handed,English,White,1
-s0011,A2ELXYKRPPGRPB,1/11/22 17:18,36.0,Female,16.0,Right-handed,English,White,1
-s0012,A27VK38SRSSHV3,1/11/22 17:19,33.0,Female,18.0,Right-handed,english,Asian,1
-s0013,AD1WGUMVD6KED,1/11/22 17:20,40.0,Female,12.0,Right-handed,English,White,1
-s0014,A3K9GTQBOI7O5A,1/11/22 17:32,30.0,Female,16.0,Right-handed,English,White,1
-s0015,A1AZGP16G9TURZ,1/11/22 17:39,40.0,Neither/Do not wish to disclose,18.0,Right-handed,english,Do not wish to answer,1
-s0016,A39VZ93N96XB6O,1/11/22 17:45,33.0,Female,21.0,Right-handed,English,Black or African American,1
-s0017,A8C3WNWRBWUXO,1/11/22 17:53,50.0,Male,14.0,Right-handed,English,White,1
-s0018,A2MS1GQLGAX9FZ,1/11/22 18:42,23.0,Female,16.0,Right-handed,English,Asian,1
-s0019,A222R4PNCF08OF,1/11/22 18:43,37.0,Female,16.0,Right-handed,english,White,1
-s0020,A2196WCNDZULFS,1/11/22 18:50,41.0,Female,14.0,Right-handed,English,White,1
-s0021,A3H32595TVJ34Q,1/11/22 18:54,36.0,Female,13.0,Right-handed,English,White,1
-s0022,A1M1E62KXCDNL0,1/11/22 19:06,27.0,Male,15.0,Right-handed,English,White,1
-s0023,A3KF6O09H04SP7,1/11/22 19:12,37.0,Male,16.0,Right-handed,English,White,1
-s0024,ARYL3C6N9SVV1,1/11/22 19:20,35.0,Male,16.0,Left-handed,English,White,1
-s0025,A27O7H19C0WQ7T,1/11/22 19:43,39.0,Female,16.0,Right-handed,ENGLISH,White,1
-s0026,A2GV9WSNSPX53,1/11/22 20:25,29.0,Male,16.0,Left-handed,English,White,1
-s0027,A2QTL039A5VV3I,1/11/22 21:23,31.0,Male,17.0,Right-handed,English,"Asian,White",1
-s0028,A3L2XKXABNO0N5,1/11/22 22:10,37.0,Female,16.0,Right-handed,English,White,1
-s0029,A1PMZUBGXFANCI,1/11/22 22:36,29.0,Male,12.0,Left-handed,English,White,1
-s0030,A1S2NQYJGZ0C5F,1/11/22 23:03,42.0,Male,18.0,Right-handed,English,White,1
-s0031,A2LT6KC1X51FVW,1/11/22 23:10,30.0,Male,14.0,Left-handed,English,White,1
-s0032,A8KX1HFH8NE2Q,1/11/22 23:26,55.0,Male,18.0,Right-handed,English,White,1
-s0033,A1CH3TODZNQCES,1/11/22 23:28,32.0,Male,16.0,Right-handed,English,White,1
-s0034,A5WWHKD82I8UE,1/11/22 23:35,38.0,Male,16.0,Right-handed,English,White,1
-s0035,A2GYGCLTMIGDJT,1/12/22 01:04,39.0,Male,16.0,Right-handed,English,Asian,1
-s0036,A13WTEQ06V3B6D,1/12/22 03:45,29.0,Male,18.0,Right-handed,English,Asian,1
-s0037,A2CEGS0NVDBCPT,1/12/22 04:11,26.0,Female,14.0,Right-handed,english,Black or African American,1
-s0038,ABW8U1U74P8MI,1/12/22 05:03,28.0,Male,16.0,Right-handed,Amharic,Black or African American,1
-s0039,A2RCYLKY072XXO,1/12/22 05:07,38.0,Male,16.0,Right-handed,English,Asian,1
-s0040,A2PWUACCQI97J8,1/12/22 05:11,27.0,Female,16.0,Right-handed,english,White,1
-s0041,A29AF16RLMI0ES,1/12/22 08:27,71.0,Male,16.0,Right-handed,English,White,1
-s0042,A2YP60DM1HYTH8,1/19/22 12:51,33.0,Female,13.0,Right-handed,english,White,2
-s0043,A3AUIYZ27TBTP9,1/19/22 12:51,22.0,Male,13.0,Right-handed,english,White,2
-s0044,A1Y6HGDW6ZAYBY,1/19/22 12:51,25.0,Male,12.0,Right-handed,English,White,2
-s0045,AEASOIPE6YBHK,1/19/22 12:51,29.0,Male,15.0,Left-handed,English,White,2
-s0046,A3EUH97BRHRSI6,1/19/22 12:51,40.0,Male,14.0,Right-handed,English,White,2
-s0047,AGWWUXDX6CI38,1/19/22 12:52,24.0,Female,16.0,Right-handed,english,White,2
-s0048,A2CDM78GVCICO5,1/19/22 12:52,26.0,Male,12.0,Right-handed,english,White,2
-s0049,A3CGQOJC28OVGN,1/19/22 12:52,31.0,Female,16.0,Right-handed,English,White,2
-s0050,AD75IYA9OIIQF,1/19/22 12:52,50.0,Male,16.0,Right-handed,English,White,2
-s0051,AX7WITN5DWW6U,1/19/22 12:52,47.0,Male,12.0,Right-handed,English,White,2
-s0052,A1T4NOV07AHY60,1/19/22 12:52,33.0,Female,16.0,Right-handed,English,White,2
-s0053,AKP66RIZ3LQVX,1/19/22 12:52,23.0,Male,13.0,Right-handed,English,White,2
-s0054,A3UZVATYJ9BYCW,1/19/22 12:53,27.0,Male,16.0,Right-handed,English,White,2
-s0055,APVJEN2541WFB,1/19/22 12:53,31.0,Female,12.0,Right-handed,English,White,2
-s0056,A1ZPIPHM272LO8,1/19/22 12:53,30.0,Female,14.0,Left-handed,English,White,2
-s0057,ALCPF5NANBDSZ,1/19/22 12:53,35.0,Male,15.0,Right-handed,English,White,2
-s0058,A2R6UQCQ8T3RZE,1/19/22 12:53,31.0,Male,16.0,Right-handed,English,White,2
-s0059,A3N66DKF3VNB9X,1/19/22 12:53,32.0,Male,13.0,Left-handed,English,White,2
-s0060,AQUCKTV7SVOK1,1/19/22 12:53,29.0,Female,18.0,Right-handed,English,White,2
-s0061,A1LRJ4U04532TM,1/19/22 12:53,47.0,Female,14.0,Left-handed,English,White,2
-s0062,A24GX1OZE6AY04,1/19/22 12:53,43.0,Male,12.0,Right-handed,English,White,2
-s0063,A3EC3OP6U52JYC,1/19/22 12:53,34.0,Male,16.0,Right-handed,English,"American Indian or Alaska Native,White",2
-s0064,A3RHJEMZ4EGY2U,1/19/22 12:53,27.0,Female,16.0,Right-handed,English,White,2
-s0065,A2KW87ZD2ELYNG,1/19/22 12:53,42.0,Male,12.0,Right-handed,English,White,2
-s0066,A30RAYNDOWQ61S,1/19/22 12:53,59.0,Male,13.0,Right-handed,English,White,2
-s0067,AI6U09NVOZ62B,1/19/22 12:53,25.0,Female,12.0,Right-handed,English,White,2
-s0068,A2C84POENS2UNY,1/19/22 12:53,41.0,Female,20.0,Right-handed,english,White,2
-s0069,ANBWJZYU2A68T,1/19/22 12:53,48.0,Neither/Do not wish to disclose,18.0,Right-handed,Nepalese,Asian,2
-s0070,A2U2LICYDFMI00,1/19/22 12:53,39.0,Female,16.0,Right-handed,English,White,2
-s0071,A118AEVQ81QLG0,1/19/22 12:54,27.0,Female,16.0,Right-handed,English,White,2
-s0072,AIIOT9A7ARQZW,1/19/22 12:54,45.0,Female,16.0,Right-handed,English,White,2
-s0073,A12ZO39VZ879ZS,1/19/22 12:54,23.0,Male,12.0,Right-handed,English,White,2
-s0074,ADP4KXZZ72DP,1/19/22 12:54,51.0,Male,12.0,Right-handed,English,White,2
-s0075,A2CY1TSQ3KKP5Q,1/19/22 12:54,57.0,Female,18.0,Right-handed,English,White,2
-s0076,A3CTXWISODY7D8,1/19/22 12:54,43.0,Male,14.0,Right-handed,English,White,2
-s0077,A11YS0T8MV3Q7C,1/19/22 12:54,31.0,Male,12.0,Right-handed,English,White,2
-s0078,AXG2QCW21F3S7,1/19/22 12:54,27.0,Female,16.0,Left-handed,English,White,2
-s0079,A2TXC8Q2IFGRXH,1/19/22 12:55,70.0,Male,14.0,Right-handed,English,White,2
-s0080,A2BK9RMC0NOIH8,1/19/22 12:55,40.0,Male,12.0,Right-handed,English,Black or African American,2
-s0081,A1FHKK0RU69RU,1/19/22 12:55,60.0,Female,12.0,Right-handed,English,White,2
-s0082,A2VA0NCPWJ8XZG,1/19/22 12:55,37.0,Male,16.0,Right-handed,English,White,2
-s0083,A2MHMWX79QLXUY,1/19/22 12:55,23.0,Female,16.0,Right-handed,English,White,2
-s0084,A212LO20SI5AY6,1/19/22 12:55,37.0,Female,12.0,Right-handed,English,White,2
-s0085,A92BS1Y7V15Y2,1/19/22 12:55,29.0,Male,16.0,Right-handed,English,White,2
-s0086,AEQ95NMC3VXQ5,1/19/22 12:55,66.0,Female,15.0,Right-handed,English,White,2
-s0087,A2DLYBXZNSSJ4S,1/19/22 12:55,27.0,Male,18.0,Right-handed,English,White,2
-s0088,A1UXVLMCA3PBIL,1/19/22 12:55,53.0,Male,12.0,Right-handed,English,White,2
-s0089,ARQR5NIFA1AJ,1/19/22 12:56,36.0,Male,18.0,Right-handed,English,White,2
-s0090,A3QKNQ07F2451W,1/19/22 12:56,43.0,Male,16.0,Right-handed,English,White,2
-s0091,A2TXZVXQU5FQZ9,1/19/22 12:56,36.0,Male,16.0,Right-handed,English,White,2
-s0092,AQJWO4YPR3LUQ,1/19/22 12:56,41.0,Female,14.0,Right-handed,English,White,2
-s0093,AARMOB6D5ZZVG,1/19/22 12:56,28.0,Male,16.0,Right-handed,English,White,2
-s0094,A2MCG5W6LHSRG9,1/19/22 12:56,37.0,Male,13.0,Right-handed,English,White,2
-s0095,A3785TR8D5I81Q,1/19/22 12:56,29.0,Female,16.0,Right-handed,English,Black or African American,2
-s0096,A10M63DSIGIEDI,1/19/22 12:56,29.0,Male,16.0,Right-handed,english,White,2
-s0097,A3OZ8KF0HWSVWK,1/19/22 12:56,56.0,Male,14.0,Right-handed,English,White,2
-s0098,A20XDCBFKG4TEE,1/19/22 12:57,41.0,Male,15.0,Right-handed,English,White,2
-s0099,A1969Q0R4Y0E3J,1/19/22 12:57,25.0,Female,12.0,Right-handed,English,White,2
-s0100,A3JZNUBAIASMKA,1/19/22 12:57,31.0,Male,16.0,Right-handed,English,White,2
-s0101,A1FHC4Z6QXDQSS,1/19/22 12:57,39.0,Male,13.0,Right-handed,English,White,2
-s0102,A1A0F0BAX3CDTF,1/19/22 12:57,29.0,Female,16.0,Right-handed,English,White,2
-s0103,A1WEN4S934ZZ1U,1/19/22 12:57,24.0,Female,16.0,Right-handed,English,Asian,2
-s0104,A1SMVF4MXT0RIH,1/19/22 12:57,25.0,Male,16.0,Right-handed,English,White,2
-s0105,A16335MOISDG1F,1/19/22 12:57,38.0,Male,13.0,Right-handed,English,Black or African American,2
-s0106,ANKDLLQHHM2OH,1/19/22 12:57,37.0,Female,16.0,Right-handed,English,Black or African American,2
-s0107,ADFJOOSM3Q18G,1/19/22 12:58,35.0,Male,19.0,Right-handed,English,White,2
-s0108,A1NQOR4RQJJDMW,1/19/22 12:58,27.0,Female,13.0,Right-handed,english,White,2
-s0109,A2V6E7SGEU0EFD,1/19/22 12:58,33.0,Male,18.0,Right-handed,English,White,2
-s0110,A1I7H6RDJS4EKN,1/19/22 12:58,66.0,Male,15.0,Right-handed,English,Asian,2
-s0111,A2Z6NL0CTXY0ZB,1/19/22 12:58,42.0,Female,12.0,Right-handed,english,Black or African American,2
-s0112,A19H6QRCGKBOUH,1/19/22 12:58,52.0,Male,14.0,Right-handed,English,White,2
-s0113,AFU00NU09CFXE,1/19/22 12:58,48.0,Female,14.0,Right-handed,English,White,2
-s0114,AONSG5WOC3OX0,1/19/22 12:59,39.0,Male,16.0,Right-handed,English,Asian,2
-s0115,A2QX3YJXAAHHVV,1/19/22 12:59,31.0,Male,18.0,Right-handed,English,White,2
-s0116,A2B153AHPWHLH1,1/19/22 13:00,55.0,Male,14.0,Right-handed,English,White,2
-s0117,A2MWAXV1YRK5GH,1/19/22 13:00,71.0,Female,19.0,Left-handed,English,White,2
-s0118,A3FNC8ELMK8YJA,1/19/22 13:03,60.0,Female,19.0,Right-handed,English,White,2
-s0119,A3P7AXWF57BHNX,1/19/22 13:03,31.0,Female,16.0,Right-handed,English,White,2
-s0120,A3CH1Z6J9R38G9,1/19/22 13:03,32.0,Male,18.0,Right-handed,English,"Black or African American,White",2
-s0121,A20C38AB8D6Z2L,1/19/22 13:04,34.0,Male,16.0,Right-handed,English,White,2
-s0122,A14LOABUGAITBM,1/19/22 13:04,35.0,Female,16.0,Right-handed,English,Black or African American,2
-s0123,A3588JV6EB95AZ,1/19/22 13:05,30.0,Male,16.0,Right-handed,english,White,2
-s0124,A2EK1HDV4I4GSK,1/19/22 13:05,51.0,Male,14.0,Right-handed,english,White,2
-s0125,A1NVJB5O4H7ZCJ,1/19/22 13:06,58.0,Female,16.0,Right-handed,english,White,2
-s0126,AV7UX8QQXABSK,1/19/22 13:07,29.0,Male,16.0,Right-handed,english,Asian,2
-s0127,A1WJIRT360P5VB,1/19/22 13:08,42.0,Male,15.0,Left-handed,English,White,2
-s0128,A10HW8JXM17XLD,1/19/22 13:09,42.0,Female,16.0,Right-handed,English,White,2
-s0129,A1FS8SBR4SDWYG,1/19/22 13:09,35.0,Female,22.0,Right-handed,English,White,2
-s0130,A3E8SXH0BAYG85,1/19/22 13:10,44.0,Male,13.0,Right-handed,English,White,2
-s0131,A2ONILC0LZKG6Y,1/19/22 13:14,45.0,Female,16.0,Right-handed,English,White,2
-s0132,A1OYQLIDML0DPW,1/19/22 13:14,32.0,Male,17.0,Right-handed,English,Black or African American,2
-s0133,A2CPI18KZN30KW,1/19/22 13:15,46.0,Male,18.0,Right-handed,English,White,2
-s0134,A104HK5ONFNJJT,1/19/22 13:16,55.0,Female,12.0,Right-handed,english,White,2
-s0135,A1F9KLZGHE9DTA,1/19/22 13:17,46.0,Male,13.0,Right-handed,English,White,2
-s0136,A1M64R8HPYNNZA,1/19/22 13:17,44.0,Male,16.0,Left-handed,English,White,2
-s0137,A2UOSEPGNUITM8,1/19/22 13:17,29.0,Male,14.0,Right-handed,English,Black or African American,2
-s0138,A2CWA5VQZ6IWMQ,1/19/22 13:17,39.0,Male,16.0,Right-handed,English,White,2
-s0139,ANUA9X7BFPTR8,1/19/22 13:20,31.0,Female,16.0,Right-handed,English,White,2
-s0140,A6MWJK1YEY5L2,1/19/22 13:21,36.0,Male,14.0,Right-handed,English,Black or African American,2
-s0141,A68J20100VW4W,1/19/22 13:21,64.0,Female,16.0,Right-handed,English,White,2
-s0142,A2C9OFEV72G568,1/19/22 13:22,46.0,Male,16.0,Left-handed,English,White,2
-s0143,A1U8RH67FLZW87,1/19/22 13:25,44.0,Male,16.0,Right-handed,English,White,2
-s0144,A39RK9TP3P7097,1/19/22 13:25,30.0,Female,16.0,Right-handed,English,White,2
-s0145,A2G57M3XD1AIBS,1/19/22 13:27,29.0,Female,13.0,Right-handed,english,Black or African American,2
-s0146,AHZ7C7ETHYX3N,1/19/22 13:30,63.0,Male,14.0,Right-handed,English,White,2
-s0147,A2L8BI5CRPR5WP,1/19/22 13:32,24.0,Male,16.0,Right-handed,English,White,2
-s0148,AERUGBNS48Z4N,1/19/22 13:34,34.0,Male,16.0,Right-handed,English,White,2
-s0149,A2Y4UMAUYJM9GK,1/19/22 13:34,51.0,Male,16.0,Right-handed,english,White,2
-s0150,A3FPXYVABXB9IZ,1/19/22 13:36,28.0,Male,16.0,Right-handed,English,Asian,2
-s0151,A2RRK8SV0VBLTJ,1/19/22 13:41,24.0,Male,12.0,Right-handed,english,White,2
-s0152,A1QMJNJ5FGC09,1/19/22 13:41,23.0,Male,16.0,Right-handed,English,Black or African American,2
-s0153,AEQAI1QN1YZG1,1/19/22 13:44,29.0,Female,16.0,Right-handed,English,White,2
-s0154,A2G7N0X0PNX0EE,1/19/22 13:44,35.0,Male,16.0,Right-handed,English,Asian,2
-s0155,A3L8LSM7V7KX3T,1/19/22 13:45,40.0,Male,12.0,Right-handed,English,White,2
-s0156,A122LRCSBAD6DC,1/19/22 13:46,29.0,Male,16.0,Right-handed,English,White,2
-s0157,ABX5OQLR6UNBC,1/19/22 13:48,48.0,Female,13.0,Right-handed,English,White,2
-s0158,AOP9WB55GYGL7,1/19/22 13:48,32.0,Male,12.0,Right-handed,English,White,2
-s0159,A3PRQ2GSU42718,1/19/22 13:49,69.0,Neither/Do not wish to disclose,14.0,Right-handed,English,Do not wish to answer,2
-s0160,A3QEVFM3UD67BA,1/19/22 13:52,45.0,Female,14.0,Right-handed,English,Other,2
-s0161,A21P1T8EW4NHOU,1/19/22 13:54,28.0,Male,13.0,Right-handed,English,White,2
-s0162,A5NE8TWS8ZV7B,1/19/22 13:59,39.0,Female,14.0,Right-handed,english,Asian,2
-s0163,A3QJJR5Y3XE92N,1/19/22 13:59,40.0,Male,20.0,Right-handed,English,White,2
-s0164,A3LT7W355XOAKF,1/19/22 14:00,64.0,Male,18.0,Right-handed,English,White,2
-s0165,AVFMTS8A5R4XK,1/19/22 14:01,30.0,Male,16.0,Right-handed,ENGLISH,White,2
-s0166,A35DXV9EC16NTI,1/19/22 14:03,32.0,Male,16.0,Right-handed,English,Black or African American,2
-s0167,A1GCTKOPKUTW3G,1/19/22 14:05,32.0,Male,16.0,Right-handed,English,Black or African American,2
-s0168,A2FYFCD16Z3PCC,1/19/22 14:08,29.0,Male,16.0,Right-handed,English,White,2
-s0169,A222GZB608T1B8,1/19/22 14:10,23.0,Female,15.0,Right-handed,Tamil,Asian,2
-s0170,A1W7I6FN183I8F,1/19/22 14:12,32.0,Male,16.0,Right-handed,English,White,2
-s0171,A28FDHF2PY98K1,1/19/22 14:15,33.0,Male,19.0,Right-handed,English,White,2
-s0172,AAXX5LDVJ32F8,1/19/22 14:19,49.0,Male,12.0,Right-handed,English,White,2
-s0173,AAASQIW3J32OL,1/19/22 14:21,60.0,Female,16.0,Right-handed,English,White,2
-s0174,A7SXWHGK8B40R,1/19/22 14:22,24.0,Male,16.0,Left-handed,English,White,2
-s0175,A2RBVMD2HTBCZ9,1/19/22 14:23,34.0,Female,18.0,Right-handed,English,White,2
-s0176,A20N1NK5X5S88F,1/19/22 14:23,35.0,Male,12.0,Left-handed,English,Black or African American,2
-s0177,AG6WV3WODQ7IN,1/19/22 14:23,33.0,Male,16.0,Right-handed,English,Black or African American,2
-s0178,AKNYT1NTK2UFK,1/19/22 14:25,37.0,Female,16.0,Right-handed,English,White,2
-s0179,A27VFM67RPD2L5,1/19/22 14:26,50.0,Female,12.0,Right-handed,English,White,2
-s0180,AY7WPVKHVNBLG,1/19/22 14:26,49.0,Female,16.0,Right-handed,English,White,2
-s0181,ACI0C2WU1NABK,1/19/22 14:28,34.0,Female,14.0,Right-handed,english,Black or African American,2
-s0182,A146MSML39KY98,1/19/22 14:32,63.0,Female,18.0,Left-handed,English,White,2
-s0183,ABBP9JASL9AGK,1/19/22 14:36,31.0,Female,16.0,Right-handed,English,White,2
-s0184,A163XFZG5BI0XU,1/19/22 14:39,39.0,Male,16.0,Right-handed,English,White,2
-s0185,A209V2VHLLQ59W,1/19/22 14:40,33.0,Neither/Do not wish to disclose,15.0,Right-handed,American English,Other,2
-s0186,A1HRH92NH49RX2,1/19/22 14:45,30.0,Male,16.0,Right-handed,ENGLISH,White,2
-s0187,A33LYSCQQU1YDJ,1/19/22 14:51,47.0,Female,16.0,Right-handed,English,White,2
-s0188,A27W025UEXS1G0,1/19/22 14:57,35.0,Male,12.0,Right-handed,English,Black or African American,2
-s0189,A2NA6X1SON3KFH,1/19/22 15:01,35.0,Male,12.0,Right-handed,english,White,2
-s0190,A320QA9HJFUOZO,1/19/22 15:02,35.0,Male,16.0,Right-handed,English,White,2
-s0191,AJQGWGESKQT4Y,1/19/22 15:03,45.0,Male,16.0,Right-handed,English,White,2
-s0192,A2N4DD7IS7EI2D,1/19/22 15:05,31.0,Male,12.0,Left-handed,English,Asian,2
-s0193,A195MOXRMNHRVT,1/19/22 15:11,37.0,Female,16.0,Right-handed,english,White,2
-s0194,AURYD2FH3FUOQ,1/19/22 15:14,60.0,Female,16.0,Right-handed,English,White,2
-s0195,A1F1TBDHPYAAXT,1/19/22 15:16,72.0,Male,16.0,Right-handed,English,White,2
-s0196,A24HOBENULGZA2,1/19/22 15:17,29.0,Male,16.0,Right-handed,English,White,2
-s0197,A2BRZKFG6WAVER,1/19/22 15:17,39.0,Female,14.0,Right-handed,English,White,2
-s0198,AFM65NU0UXIGP,1/19/22 15:27,33.0,Male,15.0,Right-handed,English,White,2
-s0199,A1ZVTAK0GLO959,1/19/22 15:30,35.0,Female,16.0,Right-handed,English,Black or African American,2
-s0200,A1DCG37N0Y8BN0,1/19/22 15:31,24.0,Male,15.0,Right-handed,English,Black or African American,2
-s0201,AUFUUD4WG9CVO,1/19/22 15:31,31.0,Male,16.0,Right-handed,English,White,2
-s0202,A24ZP6TOKYBSQS,1/19/22 15:31,24.0,Male,16.0,Right-handed,English,Native Hawaiian or Other Pacific Islander,2
-s0203,A5TWD5QD99GZY,1/19/22 15:33,36.0,Male,12.0,Right-handed,English,White,2
-s0204,A24M9OW53CLT94,1/19/22 15:34,30.0,Male,16.0,Right-handed,English,White,2
-s0205,A32TGAK321JDFF,1/19/22 15:34,62.0,Male,14.0,Right-handed,American English,White,2
-s0206,A1MKEILXWWLBW2,1/19/22 15:35,63.0,Male,16.0,Right-handed,English,White,2
-s0207,A1DUPOUC9RNU4L,1/19/22 15:35,60.0,Female,14.0,Right-handed,English,White,2
-s0208,ALYR5CI2SM2JC,1/19/22 15:36,32.0,Male,12.0,Right-handed,English,Asian,2
-s0209,AMHUDJ44HF1ZH,1/19/22 15:36,67.0,Male,14.0,Right-handed,English,White,2
-s0210,A2I43BDUPAM00C,1/19/22 15:40,43.0,Female,16.0,Right-handed,American English,White,2
-s0211,A136K4YZY2OFTV,1/19/22 15:45,52.0,Male,16.0,Right-handed,English,White,2
-s0212,A2Y0WNHMT4PZ4C,1/19/22 15:45,54.0,Male,14.0,Right-handed,English,White,2
-s0213,A3HCGNV93TJO7R,1/19/22 15:46,34.0,Female,14.0,Right-handed,English,White,2
-s0214,A3D2GO0IFRFN6R,1/19/22 15:48,37.0,Female,16.0,Left-handed,english,White,2
-s0215,A25PFSORDO3SWQ,1/19/22 15:56,34.0,Male,16.0,Right-handed,English,White,2
-s0216,AIA7RZSAONU5M,1/19/22 16:00,37.0,Female,16.0,Right-handed,English,White,2
-s0217,AV5FCKI1TTSKR,1/19/22 16:01,47.0,Male,16.0,Left-handed,Englilsh,Black or African American,2
-s0218,A3LVLZS8S41ZD7,1/19/22 16:02,49.0,Female,16.0,Right-handed,English,White,2
-s0219,A2YTQDLACTLIBA,1/19/22 16:14,67.0,Female,21.0,Right-handed,English,White,2
-s0220,A11S8IAAVDXCUS,1/19/22 16:19,31.0,Female,14.0,Right-handed,English,White,2
-s0221,AOIR8V07FYMH5,1/19/22 16:22,35.0,Male,12.0,Right-handed,English,White,2
-s0222,A12H9WVHOB0E0O,1/19/22 16:24,50.0,Female,13.0,Right-handed,English,White,2
-s0223,A2OVOVZBJYUO,1/19/22 16:26,35.0,Female,16.0,Right-handed,english,White,2
-s0224,A1DT7XOW0ISK0K,1/19/22 16:27,34.0,Male,13.0,Left-handed,english,White,2
-s0225,A1B1DPJRVIAV3L,1/19/22 16:30,42.0,Female,16.0,Right-handed,English,White,2
-s0226,A2IVGLOBFOT67M,1/19/22 16:32,31.0,Female,16.0,Right-handed,English,White,2
-s0227,A1UYU9PV266WTT,1/19/22 16:38,44.0,Female,13.0,Right-handed,English,"American Indian or Alaska Native,White",2
-s0228,A3ITZNJQUTIZ4C,1/19/22 16:48,44.0,Female,14.0,Right-handed,English,White,2
-s0229,A1Q6VY3C3CEOA0,1/19/22 16:56,48.0,Male,16.0,Right-handed,English,White,2
-s0230,AVXEDARJC5HLU,1/19/22 17:01,47.0,Male,12.0,Right-handed,english,White,2
-s0231,AIHHRINW9IN1I,1/19/22 17:05,38.0,Female,18.0,Right-handed,English,White,2
-s0232,A1FMVUYV72MUO3,1/19/22 17:06,40.0,Male,14.0,Right-handed,English,White,2
-s0233,A157L6Z8QU3SDE,1/19/22 17:06,33.0,Male,16.0,Right-handed,english,White,2
-s0234,A1TPGXT718D68E,1/19/22 17:09,42.0,Female,17.0,Left-handed,English,White,2
-s0235,A2AZYU1CT24O0K,1/19/22 17:10,42.0,Male,12.0,Right-handed,English,White,2
-s0236,A2I4PRZ9IZMKON,1/19/22 17:15,31.0,Female,18.0,Left-handed,English,White,2
-s0237,ATIVK9XUANIUE,1/19/22 17:32,36.0,Male,16.0,Right-handed,english,White,2
-s0238,A1DNJ17PE2RYJZ,1/19/22 17:32,68.0,Male,17.0,Right-handed,English,White,2
-s0239,A1CY1WJBLB2TUI,1/19/22 17:42,36.0,Female,16.0,Right-handed,English,Black or African American,2
-s0240,A1ZLLYRW6GIVC7,1/19/22 17:46,32.0,Female,16.0,Right-handed,English,White,2
-s0241,A2T675UCHNTSSW,1/19/22 17:49,51.0,Female,16.0,Left-handed,English,White,2
-s0242,A1KET5Z038NMWD,1/19/22 17:50,39.0,Female,14.0,Right-handed,English,White,2
-s0243,A1UY2W2FL9CWN,1/19/22 17:59,37.0,Male,16.0,Right-handed,English,White,2
-s0244,ANQ0RLFEZ17W0,1/19/22 18:01,30.0,Female,16.0,Right-handed,English,White,2
-s0245,A1R8A8BK2VN7RH,1/19/22 18:06,36.0,Female,16.0,Right-handed,english,"Asian,White",2
-s0246,A6JKKANO7F4KD,1/19/22 18:10,60.0,Male,16.0,Right-handed,English,White,2
-s0247,AT0COJ1G23ZB0,1/19/22 18:14,32.0,Female,18.0,Right-handed,english,White,2
-s0248,A1ZVC2VT88SYEP,1/19/22 18:17,25.0,Male,12.0,Right-handed,English,White,2
-s0249,A107RJSS561Y7R,1/19/22 18:17,35.0,Male,12.0,Right-handed,English,White,2
-s0250,AMI0SOF51O3FW,1/19/22 18:26,37.0,Male,14.0,Left-handed,English,Black or African American,2
-s0251,ALF9AAZGQP4K5,1/19/22 18:27,34.0,Male,14.0,Right-handed,english,White,2
-s0252,AOOLS8280CL0Z,1/19/22 18:28,70.0,Female,12.0,Right-handed,English,White,2
-s0253,A2RWLFIP23FZA7,1/19/22 18:35,28.0,Male,16.0,Right-handed,Chinese,Asian,2
-s0254,A3G5OWGKHW6OL5,1/19/22 18:37,34.0,Male,12.0,Right-handed,Spanish,White,2
-s0255,A234UW0G9PMSCC,1/19/22 18:38,28.0,Male,13.0,Right-handed,english,White,2
-s0256,A27TE0L5XP1H0U,1/19/22 18:41,44.0,Male,16.0,Right-handed,English,White,2
-s0257,AQV468FB908WI,1/19/22 18:51,37.0,Female,16.0,Right-handed,English,White,2
-s0258,A20VH0U95N7M0T,1/19/22 18:52,57.0,Female,20.0,Right-handed,English,White,2
-s0259,AQMLJYUQCSG22,1/19/22 18:52,32.0,Male,16.0,Right-handed,English,White,2
-s0260,A249EWKM1EOARK,1/19/22 18:55,59.0,Female,14.0,Right-handed,english,White,2
-s0261,A1NGGAVIGC9O7V,1/19/22 18:58,36.0,Female,14.0,Right-handed,English,White,2
-s0262,A2QJZJDCGK0FKR,1/19/22 18:59,56.0,Male,14.0,Right-handed,English,White,2
-s0263,A1VWLIXBS4WDOD,1/19/22 18:59,38.0,Male,16.0,Right-handed,English,White,2
-s0264,A3QLGMZOLGMBQ1,1/19/22 19:00,53.0,Male,18.0,Right-handed,English,White,2
-s0265,A2T5CROJ0FWIJY,1/19/22 19:00,37.0,Female,16.0,Right-handed,English,White,2
-s0266,A12HZGOZQD5YK7,1/19/22 19:01,41.0,Female,14.0,Right-handed,English,"Asian,White",2
-s0267,A32HHTM9N6C67R,1/19/22 19:01,43.0,Male,16.0,Right-handed,English,Black or African American,2
-s0268,A3FSDH6HUZPNQ8,1/19/22 19:03,25.0,Male,12.0,Left-handed,English,White,2
-s0269,A28GXI90JIF3I7,1/19/22 19:04,33.0,Male,16.0,Right-handed,English,Other,2
-s0270,A19AOG7JJBCDXZ,1/19/22 19:07,25.0,Female,16.0,Right-handed,English,White,2
-s0271,A1BM57TUNAQIXM,1/19/22 19:10,37.0,Female,16.0,Right-handed,English,Asian,2
-s0272,A3EU8ENRH654SB,1/19/22 19:13,43.0,Female,16.0,Right-handed,English,White,2
-s0273,A2NMAOYBBJTO0R,1/19/22 19:17,24.0,Female,16.0,Right-handed,english,White,2
-s0274,A2XMFTY9WB05U6,1/19/22 19:20,36.0,Male,14.0,Right-handed,English,White,2
-s0275,A3HQXCWOIQKT4F,1/19/22 19:27,33.0,Male,16.0,Right-handed,English,White,2
-s0276,A25R2OI9L2Q1OW,1/19/22 19:35,45.0,Male,16.0,Right-handed,English,White,2
-s0277,A2AAY4VT9L71SY,1/19/22 19:43,35.0,Male,12.0,Right-handed,English,White,2
-s0278,A3QYA7EFCS7BA2,1/19/22 19:45,34.0,Female,14.0,Right-handed,English,White,2
-s0279,A31P6DWY4XEQX9,1/19/22 20:01,28.0,Male,16.0,Right-handed,English,Asian,2
-s0280,A2TLN8489YGY81,1/19/22 20:06,34.0,Male,16.0,Right-handed,English,Asian,2
-s0281,A2Y87M8V0N1M6P,1/19/22 20:09,30.0,Female,13.0,Left-handed,English,White,2
-s0282,A2VR9O234UCT9T,1/19/22 20:40,51.0,Female,16.0,Right-handed,English,"Black or African American,White",2
-s0283,A2866TYG0D96LM,1/19/22 20:41,32.0,Male,13.0,Right-handed,English,White,2
-s0284,A2LMQ4497NMK3S,1/19/22 20:58,39.0,Male,16.0,Right-handed,English,White,2
-s0285,A292TFDMNVS0TP,1/19/22 21:08,49.0,Female,13.0,Right-handed,English,Asian,2
-s0286,A3TBG0S2IEBVHU,1/19/22 21:12,40.0,Male,14.0,Right-handed,english,White,2
-s0287,AVBRJBJONL47I,1/19/22 21:17,47.0,Female,18.0,Right-handed,English,"Asian,White",2
-s0288,AMLE1FC3SQVL8,1/19/22 21:31,26.0,Male,16.0,Right-handed,English,Native Hawaiian or Other Pacific Islander,2
-s0289,A25AYMSZNDW1VJ,1/19/22 21:42,35.0,Male,14.0,Right-handed,English,Black or African American,2
-s0290,A1M24593XO5Z3C,1/19/22 21:46,29.0,Male,12.0,Right-handed,English,White,2
-s0291,A5TI9UQEPLNWI,1/19/22 22:20,47.0,Male,16.0,Right-handed,ENGLISH,White,2
-s0292,A3VDG4N48AVYGQ,1/19/22 22:45,36.0,Male,16.0,Right-handed,English,White,2
-s0293,A2O2Q0LVWOWJ1G,1/19/22 23:13,48.0,Female,15.0,Right-handed,English,White,2
-s0294,AV8T375ESPPPS,1/20/22 00:18,31.0,Male,15.0,Left-handed,English,White,2
-s0295,A3P4XZJM2DEATZ,1/20/22 00:24,32.0,Female,14.0,Right-handed,English,Black or African American,2
-s0296,AD3V6XGQWRD6E,1/20/22 00:37,52.0,Female,14.0,Right-handed,English,White,2
-s0297,AVD6HMIO1HLFI,1/20/22 01:05,33.0,Male,12.0,Right-handed,English,White,2
-s0298,A38IZLCH8VYVFK,1/20/22 01:36,47.0,Male,22.0,Left-handed,English,White,2
-s0299,A1H5Q9HRH4RPZU,1/20/22 02:02,39.0,Male,13.0,Right-handed,English,White,2
-s0300,A277V4SHQB8JRS,1/20/22 02:05,35.0,Male,16.0,Right-handed,English,White,2
-s0301,A3NXT3OVGL7QNR,1/20/22 03:31,32.0,Male,12.0,Right-handed,English,White,2
-s0302,A1PF1T680LSXQ5,1/20/22 06:49,41.0,Male,16.0,Right-handed,English,White,2
-s0303,AS4NIEQJWCG3M,1/20/22 06:51,33.0,Female,16.0,Right-handed,English,White,2
-s0304,A33XAJW8WGY3O9,1/20/22 07:21,26.0,Male,16.0,Right-handed,English,Black or African American,2
-s0305,A1YTI83ATXD7WS,1/20/22 11:43,54.0,Female,12.0,Right-handed,English,White,2
-s0306,A1M682B2WUSYJP,1/19/22 12:59,,,,,,,2
+s1001,A3HW4QDJB63OQ2,1/11/22 16:59,31.0,Male,16.0,Right-handed,English,White,1
+s1002,A1S9I3WF8GG4RG,1/11/22 17:01,21.0,Female,10.0,Left-handed,english,White,1
+s1003,A11F3MA5FWH6SJ,1/11/22 17:01,35.0,Male,12.0,Right-handed,English,White,1
+s1004,A38OPVI04AH4JG,1/11/22 17:02,54.0,Male,16.0,Right-handed,English,White,1
+s1005,A1G187YBG0DVMQ,1/11/22 17:05,30.0,Male,16.0,Right-handed,english,White,1
+s1006,A230GPTWWF3SE7,1/11/22 17:05,30.0,Female,14.0,Right-handed,English,"Asian,White",1
+s1007,A37OUZOGQKGMW0,1/11/22 17:05,71.0,Female,14.0,Right-handed,English,White,1
+s1008,A2M183CETUMR96,1/11/22 17:05,39.0,Male,8.0,Left-handed,english,White,1
+s1009,A2J51BI7XS5ZYU,1/11/22 17:05,43.0,Male,17.0,Right-handed,English,White,1
+s1010,A1WZY0K6IE3ASG,1/11/22 17:12,37.0,Male,18.0,Right-handed,English,White,1
+s1011,A2ELXYKRPPGRPB,1/11/22 17:18,36.0,Female,16.0,Right-handed,English,White,1
+s1012,A27VK38SRSSHV3,1/11/22 17:19,33.0,Female,18.0,Right-handed,english,Asian,1
+s1013,AD1WGUMVD6KED,1/11/22 17:20,40.0,Female,12.0,Right-handed,English,White,1
+s1014,A3K9GTQBOI7O5A,1/11/22 17:32,30.0,Female,16.0,Right-handed,English,White,1
+s1015,A1AZGP16G9TURZ,1/11/22 17:39,40.0,Neither/Do not wish to disclose,18.0,Right-handed,english,Do not wish to answer,1
+s1016,A39VZ93N96XB6O,1/11/22 17:45,33.0,Female,21.0,Right-handed,English,Black or African American,1
+s1017,A8C3WNWRBWUXO,1/11/22 17:53,50.0,Male,14.0,Right-handed,English,White,1
+s1018,A2MS1GQLGAX9FZ,1/11/22 18:42,23.0,Female,16.0,Right-handed,English,Asian,1
+s1019,A222R4PNCF08OF,1/11/22 18:43,37.0,Female,16.0,Right-handed,english,White,1
+s1020,A2196WCNDZULFS,1/11/22 18:50,41.0,Female,14.0,Right-handed,English,White,1
+s1021,A3H32595TVJ34Q,1/11/22 18:54,36.0,Female,13.0,Right-handed,English,White,1
+s1022,A1M1E62KXCDNL0,1/11/22 19:06,27.0,Male,15.0,Right-handed,English,White,1
+s1023,A3KF6O09H04SP7,1/11/22 19:12,37.0,Male,16.0,Right-handed,English,White,1
+s1024,ARYL3C6N9SVV1,1/11/22 19:20,35.0,Male,16.0,Left-handed,English,White,1
+s1025,A27O7H19C0WQ7T,1/11/22 19:43,39.0,Female,16.0,Right-handed,ENGLISH,White,1
+s1026,A2GV9WSNSPX53,1/11/22 20:25,29.0,Male,16.0,Left-handed,English,White,1
+s1027,A2QTL039A5VV3I,1/11/22 21:23,31.0,Male,17.0,Right-handed,English,"Asian,White",1
+s1028,A3L2XKXABNO0N5,1/11/22 22:10,37.0,Female,16.0,Right-handed,English,White,1
+s1029,A1PMZUBGXFANCI,1/11/22 22:36,29.0,Male,12.0,Left-handed,English,White,1
+s1030,A1S2NQYJGZ0C5F,1/11/22 23:03,42.0,Male,18.0,Right-handed,English,White,1
+s1031,A2LT6KC1X51FVW,1/11/22 23:10,30.0,Male,14.0,Left-handed,English,White,1
+s1032,A8KX1HFH8NE2Q,1/11/22 23:26,55.0,Male,18.0,Right-handed,English,White,1
+s1033,A1CH3TODZNQCES,1/11/22 23:28,32.0,Male,16.0,Right-handed,English,White,1
+s1034,A5WWHKD82I8UE,1/11/22 23:35,38.0,Male,16.0,Right-handed,English,White,1
+s1035,A2GYGCLTMIGDJT,1/12/22 01:04,39.0,Male,16.0,Right-handed,English,Asian,1
+s1036,A13WTEQ06V3B6D,1/12/22 03:45,29.0,Male,18.0,Right-handed,English,Asian,1
+s1037,A2CEGS0NVDBCPT,1/12/22 04:11,26.0,Female,14.0,Right-handed,english,Black or African American,1
+s1038,ABW8U1U74P8MI,1/12/22 05:03,28.0,Male,16.0,Right-handed,Amharic,Black or African American,1
+s1039,A2RCYLKY072XXO,1/12/22 05:07,38.0,Male,16.0,Right-handed,English,Asian,1
+s1040,A2PWUACCQI97J8,1/12/22 05:11,27.0,Female,16.0,Right-handed,english,White,1
+s1041,A29AF16RLMI0ES,1/12/22 08:27,71.0,Male,16.0,Right-handed,English,White,1
+s1042,A2YP60DM1HYTH8,1/19/22 12:51,33.0,Female,13.0,Right-handed,english,White,2
+s1043,A3AUIYZ27TBTP9,1/19/22 12:51,22.0,Male,13.0,Right-handed,english,White,2
+s1044,A1Y6HGDW6ZAYBY,1/19/22 12:51,25.0,Male,12.0,Right-handed,English,White,2
+s1045,AEASOIPE6YBHK,1/19/22 12:51,29.0,Male,15.0,Left-handed,English,White,2
+s1046,A3EUH97BRHRSI6,1/19/22 12:51,40.0,Male,14.0,Right-handed,English,White,2
+s1047,AGWWUXDX6CI38,1/19/22 12:52,24.0,Female,16.0,Right-handed,english,White,2
+s1048,A2CDM78GVCICO5,1/19/22 12:52,26.0,Male,12.0,Right-handed,english,White,2
+s1049,A3CGQOJC28OVGN,1/19/22 12:52,31.0,Female,16.0,Right-handed,English,White,2
+s1050,AD75IYA9OIIQF,1/19/22 12:52,50.0,Male,16.0,Right-handed,English,White,2
+s1051,AX7WITN5DWW6U,1/19/22 12:52,47.0,Male,12.0,Right-handed,English,White,2
+s1052,A1T4NOV07AHY60,1/19/22 12:52,33.0,Female,16.0,Right-handed,English,White,2
+s1053,AKP66RIZ3LQVX,1/19/22 12:52,23.0,Male,13.0,Right-handed,English,White,2
+s1054,A3UZVATYJ9BYCW,1/19/22 12:53,27.0,Male,16.0,Right-handed,English,White,2
+s1055,APVJEN2541WFB,1/19/22 12:53,31.0,Female,12.0,Right-handed,English,White,2
+s1056,A1ZPIPHM272LO8,1/19/22 12:53,30.0,Female,14.0,Left-handed,English,White,2
+s1057,ALCPF5NANBDSZ,1/19/22 12:53,35.0,Male,15.0,Right-handed,English,White,2
+s1058,A2R6UQCQ8T3RZE,1/19/22 12:53,31.0,Male,16.0,Right-handed,English,White,2
+s1059,A3N66DKF3VNB9X,1/19/22 12:53,32.0,Male,13.0,Left-handed,English,White,2
+s1060,AQUCKTV7SVOK1,1/19/22 12:53,29.0,Female,18.0,Right-handed,English,White,2
+s1061,A1LRJ4U04532TM,1/19/22 12:53,47.0,Female,14.0,Left-handed,English,White,2
+s1062,A24GX1OZE6AY04,1/19/22 12:53,43.0,Male,12.0,Right-handed,English,White,2
+s1063,A3EC3OP6U52JYC,1/19/22 12:53,34.0,Male,16.0,Right-handed,English,"American Indian or Alaska Native,White",2
+s1064,A3RHJEMZ4EGY2U,1/19/22 12:53,27.0,Female,16.0,Right-handed,English,White,2
+s1065,A2KW87ZD2ELYNG,1/19/22 12:53,42.0,Male,12.0,Right-handed,English,White,2
+s1066,A30RAYNDOWQ61S,1/19/22 12:53,59.0,Male,13.0,Right-handed,English,White,2
+s1067,AI6U09NVOZ62B,1/19/22 12:53,25.0,Female,12.0,Right-handed,English,White,2
+s1068,A2C84POENS2UNY,1/19/22 12:53,41.0,Female,20.0,Right-handed,english,White,2
+s1069,ANBWJZYU2A68T,1/19/22 12:53,48.0,Neither/Do not wish to disclose,18.0,Right-handed,Nepalese,Asian,2
+s1070,A2U2LICYDFMI00,1/19/22 12:53,39.0,Female,16.0,Right-handed,English,White,2
+s1071,A118AEVQ81QLG0,1/19/22 12:54,27.0,Female,16.0,Right-handed,English,White,2
+s1072,AIIOT9A7ARQZW,1/19/22 12:54,45.0,Female,16.0,Right-handed,English,White,2
+s1073,A12ZO39VZ879ZS,1/19/22 12:54,23.0,Male,12.0,Right-handed,English,White,2
+s1074,ADP4KXZZ72DP,1/19/22 12:54,51.0,Male,12.0,Right-handed,English,White,2
+s1075,A2CY1TSQ3KKP5Q,1/19/22 12:54,57.0,Female,18.0,Right-handed,English,White,2
+s1076,A3CTXWISODY7D8,1/19/22 12:54,43.0,Male,14.0,Right-handed,English,White,2
+s1077,A11YS0T8MV3Q7C,1/19/22 12:54,31.0,Male,12.0,Right-handed,English,White,2
+s1078,AXG2QCW21F3S7,1/19/22 12:54,27.0,Female,16.0,Left-handed,English,White,2
+s1079,A2TXC8Q2IFGRXH,1/19/22 12:55,70.0,Male,14.0,Right-handed,English,White,2
+s1080,A2BK9RMC0NOIH8,1/19/22 12:55,40.0,Male,12.0,Right-handed,English,Black or African American,2
+s1081,A1FHKK0RU69RU,1/19/22 12:55,60.0,Female,12.0,Right-handed,English,White,2
+s1082,A2VA0NCPWJ8XZG,1/19/22 12:55,37.0,Male,16.0,Right-handed,English,White,2
+s1083,A2MHMWX79QLXUY,1/19/22 12:55,23.0,Female,16.0,Right-handed,English,White,2
+s1084,A212LO20SI5AY6,1/19/22 12:55,37.0,Female,12.0,Right-handed,English,White,2
+s1085,A92BS1Y7V15Y2,1/19/22 12:55,29.0,Male,16.0,Right-handed,English,White,2
+s1086,AEQ95NMC3VXQ5,1/19/22 12:55,66.0,Female,15.0,Right-handed,English,White,2
+s1087,A2DLYBXZNSSJ4S,1/19/22 12:55,27.0,Male,18.0,Right-handed,English,White,2
+s1088,A1UXVLMCA3PBIL,1/19/22 12:55,53.0,Male,12.0,Right-handed,English,White,2
+s1089,ARQR5NIFA1AJ,1/19/22 12:56,36.0,Male,18.0,Right-handed,English,White,2
+s1090,A3QKNQ07F2451W,1/19/22 12:56,43.0,Male,16.0,Right-handed,English,White,2
+s1091,A2TXZVXQU5FQZ9,1/19/22 12:56,36.0,Male,16.0,Right-handed,English,White,2
+s1092,AQJWO4YPR3LUQ,1/19/22 12:56,41.0,Female,14.0,Right-handed,English,White,2
+s1093,AARMOB6D5ZZVG,1/19/22 12:56,28.0,Male,16.0,Right-handed,English,White,2
+s1094,A2MCG5W6LHSRG9,1/19/22 12:56,37.0,Male,13.0,Right-handed,English,White,2
+s1095,A3785TR8D5I81Q,1/19/22 12:56,29.0,Female,16.0,Right-handed,English,Black or African American,2
+s1096,A10M63DSIGIEDI,1/19/22 12:56,29.0,Male,16.0,Right-handed,english,White,2
+s1097,A3OZ8KF0HWSVWK,1/19/22 12:56,56.0,Male,14.0,Right-handed,English,White,2
+s1098,A20XDCBFKG4TEE,1/19/22 12:57,41.0,Male,15.0,Right-handed,English,White,2
+s1099,A1969Q0R4Y0E3J,1/19/22 12:57,25.0,Female,12.0,Right-handed,English,White,2
+s1100,A3JZNUBAIASMKA,1/19/22 12:57,31.0,Male,16.0,Right-handed,English,White,2
+s1101,A1FHC4Z6QXDQSS,1/19/22 12:57,39.0,Male,13.0,Right-handed,English,White,2
+s1102,A1A0F0BAX3CDTF,1/19/22 12:57,29.0,Female,16.0,Right-handed,English,White,2
+s1103,A1WEN4S934ZZ1U,1/19/22 12:57,24.0,Female,16.0,Right-handed,English,Asian,2
+s1104,A1SMVF4MXT0RIH,1/19/22 12:57,25.0,Male,16.0,Right-handed,English,White,2
+s1105,A16335MOISDG1F,1/19/22 12:57,38.0,Male,13.0,Right-handed,English,Black or African American,2
+s1106,ANKDLLQHHM2OH,1/19/22 12:57,37.0,Female,16.0,Right-handed,English,Black or African American,2
+s1107,ADFJOOSM3Q18G,1/19/22 12:58,35.0,Male,19.0,Right-handed,English,White,2
+s1108,A1NQOR4RQJJDMW,1/19/22 12:58,27.0,Female,13.0,Right-handed,english,White,2
+s1109,A2V6E7SGEU0EFD,1/19/22 12:58,33.0,Male,18.0,Right-handed,English,White,2
+s1110,A1I7H6RDJS4EKN,1/19/22 12:58,66.0,Male,15.0,Right-handed,English,Asian,2
+s1111,A2Z6NL0CTXY0ZB,1/19/22 12:58,42.0,Female,12.0,Right-handed,english,Black or African American,2
+s1112,A19H6QRCGKBOUH,1/19/22 12:58,52.0,Male,14.0,Right-handed,English,White,2
+s1113,AFU00NU09CFXE,1/19/22 12:58,48.0,Female,14.0,Right-handed,English,White,2
+s1114,AONSG5WOC3OX0,1/19/22 12:59,39.0,Male,16.0,Right-handed,English,Asian,2
+s1115,A2QX3YJXAAHHVV,1/19/22 12:59,31.0,Male,18.0,Right-handed,English,White,2
+s1116,A2B153AHPWHLH1,1/19/22 13:00,55.0,Male,14.0,Right-handed,English,White,2
+s1117,A2MWAXV1YRK5GH,1/19/22 13:00,71.0,Female,19.0,Left-handed,English,White,2
+s1118,A3FNC8ELMK8YJA,1/19/22 13:03,60.0,Female,19.0,Right-handed,English,White,2
+s1119,A3P7AXWF57BHNX,1/19/22 13:03,31.0,Female,16.0,Right-handed,English,White,2
+s1120,A3CH1Z6J9R38G9,1/19/22 13:03,32.0,Male,18.0,Right-handed,English,"Black or African American,White",2
+s1121,A20C38AB8D6Z2L,1/19/22 13:04,34.0,Male,16.0,Right-handed,English,White,2
+s1122,A14LOABUGAITBM,1/19/22 13:04,35.0,Female,16.0,Right-handed,English,Black or African American,2
+s1123,A3588JV6EB95AZ,1/19/22 13:05,30.0,Male,16.0,Right-handed,english,White,2
+s1124,A2EK1HDV4I4GSK,1/19/22 13:05,51.0,Male,14.0,Right-handed,english,White,2
+s1125,A1NVJB5O4H7ZCJ,1/19/22 13:06,58.0,Female,16.0,Right-handed,english,White,2
+s1126,AV7UX8QQXABSK,1/19/22 13:07,29.0,Male,16.0,Right-handed,english,Asian,2
+s1127,A1WJIRT360P5VB,1/19/22 13:08,42.0,Male,15.0,Left-handed,English,White,2
+s1128,A10HW8JXM17XLD,1/19/22 13:09,42.0,Female,16.0,Right-handed,English,White,2
+s1129,A1FS8SBR4SDWYG,1/19/22 13:09,35.0,Female,22.0,Right-handed,English,White,2
+s1130,A3E8SXH0BAYG85,1/19/22 13:10,44.0,Male,13.0,Right-handed,English,White,2
+s1131,A2ONILC0LZKG6Y,1/19/22 13:14,45.0,Female,16.0,Right-handed,English,White,2
+s1132,A1OYQLIDML0DPW,1/19/22 13:14,32.0,Male,17.0,Right-handed,English,Black or African American,2
+s1133,A2CPI18KZN30KW,1/19/22 13:15,46.0,Male,18.0,Right-handed,English,White,2
+s1134,A104HK5ONFNJJT,1/19/22 13:16,55.0,Female,12.0,Right-handed,english,White,2
+s1135,A1F9KLZGHE9DTA,1/19/22 13:17,46.0,Male,13.0,Right-handed,English,White,2
+s1136,A1M64R8HPYNNZA,1/19/22 13:17,44.0,Male,16.0,Left-handed,English,White,2
+s1137,A2UOSEPGNUITM8,1/19/22 13:17,29.0,Male,14.0,Right-handed,English,Black or African American,2
+s1138,A2CWA5VQZ6IWMQ,1/19/22 13:17,39.0,Male,16.0,Right-handed,English,White,2
+s1139,ANUA9X7BFPTR8,1/19/22 13:20,31.0,Female,16.0,Right-handed,English,White,2
+s1140,A6MWJK1YEY5L2,1/19/22 13:21,36.0,Male,14.0,Right-handed,English,Black or African American,2
+s1141,A68J20100VW4W,1/19/22 13:21,64.0,Female,16.0,Right-handed,English,White,2
+s1142,A2C9OFEV72G568,1/19/22 13:22,46.0,Male,16.0,Left-handed,English,White,2
+s1143,A1U8RH67FLZW87,1/19/22 13:25,44.0,Male,16.0,Right-handed,English,White,2
+s1144,A39RK9TP3P7097,1/19/22 13:25,30.0,Female,16.0,Right-handed,English,White,2
+s1145,A2G57M3XD1AIBS,1/19/22 13:27,29.0,Female,13.0,Right-handed,english,Black or African American,2
+s1146,AHZ7C7ETHYX3N,1/19/22 13:30,63.0,Male,14.0,Right-handed,English,White,2
+s1147,A2L8BI5CRPR5WP,1/19/22 13:32,24.0,Male,16.0,Right-handed,English,White,2
+s1148,AERUGBNS48Z4N,1/19/22 13:34,34.0,Male,16.0,Right-handed,English,White,2
+s1149,A2Y4UMAUYJM9GK,1/19/22 13:34,51.0,Male,16.0,Right-handed,english,White,2
+s1150,A3FPXYVABXB9IZ,1/19/22 13:36,28.0,Male,16.0,Right-handed,English,Asian,2
+s1151,A2RRK8SV0VBLTJ,1/19/22 13:41,24.0,Male,12.0,Right-handed,english,White,2
+s1152,A1QMJNJ5FGC09,1/19/22 13:41,23.0,Male,16.0,Right-handed,English,Black or African American,2
+s1153,AEQAI1QN1YZG1,1/19/22 13:44,29.0,Female,16.0,Right-handed,English,White,2
+s1154,A2G7N0X0PNX0EE,1/19/22 13:44,35.0,Male,16.0,Right-handed,English,Asian,2
+s1155,A3L8LSM7V7KX3T,1/19/22 13:45,40.0,Male,12.0,Right-handed,English,White,2
+s1156,A122LRCSBAD6DC,1/19/22 13:46,29.0,Male,16.0,Right-handed,English,White,2
+s1157,ABX5OQLR6UNBC,1/19/22 13:48,48.0,Female,13.0,Right-handed,English,White,2
+s1158,AOP9WB55GYGL7,1/19/22 13:48,32.0,Male,12.0,Right-handed,English,White,2
+s1159,A3PRQ2GSU42718,1/19/22 13:49,69.0,Neither/Do not wish to disclose,14.0,Right-handed,English,Do not wish to answer,2
+s1160,A3QEVFM3UD67BA,1/19/22 13:52,45.0,Female,14.0,Right-handed,English,Other,2
+s1161,A21P1T8EW4NHOU,1/19/22 13:54,28.0,Male,13.0,Right-handed,English,White,2
+s1162,A5NE8TWS8ZV7B,1/19/22 13:59,39.0,Female,14.0,Right-handed,english,Asian,2
+s1163,A3QJJR5Y3XE92N,1/19/22 13:59,40.0,Male,20.0,Right-handed,English,White,2
+s1164,A3LT7W355XOAKF,1/19/22 14:00,64.0,Male,18.0,Right-handed,English,White,2
+s1165,AVFMTS8A5R4XK,1/19/22 14:01,30.0,Male,16.0,Right-handed,ENGLISH,White,2
+s1166,A35DXV9EC16NTI,1/19/22 14:03,32.0,Male,16.0,Right-handed,English,Black or African American,2
+s1167,A1GCTKOPKUTW3G,1/19/22 14:05,32.0,Male,16.0,Right-handed,English,Black or African American,2
+s1168,A2FYFCD16Z3PCC,1/19/22 14:08,29.0,Male,16.0,Right-handed,English,White,2
+s1169,A222GZB608T1B8,1/19/22 14:10,23.0,Female,15.0,Right-handed,Tamil,Asian,2
+s1170,A1W7I6FN183I8F,1/19/22 14:12,32.0,Male,16.0,Right-handed,English,White,2
+s1171,A28FDHF2PY98K1,1/19/22 14:15,33.0,Male,19.0,Right-handed,English,White,2
+s1172,AAXX5LDVJ32F8,1/19/22 14:19,49.0,Male,12.0,Right-handed,English,White,2
+s1173,AAASQIW3J32OL,1/19/22 14:21,60.0,Female,16.0,Right-handed,English,White,2
+s1174,A7SXWHGK8B40R,1/19/22 14:22,24.0,Male,16.0,Left-handed,English,White,2
+s1175,A2RBVMD2HTBCZ9,1/19/22 14:23,34.0,Female,18.0,Right-handed,English,White,2
+s1176,A20N1NK5X5S88F,1/19/22 14:23,35.0,Male,12.0,Left-handed,English,Black or African American,2
+s1177,AG6WV3WODQ7IN,1/19/22 14:23,33.0,Male,16.0,Right-handed,English,Black or African American,2
+s1178,AKNYT1NTK2UFK,1/19/22 14:25,37.0,Female,16.0,Right-handed,English,White,2
+s1179,A27VFM67RPD2L5,1/19/22 14:26,50.0,Female,12.0,Right-handed,English,White,2
+s1180,AY7WPVKHVNBLG,1/19/22 14:26,49.0,Female,16.0,Right-handed,English,White,2
+s1181,ACI0C2WU1NABK,1/19/22 14:28,34.0,Female,14.0,Right-handed,english,Black or African American,2
+s1182,A146MSML39KY98,1/19/22 14:32,63.0,Female,18.0,Left-handed,English,White,2
+s1183,ABBP9JASL9AGK,1/19/22 14:36,31.0,Female,16.0,Right-handed,English,White,2
+s1184,A163XFZG5BI0XU,1/19/22 14:39,39.0,Male,16.0,Right-handed,English,White,2
+s1185,A209V2VHLLQ59W,1/19/22 14:40,33.0,Neither/Do not wish to disclose,15.0,Right-handed,American English,Other,2
+s1186,A1HRH92NH49RX2,1/19/22 14:45,30.0,Male,16.0,Right-handed,ENGLISH,White,2
+s1187,A33LYSCQQU1YDJ,1/19/22 14:51,47.0,Female,16.0,Right-handed,English,White,2
+s1188,A27W025UEXS1G0,1/19/22 14:57,35.0,Male,12.0,Right-handed,English,Black or African American,2
+s1189,A2NA6X1SON3KFH,1/19/22 15:01,35.0,Male,12.0,Right-handed,english,White,2
+s1190,A320QA9HJFUOZO,1/19/22 15:02,35.0,Male,16.0,Right-handed,English,White,2
+s1191,AJQGWGESKQT4Y,1/19/22 15:03,45.0,Male,16.0,Right-handed,English,White,2
+s1192,A2N4DD7IS7EI2D,1/19/22 15:05,31.0,Male,12.0,Left-handed,English,Asian,2
+s1193,A195MOXRMNHRVT,1/19/22 15:11,37.0,Female,16.0,Right-handed,english,White,2
+s1194,AURYD2FH3FUOQ,1/19/22 15:14,60.0,Female,16.0,Right-handed,English,White,2
+s1195,A1F1TBDHPYAAXT,1/19/22 15:16,72.0,Male,16.0,Right-handed,English,White,2
+s1196,A24HOBENULGZA2,1/19/22 15:17,29.0,Male,16.0,Right-handed,English,White,2
+s1197,A2BRZKFG6WAVER,1/19/22 15:17,39.0,Female,14.0,Right-handed,English,White,2
+s1198,AFM65NU0UXIGP,1/19/22 15:27,33.0,Male,15.0,Right-handed,English,White,2
+s1199,A1ZVTAK0GLO959,1/19/22 15:30,35.0,Female,16.0,Right-handed,English,Black or African American,2
+s1200,A1DCG37N0Y8BN0,1/19/22 15:31,24.0,Male,15.0,Right-handed,English,Black or African American,2
+s1201,AUFUUD4WG9CVO,1/19/22 15:31,31.0,Male,16.0,Right-handed,English,White,2
+s1202,A24ZP6TOKYBSQS,1/19/22 15:31,24.0,Male,16.0,Right-handed,English,Native Hawaiian or Other Pacific Islander,2
+s1203,A5TWD5QD99GZY,1/19/22 15:33,36.0,Male,12.0,Right-handed,English,White,2
+s1204,A24M9OW53CLT94,1/19/22 15:34,30.0,Male,16.0,Right-handed,English,White,2
+s1205,A32TGAK321JDFF,1/19/22 15:34,62.0,Male,14.0,Right-handed,American English,White,2
+s1206,A1MKEILXWWLBW2,1/19/22 15:35,63.0,Male,16.0,Right-handed,English,White,2
+s1207,A1DUPOUC9RNU4L,1/19/22 15:35,60.0,Female,14.0,Right-handed,English,White,2
+s1208,ALYR5CI2SM2JC,1/19/22 15:36,32.0,Male,12.0,Right-handed,English,Asian,2
+s1209,AMHUDJ44HF1ZH,1/19/22 15:36,67.0,Male,14.0,Right-handed,English,White,2
+s1210,A2I43BDUPAM00C,1/19/22 15:40,43.0,Female,16.0,Right-handed,American English,White,2
+s1211,A136K4YZY2OFTV,1/19/22 15:45,52.0,Male,16.0,Right-handed,English,White,2
+s1212,A2Y0WNHMT4PZ4C,1/19/22 15:45,54.0,Male,14.0,Right-handed,English,White,2
+s1213,A3HCGNV93TJO7R,1/19/22 15:46,34.0,Female,14.0,Right-handed,English,White,2
+s1214,A3D2GO0IFRFN6R,1/19/22 15:48,37.0,Female,16.0,Left-handed,english,White,2
+s1215,A25PFSORDO3SWQ,1/19/22 15:56,34.0,Male,16.0,Right-handed,English,White,2
+s1216,AIA7RZSAONU5M,1/19/22 16:00,37.0,Female,16.0,Right-handed,English,White,2
+s1217,AV5FCKI1TTSKR,1/19/22 16:01,47.0,Male,16.0,Left-handed,Englilsh,Black or African American,2
+s1218,A3LVLZS8S41ZD7,1/19/22 16:02,49.0,Female,16.0,Right-handed,English,White,2
+s1219,A2YTQDLACTLIBA,1/19/22 16:14,67.0,Female,21.0,Right-handed,English,White,2
+s1220,A11S8IAAVDXCUS,1/19/22 16:19,31.0,Female,14.0,Right-handed,English,White,2
+s1221,AOIR8V07FYMH5,1/19/22 16:22,35.0,Male,12.0,Right-handed,English,White,2
+s1222,A12H9WVHOB0E0O,1/19/22 16:24,50.0,Female,13.0,Right-handed,English,White,2
+s1223,A2OVOVZBJYUO,1/19/22 16:26,35.0,Female,16.0,Right-handed,english,White,2
+s1224,A1DT7XOW0ISK0K,1/19/22 16:27,34.0,Male,13.0,Left-handed,english,White,2
+s1225,A1B1DPJRVIAV3L,1/19/22 16:30,42.0,Female,16.0,Right-handed,English,White,2
+s1226,A2IVGLOBFOT67M,1/19/22 16:32,31.0,Female,16.0,Right-handed,English,White,2
+s1227,A1UYU9PV266WTT,1/19/22 16:38,44.0,Female,13.0,Right-handed,English,"American Indian or Alaska Native,White",2
+s1228,A3ITZNJQUTIZ4C,1/19/22 16:48,44.0,Female,14.0,Right-handed,English,White,2
+s1229,A1Q6VY3C3CEOA0,1/19/22 16:56,48.0,Male,16.0,Right-handed,English,White,2
+s1230,AVXEDARJC5HLU,1/19/22 17:01,47.0,Male,12.0,Right-handed,english,White,2
+s1231,AIHHRINW9IN1I,1/19/22 17:05,38.0,Female,18.0,Right-handed,English,White,2
+s1232,A1FMVUYV72MUO3,1/19/22 17:06,40.0,Male,14.0,Right-handed,English,White,2
+s1233,A157L6Z8QU3SDE,1/19/22 17:06,33.0,Male,16.0,Right-handed,english,White,2
+s1234,A1TPGXT718D68E,1/19/22 17:09,42.0,Female,17.0,Left-handed,English,White,2
+s1235,A2AZYU1CT24O0K,1/19/22 17:10,42.0,Male,12.0,Right-handed,English,White,2
+s1236,A2I4PRZ9IZMKON,1/19/22 17:15,31.0,Female,18.0,Left-handed,English,White,2
+s1237,ATIVK9XUANIUE,1/19/22 17:32,36.0,Male,16.0,Right-handed,english,White,2
+s1238,A1DNJ17PE2RYJZ,1/19/22 17:32,68.0,Male,17.0,Right-handed,English,White,2
+s1239,A1CY1WJBLB2TUI,1/19/22 17:42,36.0,Female,16.0,Right-handed,English,Black or African American,2
+s1240,A1ZLLYRW6GIVC7,1/19/22 17:46,32.0,Female,16.0,Right-handed,English,White,2
+s1241,A2T675UCHNTSSW,1/19/22 17:49,51.0,Female,16.0,Left-handed,English,White,2
+s1242,A1KET5Z038NMWD,1/19/22 17:50,39.0,Female,14.0,Right-handed,English,White,2
+s1243,A1UY2W2FL9CWN,1/19/22 17:59,37.0,Male,16.0,Right-handed,English,White,2
+s1244,ANQ0RLFEZ17W0,1/19/22 18:01,30.0,Female,16.0,Right-handed,English,White,2
+s1245,A1R8A8BK2VN7RH,1/19/22 18:06,36.0,Female,16.0,Right-handed,english,"Asian,White",2
+s1246,A6JKKANO7F4KD,1/19/22 18:10,60.0,Male,16.0,Right-handed,English,White,2
+s1247,AT0COJ1G23ZB0,1/19/22 18:14,32.0,Female,18.0,Right-handed,english,White,2
+s1248,A1ZVC2VT88SYEP,1/19/22 18:17,25.0,Male,12.0,Right-handed,English,White,2
+s1249,A107RJSS561Y7R,1/19/22 18:17,35.0,Male,12.0,Right-handed,English,White,2
+s1250,AMI0SOF51O3FW,1/19/22 18:26,37.0,Male,14.0,Left-handed,English,Black or African American,2
+s1251,ALF9AAZGQP4K5,1/19/22 18:27,34.0,Male,14.0,Right-handed,english,White,2
+s1252,AOOLS8280CL0Z,1/19/22 18:28,70.0,Female,12.0,Right-handed,English,White,2
+s1253,A2RWLFIP23FZA7,1/19/22 18:35,28.0,Male,16.0,Right-handed,Chinese,Asian,2
+s1254,A3G5OWGKHW6OL5,1/19/22 18:37,34.0,Male,12.0,Right-handed,Spanish,White,2
+s1255,A234UW0G9PMSCC,1/19/22 18:38,28.0,Male,13.0,Right-handed,english,White,2
+s1256,A27TE0L5XP1H0U,1/19/22 18:41,44.0,Male,16.0,Right-handed,English,White,2
+s1257,AQV468FB908WI,1/19/22 18:51,37.0,Female,16.0,Right-handed,English,White,2
+s1258,A20VH0U95N7M0T,1/19/22 18:52,57.0,Female,20.0,Right-handed,English,White,2
+s1259,AQMLJYUQCSG22,1/19/22 18:52,32.0,Male,16.0,Right-handed,English,White,2
+s1260,A249EWKM1EOARK,1/19/22 18:55,59.0,Female,14.0,Right-handed,english,White,2
+s1261,A1NGGAVIGC9O7V,1/19/22 18:58,36.0,Female,14.0,Right-handed,English,White,2
+s1262,A2QJZJDCGK0FKR,1/19/22 18:59,56.0,Male,14.0,Right-handed,English,White,2
+s1263,A1VWLIXBS4WDOD,1/19/22 18:59,38.0,Male,16.0,Right-handed,English,White,2
+s1264,A3QLGMZOLGMBQ1,1/19/22 19:00,53.0,Male,18.0,Right-handed,English,White,2
+s1265,A2T5CROJ0FWIJY,1/19/22 19:00,37.0,Female,16.0,Right-handed,English,White,2
+s1266,A12HZGOZQD5YK7,1/19/22 19:01,41.0,Female,14.0,Right-handed,English,"Asian,White",2
+s1267,A32HHTM9N6C67R,1/19/22 19:01,43.0,Male,16.0,Right-handed,English,Black or African American,2
+s1268,A3FSDH6HUZPNQ8,1/19/22 19:03,25.0,Male,12.0,Left-handed,English,White,2
+s1269,A28GXI90JIF3I7,1/19/22 19:04,33.0,Male,16.0,Right-handed,English,Other,2
+s1270,A19AOG7JJBCDXZ,1/19/22 19:07,25.0,Female,16.0,Right-handed,English,White,2
+s1271,A1BM57TUNAQIXM,1/19/22 19:10,37.0,Female,16.0,Right-handed,English,Asian,2
+s1272,A3EU8ENRH654SB,1/19/22 19:13,43.0,Female,16.0,Right-handed,English,White,2
+s1273,A2NMAOYBBJTO0R,1/19/22 19:17,24.0,Female,16.0,Right-handed,english,White,2
+s1274,A2XMFTY9WB05U6,1/19/22 19:20,36.0,Male,14.0,Right-handed,English,White,2
+s1275,A3HQXCWOIQKT4F,1/19/22 19:27,33.0,Male,16.0,Right-handed,English,White,2
+s1276,A25R2OI9L2Q1OW,1/19/22 19:35,45.0,Male,16.0,Right-handed,English,White,2
+s1277,A2AAY4VT9L71SY,1/19/22 19:43,35.0,Male,12.0,Right-handed,English,White,2
+s1278,A3QYA7EFCS7BA2,1/19/22 19:45,34.0,Female,14.0,Right-handed,English,White,2
+s1279,A31P6DWY4XEQX9,1/19/22 20:01,28.0,Male,16.0,Right-handed,English,Asian,2
+s1280,A2TLN8489YGY81,1/19/22 20:06,34.0,Male,16.0,Right-handed,English,Asian,2
+s1281,A2Y87M8V0N1M6P,1/19/22 20:09,30.0,Female,13.0,Left-handed,English,White,2
+s1282,A2VR9O234UCT9T,1/19/22 20:40,51.0,Female,16.0,Right-handed,English,"Black or African American,White",2
+s1283,A2866TYG0D96LM,1/19/22 20:41,32.0,Male,13.0,Right-handed,English,White,2
+s1284,A2LMQ4497NMK3S,1/19/22 20:58,39.0,Male,16.0,Right-handed,English,White,2
+s1285,A292TFDMNVS0TP,1/19/22 21:08,49.0,Female,13.0,Right-handed,English,Asian,2
+s1286,A3TBG0S2IEBVHU,1/19/22 21:12,40.0,Male,14.0,Right-handed,english,White,2
+s1287,AVBRJBJONL47I,1/19/22 21:17,47.0,Female,18.0,Right-handed,English,"Asian,White",2
+s1288,AMLE1FC3SQVL8,1/19/22 21:31,26.0,Male,16.0,Right-handed,English,Native Hawaiian or Other Pacific Islander,2
+s1289,A25AYMSZNDW1VJ,1/19/22 21:42,35.0,Male,14.0,Right-handed,English,Black or African American,2
+s1290,A1M24593XO5Z3C,1/19/22 21:46,29.0,Male,12.0,Right-handed,English,White,2
+s1291,A5TI9UQEPLNWI,1/19/22 22:20,47.0,Male,16.0,Right-handed,ENGLISH,White,2
+s1292,A3VDG4N48AVYGQ,1/19/22 22:45,36.0,Male,16.0,Right-handed,English,White,2
+s1293,A2O2Q0LVWOWJ1G,1/19/22 23:13,48.0,Female,15.0,Right-handed,English,White,2
+s1294,AV8T375ESPPPS,1/20/22 00:18,31.0,Male,15.0,Left-handed,English,White,2
+s1295,A3P4XZJM2DEATZ,1/20/22 00:24,32.0,Female,14.0,Right-handed,English,Black or African American,2
+s1296,AD3V6XGQWRD6E,1/20/22 00:37,52.0,Female,14.0,Right-handed,English,White,2
+s1297,AVD6HMIO1HLFI,1/20/22 01:05,33.0,Male,12.0,Right-handed,English,White,2
+s1298,A38IZLCH8VYVFK,1/20/22 01:36,47.0,Male,22.0,Left-handed,English,White,2
+s1299,A1H5Q9HRH4RPZU,1/20/22 02:02,39.0,Male,13.0,Right-handed,English,White,2
+s1300,A277V4SHQB8JRS,1/20/22 02:05,35.0,Male,16.0,Right-handed,English,White,2
+s1301,A3NXT3OVGL7QNR,1/20/22 03:31,32.0,Male,12.0,Right-handed,English,White,2
+s1302,A1PF1T680LSXQ5,1/20/22 06:49,41.0,Male,16.0,Right-handed,English,White,2
+s1303,AS4NIEQJWCG3M,1/20/22 06:51,33.0,Female,16.0,Right-handed,English,White,2
+s1304,A33XAJW8WGY3O9,1/20/22 07:21,26.0,Male,16.0,Right-handed,English,Black or African American,2
+s1305,A1YTI83ATXD7WS,1/20/22 11:43,54.0,Female,12.0,Right-handed,English,White,2
+s1306,A1M682B2WUSYJP,1/19/22 12:59,,,,,,,2

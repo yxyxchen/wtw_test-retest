@@ -1,8 +1,4 @@
 expModelFit = function(expname, sess, modelName, isFirstFit, batchIdx = NULL, fit_method = NULL, parallel = F){
-  # I might want to merge expModelFit and expModelFit_trct later
-  # generate output directories
-  # dir.create("stanWarnings")
-  
   # load experiment parameters
   load("expParas.RData")
   
@@ -12,13 +8,15 @@ expModelFit = function(expname, sess, modelName, isFirstFit, batchIdx = NULL, fi
   source("subFxs/helpFxs.R")
   source('subFxs/modelFitGroup.R')
   
-  # I need to prepare my outputs here; it sucks 
+  # load taskdata 
   allData = loadAllData(expname, sess)
   hdrData = allData$hdrData
   trialData = allData$trialData
   
   # I want to make the output dir specific
-  if(fit_method == 'trct'){
+  if(is.null(fit_method)){
+      outputDir = sprintf("../../analysis_results/%s/modelfit/%s", expname, modelName)
+  }else if(fit_method == 'trct'){
     outputDir = sprintf("../../analysis_results/%s/modelfit/%s_trct", expname, modelName)
     # truncate the first half block
     ids = names(trialData)
@@ -29,10 +27,7 @@ expModelFit = function(expname, sess, modelName, isFirstFit, batchIdx = NULL, fi
       thisTrialData = thisTrialData[thisTrialData$trialStartTime >= 300 | thisTrialData$blockNum > 1,]
       trialData[[id]] = thisTrialData
     }
-  }else{
-    outputDir = sprintf("../../analysis_results/%s/modelfit/%s", expname, modelName)
   }
-  
   
   # I also want to add a 
   if(isFirstFit){
@@ -63,14 +58,15 @@ expModelFit = function(expname, sess, modelName, isFirstFit, batchIdx = NULL, fi
   if(!isFirstFit){
     ids = names(trialData)
     paraNames = getParaNames(modelName)
-    expPara = loadExpPara(paraNames, outputDir)
-    passCheck = checkFit(paraNames, expPara)
-    trialData = trialData[!passCheck]
+    expPara = loadExpPara(paraNames, outputDir, sess)
+    # passCheck = checkFit(paraNames, expPara)
+    # trialData = trialData[!passCheck]
+    trialData = trialData[!ids %in% paste0("s", expPara$id)]
     
     # increase the num of Iterations 
     config = list(
       nChain = 4,
-      nIter = 1200,
+      nIter = 4000,
       adapt_delta = 0.99,
       max_treedepth = 11,
       warningFile = sprintf("stanWarnings/exp_refit_%s.txt", modelName)
@@ -83,6 +79,9 @@ expModelFit = function(expname, sess, modelName, isFirstFit, batchIdx = NULL, fi
 if (sys.nframe() == 0){
   # use this command to test: Rscript expModelFit_trct.R 'active' 1 'QL2' T 1
   args = commandArgs(trailingOnly = T)
+  # print(args)
+  # print(length(args))
+  # print(args[1])
   if(length(args) == 6){
     expModelFit(args[1], as.numeric(args[2]), args[3], as.logical(args[4]), as.numeric(args[5]))
   }else{

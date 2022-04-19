@@ -9,7 +9,7 @@ import copy # pay attention to copy
 import code
 import math
 from datetime import datetime
-
+import matplotlib.pyplot as plt
 
 ############################# parse_original data files ############################
 def parsedata(expname, sess):
@@ -80,7 +80,10 @@ def parsedata(expname, sess):
                 print("Duplicated entries deleted!")
             # add unidentifiable IDs
             consentdata.sort_values("consent_date", ignore_index = True)
-            consentdata.insert(0, "id", ["s" + str(x + 1).zfill(4) for x in range(consentdata.shape[0])]) 
+            if expname == 'passive':
+                consentdata.insert(0, "id", ["s" + str(x + 1001).zfill(4) for x in range(consentdata.shape[0])]) 
+            elif expname == 'active':
+                consentdata.insert(0, "id", ["s" + str(x + 1).zfill(4) for x in range(consentdata.shape[0])]) 
             # rm assignmentId 
             consentdata.pop("assignmentId")
         else:
@@ -202,6 +205,13 @@ def parsedata(expname, sess):
         variables = ['trialIdx', 'condition', 'scheduledDelay', 'scheduledReward', 'rewardedTime', 'RT', 'timeWaited', 'trialEarnings', 'totalEarnings', 'sellTime', 'trialStartTime', 'trialReadyTime']
 
         # loop over blocks
+        # initialize outputs for keypress dataframe
+        if expname == "active":
+            timestamp = []
+            keypressIdx = []
+            trialIdx = []
+            bkIdx = []
+            blocktime = []
         for i in range(numblock):
             taskdata_in_this_block = taskdata.iloc[i]
             cleandata_in_this_block = dict()
@@ -212,10 +222,24 @@ def parsedata(expname, sess):
                     cleandata_in_this_block[variable] = parse_task_variable(variable, taskdata_in_this_block)
                     if len(cleandata_in_this_block[variable]) < num_valid_entry:
                         num_valid_entry = len(cleandata_in_this_block[variable])
-
+            
+            # parse keypress data 
+            timestamp_by_trial = taskdata_in_this_block['imKeypressLog'].split(",0")
+            for str_idx, timestamp_str in enumerate(timestamp_by_trial): # split by trial
+                if str_idx <= num_valid_entry:
+                    if len(timestamp_str) > 0: # sometimes the participant dosen't press at all
+                        if timestamp_str[0] == ",":
+                            timestamp_str = timestamp_str[1:]
+                        timestamp_list = [int(x) for x in timestamp_str.split(",")]
+                        timestamp.extend(timestamp_list)
+                        keypressIdx.extend([x+1 for x in range(len(timestamp_list))]) 
+                        trialIdx.extend([str_idx + 1 for x in range(len(timestamp_list))])
+                        bkIdx.extend([i+1 for x in range(len(timestamp_list))])
+                        blocktime.extend([cleandata_in_this_block['trialStartTime'][str_idx] + x / 1000 for x in timestamp_list])
             # make sure all variables have the same number of entries
             for variable in cleandata_in_this_block:
                 cleandata_in_this_block[variable] = cleandata_in_this_block[variable][:num_valid_entry]
+
             # append data 
             cleandata.append(pd.DataFrame(cleandata_in_this_block))
             # check the block duration
@@ -236,11 +260,20 @@ def parsedata(expname, sess):
         # stack cleandata
         if numblock > 0:
             cleandata = pd.concat(cleandata)
-
+        # assemble keypress dataframe
+        if expname == "active":
+            keypress_df = pd.DataFrame({
+                "bkIdx": bkIdx,
+                "trialIdx": trialIdx,
+                "keypressIdx": keypressIdx,
+                "timestamp": timestamp,
+                "blocktime": blocktime
+                })
+        # code.interact(local = dict(locals(), **globals()))
         # save clean data 
         # cleandata.to_csv(os.path.join(cleandatadir, workerId+".csv"))
         if expname == 'active':
-            return cleandata, workerId, cb, numblock, blockduration_
+            return cleandata, workerId, cb, numblock, blockduration_, keypress_df
         else:
             return cleandata, workerId, cb, numblock, blockduration_, screenEnterTime_, screenExitTime_
     
@@ -263,7 +296,7 @@ def parsedata(expname, sess):
             os.remove(os.path.join('log','hdrdata_empty_sess%d.csv'%sess))
         for file in files:
             if expname == 'active':
-                cleandata, worker_id, cb, numblock, blockduration_ = parse_data(file, outdir)
+                cleandata, worker_id, cb, numblock, blockduration_, keypress_df = parse_data(file, outdir)
             else:
                 cleandata, worker_id, cb, numblock, blockduration_, screenEnterTime_, screenExitTime_ = parse_data(file, outdir)
             
@@ -276,14 +309,18 @@ def parsedata(expname, sess):
                 # mannually exclude participants who I shouldn't invite for the second session
                 print("remove participant " + worker_id + " who I shouldn't invite for the second session.")
                 continue
+            elif expname == "passive" and sess == 2 and worker_id == "A1OYQLIDML0DPW":
+                print("remove participant " + worker_id + " who I shouldn't invite for the second session. since the first session data were not recorded")
+                continue
             else:
                 try:
                     thisid = consentdata['id'][np.where(consentdata['worker_id'] == worker_id)[0]].values[0]
                     thisbatch = consentdata['batch'][np.where(consentdata['worker_id'] == worker_id)[0]].values[0]
                 except:
+                    code.interact(local = dict(globals(), **locals()))
                     print("We can't find " + worker_id + 'in consent data.')
                     # I can't use consentdata from the second session since I don't have batch info and id info
-                    code.interact(local = dict(globals(), **locals()))
+                    
 
             thisentry = pd.DataFrame({
                 "id": thisid,
@@ -304,6 +341,8 @@ def parsedata(expname, sess):
             hdrdata = pd.concat([hdrdata, thisentry])
             if numblock > 0:
                 cleandata.to_csv(os.path.join(outdir, "task-" + thisid + "-sess%s.csv"%sess), index = False)
+                if expname == "active":
+                    keypress_df.to_csv(os.path.join(outdir, "keypress-" + thisid + "-sess%s.csv"%sess), index = False)
             thisbonusentry = pd.DataFrame({
                 "worker_id": worker_id,
                 "bonus": max(cleandata.totalEarnings) / 100 if numblock > 0 else 0,
@@ -311,7 +350,7 @@ def parsedata(expname, sess):
                 "batch": thisbatch
                 }, index = [0])
             bonusdata = pd.concat([bonusdata, thisbonusentry])
-
+            
         # save hdrdata and bonus data
         hdrdata = hdrdata.sort_values("id", ignore_index = True)
         hdrdata.to_csv(hdrdata_out, index = False)
@@ -333,7 +372,7 @@ def parsedata(expname, sess):
         print("%d participants completed this task"%np.sum(~hdrdata.quit_midway))
         print("bonusdata size: %d"%bonusdata.shape[0])
         print("%d participants completed this task and the questionaires."%bonusdata.shape[0])
-
+        # code.interact(local = dict(globals(), **locals()))
     ############### main function #########
     print("Parse consent data")
     parse_consent_data()
@@ -381,9 +420,10 @@ def parsedata(expname, sess):
 
 if __name__ == "__main__":
 
-    expname = 'passive'
+    expname = 'active'
     print("Parse data files for SESS1")
     parsedata(expname, 1)
+    parsedata(expname, 2)
     # print("Parse data files for SESS2")
     # parsedata(expname, 2)
 

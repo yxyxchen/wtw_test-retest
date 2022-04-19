@@ -28,7 +28,7 @@ RL2 = function(paras, condition_, scheduledWait_, normResults){
   optimRewardRates = normResults$optimRewardRates
   
   # learning parameters
-  alpha = paras[1]; rho = paras[2]; tau = paras[3]; eta = paras[4]; beta = paras[5];
+  alpha = paras[1]; nu = paras[2]; tau = paras[3]; eta = paras[4]; beta = paras[5];
   
   # num of trials
   nTrial = length(scheduledWait_) 
@@ -98,7 +98,7 @@ RL2 = function(paras, condition_, scheduledWait_, normResults){
       if(trialEarnings > 0){
         LR = alpha
       }else{
-        LR = alpha * rho
+        LR = alpha * nu
       }
       # calculate expected returns for t >= 2
       Gts = trialEarnings - rewardRate * (T - tWaits) + V

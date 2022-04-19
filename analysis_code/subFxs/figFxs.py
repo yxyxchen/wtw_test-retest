@@ -108,13 +108,14 @@ def AUC_reliability(sess1_stats, sess2_stats):
     colnames = ['id', 'condition', 'auc']
     df = sess1_stats.loc[:, colnames].merge(sess2_stats.loc[:, colnames], on = ["id", "condition"], suffixes = ['_sess1', '_sess2'])
     g = sns.FacetGrid(df, col= "condition", hue = 'condition', sharex = True, sharey = True, palette = condition_palette)
-    g.map(sns.scatterplot, 'auc_sess1', 'auc_sess2')
-    g.map(my_regplot, 'auc_sess1', "auc_sess2")
+    # g.map(sns.scatterplot, 'auc_sess1', 'auc_sess2')
+    g.map(my_regplot, 'auc_sess1', "auc_sess2", exclude_outliers = False)
+    g.set(xlabel ="AUC SESS1 (s)", ylabel = "AUC SESS2 (s)")
     g.set(ylim=(-0.5, expParas.tMax + 0.5), xlim = (-0.5, expParas.tMax + 0.5))
+    # def plot_reliability(sess1_df, sess2_df, varname, ax, **kwargs):
+    #     df = sess1_df.merge(sess2_df, on = 'id', suffixes = ['_sess1', '_sess2']) 
+    #     my_regplot(df[varname + '_sess1'], df[varname + '_sess2'], **kwargs)
 
-# def plot_reliability(sess1_df, sess2_df, varname, ax, **kwargs):
-#     df = sess1_df.merge(sess2_df, on = 'id', suffixes = ['_sess1', '_sess2']) 
-#     my_regplot(df[varname + '_sess1'], df[varname + '_sess2'], **kwargs)
 
 
 ######################### parameter analysis ###############
@@ -129,18 +130,23 @@ def log_transform_parameter(paradf, selected_paranames):
             # paradf.drop(paraname, axis = 1, inplace = True)
             paradf.rename(columns = {paraname : 'log_' + paraname}, inplace = True)
 
-def plot_parameter_reliability(modelname, paradf_sess1, paradf_sess2):
+
+def plot_parameter_reliability(modelname, paradf_sess1, paradf_sess2, subtitles):
     # log transform parameter data
     log_transform_parameter(paradf_sess1, ['alpha', 'nu', 'eta'])
     log_transform_parameter(paradf_sess2, ['alpha', 'nu', 'eta'])
-
+    plt.style.use('classic')
+    sns.set(font_scale=1.5)
+    sns.set_style("white")
     # reorganize and merge sess1 and sess2 data
     paradf_sess1 = pd.melt(paradf_sess1, id_vars = ('id', 'sess'), value_vars = paradf_sess1.columns.drop(['id', 'sess']))
     paradf_sess2 = pd.melt(paradf_sess2, id_vars = ('id', 'sess'), value_vars = paradf_sess2.columns.drop(['id', 'sess']))
     paradf = paradf_sess1.merge(paradf_sess2, left_on = ("id", "variable"), right_on = ("id", "variable"), suffixes = ['_sess1', '_sess2'])
-
     g = sns.FacetGrid(paradf, col= "variable", sharex = False, sharey = False)
     g.map(my_regplot, 'value_sess1', "value_sess2")
+    g.set(xlabel ="SESS1", ylabel = "SESS2")
+    for i, ax in enumerate(g.axes_dict.values()):
+        ax.set_title(subtitles[i], fontdict= { 'fontsize': 24, 'weight':'bold'})
     return g
 
 def plot_parameter_distribution(modelname, paradf_sess1, paradf_sess2):
@@ -204,6 +210,8 @@ def plot_parameter_selfreport_corr(modelname, hdrdata_sess1, hdrdata_sess2):
     # code.interact(local = dict(locals(), **globals()))
 
 # I am refining code for these several analyses
+
+# yeah I also need to recalc this part 
 def corr_analysis(row_df, col_df, n_perm):
     """ calculate correlations for all combinations of variables in row_df and col_df
     """
@@ -234,16 +242,13 @@ def corr_analysis(row_df, col_df, n_perm):
 
 
 
-################ 
+
 # reliability functions
-def my_regplot(x, y, ax = None, **kwargs):  
+def my_regplot(x, y, ax = None, exclude_outliers = True, **kwargs):  
     if(ax is None):
         ax = plt.gca()
-    # code.interact(local = dict(locals(), **globals()))
-    # calc correlation with all data points
-    # r, ci, _ = analysisFxs.my_bootstrap_corr(x, y) 
-
-    r = spearmanr(x, y, nan_policy = 'omit') 
+    # cacl realibility 
+    spearman_rho, pearson_rho, abs_icc, con_icc, = analysisFxs.calc_reliability(x, y)
     # set boundaries to exclude outliers: either based on the min/max value or the 1.5 iqr limit
     # x_min = x.min(); x_max = x.max()
     # y_min = y.min(); y_max = y.max()
@@ -264,24 +269,29 @@ def my_regplot(x, y, ax = None, **kwargs):
     # print(n_outlier)
     # scatter plot with included data
     # 
-    sns.regplot(x[~is_outlier], y[~is_outlier], **kwargs, ax = ax)
+    if exclude_outliers:
+        sns.regplot(x[~is_outlier], y[~is_outlier], **kwargs, ax = ax)
+        print('n_o = %d'%n_outlier)
+        x_now_min = x[~is_outlier].min()
+        y_now_min = y[~is_outlier].min()
+        x_now_max = x[~is_outlier].max()
+        y_now_max = y[~is_outlier].max()
+        tmp = [min(x_now_min, y_now_min), max(x_now_max, y_now_max)]
+        lims = [tmp[0] - (tmp[1] - tmp[0]) * 0.1, tmp[1] + (tmp[1] - tmp[0]) * 0.1]
+        ax.set_ylim(lims)
+        ax.set_xlim(lims)  
+    else:
+        sns.regplot(x, y, **kwargs, ax = ax)
     # 
     # choose equal limits for the x and y axes
-    x_now_min = x[~is_outlier].min()
-    y_now_min = y[~is_outlier].min()
-    x_now_max = x[~is_outlier].max()
-    y_now_max = y[~is_outlier].max()
-    tmp = [min(x_now_min, y_now_min), max(x_now_max, y_now_max)]
-    lims = [tmp[0] - (tmp[1] - tmp[0]) * 0.1, tmp[1] + (tmp[1] - tmp[0]) * 0.1]
+
     ax.set_xlabel("SESS1 value")
     ax.set_ylabel("SESS2 value")
-    ax.set_ylim(lims)
-    ax.set_xlim(lims)  
     ax.set_aspect('equal')
 
     # add text
-    ax.text(0.7, 0.2, 'r = %.3f\n'%r, size=15, color='red', transform=ax.transAxes)
-    print('n_o = %d'%n_outlier)
+    # code.interact(local = dict(locals(), **globals()))
+    ax.text(0.4, 0.1, 'ICC = %.3f\n'%abs_icc, size=16, color='red', transform=ax.transAxes)
     # print('ci = (%.3f, %.3f)'%ci)
     # ax.text(0.7, 0.1, 'n_o = %d'%n_outlier, size=15, color='red', transform=ax.transAxes)
 
