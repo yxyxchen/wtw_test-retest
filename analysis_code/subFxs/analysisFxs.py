@@ -785,7 +785,7 @@ def ind_MF(trialdata, key, isTrct = True, plot_RT = False, plot_trial = False, p
     return stats, objs
 
 
-def ind_sim_MF(simdata, key, plot_trial = False, plot_KMSC = False, plot_WTW = False):
+def ind_sim_MF(simdata, empdata, key, plot_trial = False, plot_KMSC = False, plot_WTW = False):
     """ 
         # this is for replication simulation though
         using wtw analysis here will be risky because balabala time longer will be truncated
@@ -810,6 +810,7 @@ def ind_sim_MF(simdata, key, plot_trial = False, plot_KMSC = False, plot_WTW = F
     nBlock = len(np.unique(simdata.blockIdx))
     for i in range(nBlock):
         blockdata = simdata[simdata.blockIdx == i + 1]
+        emp_blockdata = empdata[empdata.blockIdx == i + 1]
         condition = blockdata.condition.values[0]
         conditionColor = expParas.conditionColors[condition]
         # code.interact(local = dict(locals(), **globals()))
@@ -830,7 +831,7 @@ def ind_sim_MF(simdata, key, plot_trial = False, plot_KMSC = False, plot_WTW = F
         wtwTS(
             blockdata['trialEarnings'].values,
             blockdata['timeWaited'].values,
-            blockdata['sellTime'].values,
+            emp_blockdata['sellTime'].values,
             blockdata['blockIdx'].values,
             expParas.tMax, 
             np.linspace(0, expParas.blocksec, int(len(expParas.TaskTime) / 2)),
@@ -871,7 +872,7 @@ def group_MF(trialdata_, plot_each = False):
     idx = 0
     for key, trialdata in trialdata_.items():
         if plot_each:
-            stats, objs  = ind_MF(trialdata, key, plot_RT = True, plot_trial = True, plot_KMSC = False, plot_WTW = True)
+            stats, objs  = ind_MF(trialdata, key, plot_RT = False, plot_trial = True, plot_KMSC = False, plot_WTW = True)
             plt.show()
             input("Press Enter to continue...")
             plt.clf()
@@ -896,7 +897,7 @@ def group_MF(trialdata_, plot_each = False):
 
     return stats_, Psurv_block1_, Psurv_block2_, WTW_
 
-def group_sim_MF(simdata_, plot_each = False):
+def group_sim_MF(simdata_, empdata, plot_each = False):
     """
         conduct MF analysis for multiple participants/simulated datasets
     """
@@ -915,12 +916,12 @@ def group_sim_MF(simdata_, plot_each = False):
     # loop over participants 
     for i, simdata in enumerate(simdata_):
         if plot_each:
-            stats, objs  = stats, objs  = ind_sim_MF(simdata, 'sim_%d'%i, plot_trial = True, plot_KMSC = False, plot_WTW = True)
+            stats, objs  = stats, objs  = ind_sim_MF(simdata, empdata, 'sim_%d'%i, plot_trial = True, plot_KMSC = False, plot_WTW = True)
             plt.show()
             input("Press Enter to continue...")
             plt.clf()
         else:
-            stats, objs  = stats, objs  = ind_sim_MF(simdata, 'sim_%d'%i)
+            stats, objs  = stats, objs  = ind_sim_MF(simdata, empdata, 'sim_%d'%i)
         
         # append data
         stats_.append(stats)

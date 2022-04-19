@@ -491,6 +491,7 @@ if __name__ == "__main__":
     ############################
     ## group-level behavior  ##
     ############################
+    # replicate Wtw 
 
 
 
@@ -547,6 +548,38 @@ if __name__ == "__main__":
     plt.savefig(os.path.join("..", "figures", expname, "delta_auc_reliability.pdf"))
 
 
+    ##############
+    ## modelrep ##
+    ##############
+    for modelname in modelnames:
+        s1_paradf = loadFxs.load_parameter_estimates(expname, 1, hdrdata_sess1, modelname, modelname)
+        s2_paradf = loadFxs.load_parameter_estimates(expname, 2, hdrdata_sess2, modelname, modelname)
+        s1_stats_rep, s1_WTW_rep = modelFxs.group_model_rep(trialdata_sess1_, s1_paradf, modelname, isTrct = True, plot_each = False)
+        s2_stats_rep, s2_WTW_rep = modelFxs.group_model_rep(trialdata_sess2_, s2_paradf, modelname, isTrct = True, plot_each = False)
+        s1_stats_rep.to_csv(os.path.join('..', 'analysis_results', expname, 'taskstats', 'rep_%s_sess1.csv'%modelname), index = None)
+        s2_stats_rep.to_csv(os.path.join('..', 'analysis_results', expname, 'taskstats', 'rep_%s_sess2.csv'%modelname), index = None)
+
+
+        figFxs.plot_group_emp_rep(modelname, s1_stats_rep, s2_stats_rep, s1_stats, s2_stats)
+        plt.gcf().set_size_inches(8, 4)
+        plt.savefig(os.path.join('..', 'figures', expname, 'auc_emp_rep_%s.pdf'%modelname))
+
+        figFxs.plot_group_emp_rep_wtw(modelname, s1_WTW_rep, s2_WTW_rep, s1_WTW_, s2_WTW_, hdrdata_sess1, hdrdata_sess2, s1_paradf, s2_paradf)
+        plt.gcf().set_size_inches(8, 4)
+        plt.savefig(os.path.join('..', 'figures', expname, 'wtw_emp_rep_%s.pdf'%modelname))
+
+    ##########################
+    ## parameter histograms ##
+    ##########################
+    for modelname in modelnames:
+        s1_paradf = loadFxs.load_parameter_estimates(expname, 1, hdrdata_sess1, modelname, modelname)
+        s2_paradf = loadFxs.load_parameter_estimates(expname, 2, hdrdata_sess2, modelname, modelname)
+        figFxs.plot_parameter_distribution(modelname, s1_paradf, s2_paradf)
+        plt.gcf().set_size_inches(4 * len(paranames), 10)
+        plt.savefig(os.path.join("..", 'figures', expname, "%s_para_hist.pdf"%modelname))
+        # 
+        figFxs.plot_parameter_compare(modelname, s1_paradf.iloc[:,:-1], s2_paradf.iloc[:,:-1], subtitles)
+
     ###################### parameter reliability #########
     for modelname in ['QL1', 'QL2']:
         paranames = modelFxs.getModelParas(modelname)
@@ -561,21 +594,7 @@ if __name__ == "__main__":
         plt.savefig(os.path.join("..", 'figures', expname, "%s_para_reliability.pdf"%modelname))
 
 
-    ############################
-    ## bootstrap reliability ##
-    ############################
-    for modelname in modelnames:
-        s1_paradf = loadFxs.load_parameter_estimates(expname, 1, hdrdata_sess1, modelname, modelname)
-        s2_paradf = loadFxs.load_parameter_estimates(expname, 2, hdrdata_sess2, modelname, modelname)
-        s1_stats_rep = modelFxs.group_model_rep(trialdata_sess1_, s1_paradf, modelname, isTrct = True, plot_each = False)
-        s2_stats_rep = modelFxs.group_model_rep(trialdata_sess2_, s2_paradf, modelname, isTrct = True, plot_each = False)
-        s1_stats_rep.to_csv(os.path.join('..', 'analysis_results', expname, 'taskstats', 'rep_%s_sess1.csv'%modelname), index = None)
-        s2_stats_rep.to_csv(os.path.join('..', 'analysis_results', expname, 'taskstats', 'rep_%s_sess2.csv'%modelname), index = None)
 
-
-    figFxs.plot_group_emp_rep(modelname, s1_stats_rep, s2_stats_rep, s1_stats, s2_stats)
-    plt.gcf().set_size_inches(8, 4)
-    plt.savefig(os.path.join('..', 'figures', expname, 'auc_emp_rep.pdf'))
 
 
     ##########

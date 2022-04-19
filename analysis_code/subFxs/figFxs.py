@@ -37,9 +37,33 @@ condition_palette = ["#762a83", "#1b7837"]
 
 
 ######## 
-def plot_group_emp_rep(modelname, rep_sess1, rep_sess2, emp_sess1, emp_sess2):
-    # code.interact(local = dict(locals(), **globals()))
+def plot_group_emp_rep_wtw(modelname, s1_WTW_rep, s2_WTW_rep, s1_WTW_emp, s2_WTW_emp, hdrdata_sess1, hdrdata_sess2, s1_paradf, s2_paradf):
+    s1_WTW_emp = s1_WTW_emp[np.isin(hdrdata_sess1.id, s1_paradf.id), ]
+    s1_ave_emp = s1_WTW_emp.mean(axis = 0)
+    s1_ave_rep = s1_WTW_rep.mean(axis = 0)
 
+
+    s2_WTW_emp = s2_WTW_emp[np.isin(hdrdata_sess2.id, s2_paradf.id), ]
+    s2_ave_emp = s2_WTW_emp.mean(axis = 0)
+    s2_ave_rep = s2_WTW_rep.mean(axis = 0)
+
+    # it is kinda problematic
+    plotdf = pd.DataFrame({
+        "wtw": np.concatenate([s1_ave_emp, s1_ave_rep, s2_ave_emp, s2_ave_rep]),
+        "type": np.tile(np.repeat(["emp", "rep"], len(expParas.TaskTime)), 2),
+        "time": np.tile(expParas.TaskTime, 4),
+        "sess": np.repeat(["SESS1", "SESS2"], len(expParas.TaskTime) * 2)
+        })
+
+    g = sns.FacetGrid(plotdf, col= "sess", hue = 'type', sharex = True, sharey = True, palette = ["black", "red"])
+    g.map(sns.lineplot, "time", "wtw")
+    g.set(ylim=(-0.5, expParas.tMax + 0.5), ylabel = "WTW (s)", xlabel = "Task time (s)")
+    axs = g.axes_dict.values()
+    for i, ax in enumerate(axs):
+        ax.set_title("SESS%d"%(i+1))
+    return g
+
+def plot_group_emp_rep(modelname, rep_sess1, rep_sess2, emp_sess1, emp_sess2):
     # plot AUC against AUC
     # code.interact(local = dict(locals(), **globals()))
     rep = pd.concat([rep_sess1[['auc', 'id', 'condition', 'sess']], rep_sess2[['auc', 'id', 'condition', 'sess']]])
@@ -151,14 +175,38 @@ def plot_parameter_reliability(modelname, paradf_sess1, paradf_sess2, subtitles)
 
 def plot_parameter_distribution(modelname, paradf_sess1, paradf_sess2):
     # get model parameters
+    # hmmm maybe i will think again 
     paranames = modelFxs.getModelParas(modelname)
     npara = len(paranames)
 
     # merge sess1 and sess2 data
     tmp = pd.concat([paradf_sess1, paradf_sess2])
     plotdf = tmp.melt(id_vars = ['id', 'sess'], value_vars = paranames)
+    plt.style.use('classic')
+    sns.set(font_scale=1.5)
+    sns.set_style("white")
     g = sns.FacetGrid(plotdf, col= "variable", row = 'sess', sharex = 'col')
     g.map(sns.histplot, "value", bins = 10) # this works, but low flexibility
+    for (row_key, col_key), ax in g.axes_dict.items():
+        ax.set_title(r'SESS%d, $\%s$'%(row_key, col_key), fontdict= { 'fontsize': 24, 'weight':'bold'})
+    return g
+
+def plot_parameter_compare(modelname, paradf_sess1, paradf_sess2, subtitles):
+    # compare session-by-session differences
+    log_transform_parameter(paradf_sess1, ['alpha', 'nu', 'eta'])
+    log_transform_parameter(paradf_sess2, ['alpha', 'nu', 'eta'])
+    paradf_sess1 = pd.melt(paradf_sess1, id_vars = ('id', 'sess'), value_vars = paradf_sess1.columns.drop(['id', 'sess']))
+    paradf_sess2 = pd.melt(paradf_sess2, id_vars = ('id', 'sess'), value_vars = paradf_sess2.columns.drop(['id', 'sess']))
+    plotdf = pd.concat([paradf_sess1.loc[np.isin(paradf_sess1.id, paradf_sess2.id)], paradf_sess2])
+    # compare differences
+    plt.style.use('classic')
+    sns.set(font_scale=1.5)
+    sns.set_style("white")
+    g = sns.FacetGrid(plotdf, col= "variable", sharey = False)
+    g.map(sns.boxplot, "sess", "value")
+    print(g.axes_dict.values())
+    for i, ax in enumerate(g.axes_dict.values()):
+        ax.set_title(subtitles[i], fontdict= { 'fontsize': 24, 'weight':'bold'})
     return g
 
 

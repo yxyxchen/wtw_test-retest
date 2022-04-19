@@ -134,7 +134,7 @@ def ind_model_rep(modelname, paras, trialdata, key, nsim, plot_each):
         simdata_.append(simdata)
 
     # analyze simulated datasets
-    stats_, Psurv_block1_, Psurv_block2_, WTW_ = analysisFxs.group_sim_MF(simdata_)
+    stats_, Psurv_block1_, Psurv_block2_, WTW_ = analysisFxs.group_sim_MF(simdata_, trialdata)
 
     # return summary statistics
     stats = stats_.groupby(['block', 'condition']).agg('mean')
@@ -165,6 +165,7 @@ def group_model_rep(trialdata_, paradf, modelname, isTrct = True, plot_each = Fa
 
     # initialize outputs
     stats_ = []
+    WTW_ = []
     # loop over participants
     for key, trialdata in trialdata_.items():
         # code.interact(local = dict(locals(), **globals()))
@@ -195,24 +196,26 @@ def group_model_rep(trialdata_, paradf, modelname, isTrct = True, plot_each = Fa
         # replicate original behaviors
         paras = dict(zip(paranames, paravals))
         if plot_each:
-            stats, _, _, _ = ind_model_rep(modelname, paras, trialdata, key, 10, plot_each = True)
+            stats, _, _, WTW = ind_model_rep(modelname, paras, trialdata, key, 10, plot_each = True)
             plt.show()
             input("Press Enter to continue or ESC to exit...")
             plt.clf()
         else:
-            stats, _, _, _ = ind_model_rep(modelname, paras, trialdata, key, 10, plot_each = False)
+            stats, _, _, WTW = ind_model_rep(modelname, paras, trialdata, key, 10, plot_each = False)
         stats['id'] = np.full(2, key[0])
         stats['sess'] = np.full(2, key[1])
         stats['key'] = np.full(2, str(key))
         stats_.append(stats)
+        WTW_.append(WTW)
         # add more code tomorrow.
         # emp_stats, emp_obj = analysisFxs.ind_MF(trialdata, key, plot_trial = True, plot_KMSC = True, plot_WTW = True)
     stats_ = pd.concat(stats_)
     stats_ = stats_.reset_index()
+    WTW_ = np.array([e for e in WTW_])
     # code.interact(local = dict(locals(), **globals()))
     # temporarily let's save it to save time
     # stats_.to_csv(os.path.join('..', 'analysis_results', 'taskstats', 'rep_%s_sess%d.csv'%(modelname, key[1])), index = None)
-    return stats_
+    return stats_, WTW_
        
 
 
