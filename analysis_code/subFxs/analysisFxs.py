@@ -53,6 +53,33 @@ def calc_se(x):
 
 ################ I want to write some correlation functions that I can use repeatedly ##########
 # def calc_cross_correlations(df, row_vars, col_vars):
+def calc_zip_reliability(df, vars):
+    n_var = len(vars)
+    spearman_rho_ = np.zeros(n_var)
+    # spearman_p_ = np.zeros(n_var)
+    pearson_rho_ = np.zeros(n_var)
+    # pearson_p_ = np.zeros(n_var)
+    abs_icc_ = np.zeros(n_var)
+    con_icc_ = np.zeros(n_var)
+    n_ = np.zeros(n_var)
+
+    for i, var in enumerate(vars):
+        spearman_rho, pearson_rho, abs_icc, con_icc = calc_reliability(df[var[0]].values, df[var[1]].values)
+        spearman_rho_[i] = spearman_rho
+        pearson_rho_[i] = pearson_rho
+        abs_icc_[i] = abs_icc
+        con_icc_[i] = con_icc
+        n_[i] = min(np.sum(~np.isnan(df[var[0]])), np.sum(~np.isnan(df[var[1]])))
+    
+    report = pd.DataFrame({
+        "spearman_rho": spearman_rho_,
+        "pearson_rho": pearson_rho_,
+        "abs_icc": abs_icc_,
+        "con_icc": con_icc_,
+        "sample size" : n_
+        }, index = vars)
+    return spearman_rho_, pearson_rho_, abs_icc_, con_icc_, n_, report
+
 def calc_zip_correlations(df, vars):
     n_var = len(vars)
     rs = np.zeros(n_var)
@@ -101,13 +128,14 @@ def calc_icc(x, y):
     abs_icc = (msbs - mse)  / (msbs + (k-1) * mse + k / n * (msbm - mse))
     con_icc = (msbs - mse)  / (msbs + (k-1) * mse)
 
-    return abs_icc, con_icc
+    return abs_icc, con_icc, ssbs, ssbm, sse, msbs, msbm, mse
 
 def calc_reliability(x, y):
+    x, y = x[np.logical_and(~np.isnan(x), ~np.isnan(y))], y[np.logical_and(~np.isnan(x), ~np.isnan(y))]
     spearman_rho = stats.spearmanr(x, y, nan_policy = "omit")[0]
     pearson_rho = stats.pearsonr(x, y)[0]
-    abs_icc, con_icc = calc_icc(x, y)
-    return spearman_rho, pearson_rho, abs_icc, con_icc
+    abs_icc, con_icc, ssbs, ssbm, sse, msbs, msbm, mse = calc_icc(x, y)
+    return spearman_rho, pearson_rho, abs_icc, con_icc, ssbs, ssbm, sse, msbs, msbm, mse
 
 def calc_bootstrap_reliability(x, y, n_perm = 1000, alpha = 0.95, n = None):
     """ calc reliability measure, bootstrapped CI and distribution. 
@@ -756,6 +784,10 @@ def ind_MF(trialdata, key, isTrct = True, plot_RT = False, plot_trial = False, p
             sub_aucs.append(auc) 
             sub_std_wtws.append(std_wtw)
 
+        # remove the data near the beginning of the block
+        # this is not necessary for the HP block
+        _, _, _, _, block_auc_rh, block_std_wtw_rh = kmsc(blockdata.loc[blockdata['trialStartTime'] >= 90], expParas.tMax, expParas.Time, False)
+
         # RT stats 
         # ready_RT_median, ready_RT_mean, ready_RT_se
         sell_RT_median, sell_RT_mean, sell_RT_se = desc_RT(blockdata)
@@ -772,7 +804,7 @@ def ind_MF(trialdata, key, isTrct = True, plot_RT = False, plot_trial = False, p
         #     "sell_RT_median": sell_RT_median,\
         #     "sell_RT_mean": sell_RT_mean, "sell_RT_se": sell_RT_se,\
         #     "condition": condition}, index = [i])
-        tmp = {"id": key[0], "sess": key[1], "key": str(key), "block": i + 1, "auc": block_auc, "std_wtw": block_std_wtw, "init_wtw": init_wtw, \
+        tmp = {"id": key[0], "sess": key[1], "key": str(key), "block": i + 1, "auc": block_auc, "auc_rh": block_auc_rh, "std_wtw": block_std_wtw, "std_wtw_rh": block_std_wtw_rh, "init_wtw": init_wtw, \
             "sell_RT_median": sell_RT_median, "sell_RT_mean": sell_RT_mean, "sell_RT_se": sell_RT_se, "condition": condition}
         tmp.update(dict(zip(['auc' + str((i + 1)) for i in range(n_sublock)], sub_aucs)))
         tmp.update(dict(zip(['std_wtw' + str((i + 1)) for i in range(n_sublock)], sub_std_wtws)))

@@ -270,7 +270,7 @@ def corr_analysis(row_df, col_df, n_perm):
     r_table = np.zeros([len(row_vars), len(col_vars)])
     p_table = np.zeros([len(row_vars), len(col_vars)])
     perm_r_ = np.zeros((len(row_vars), len(col_vars), n_perm)) # permutated r for each comb of row var and col var
-
+    perm_p_table = np.zeros([len(row_vars), len(col_vars)])
     # loop 
     for i, row_var in enumerate(row_vars):
         for j, col_var in enumerate(col_vars):
@@ -280,11 +280,12 @@ def corr_analysis(row_df, col_df, n_perm):
             r_table[i, j] = res[0]
             p_table[i, j] = res[1]
             for k in range(n_perm):
-                # fix x and shuffle y, using np.random.permutation which returns a copy of y
                 perm_r_[i, j, k] = spearmanr(x, np.random.permutation(y), nan_policy = 'omit')[0]
+            perm_p_table[i, j] = np.mean(np.abs(perm_r_[i, j, :]) > np.abs(r_table[i, j]))
     r_table = pd.DataFrame(r_table, index = row_vars, columns = col_vars)
     p_table = pd.DataFrame(p_table, index = row_vars, columns = col_vars)
-    return r_table, p_table, perm_r_
+    perm_p_table = pd.DataFrame(perm_p_table, index = row_vars, columns = col_vars)
+    return r_table, p_table, perm_r_, perm_p_table
 
 # def all_reliability(sess1_stats, sess2_stats):
 

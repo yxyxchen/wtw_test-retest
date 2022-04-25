@@ -115,8 +115,8 @@ calc_k_lookup_table = function(filepath){
 
 ####### main script #########
 if (!interactive()) {
-  expname = "active"
-  sess = 1
+  expname = "passive"
+  sess = 2
   filepath = file.path("data", expname, sprintf("selfreport_sess%d.csv", sess))
   resdf = calc_k_lookup_table(filepath)
   write_csv(resdf, file.path("..",  "analysis_results", expname, 'selfreport',  sprintf('MCQ_sess%d.csv', sess)))

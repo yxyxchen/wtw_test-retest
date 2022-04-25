@@ -37,6 +37,7 @@ def softmax_dec(Qwait, Qquit, paras):
 		action = 'quit'
 	return action
 
+
 def QL2_learn(Qwaits, Qquit, ts, timeWaited, trialEarnings, paras, empirical_iti = expParas.iti):
 	""" Learning rule for QL2
 	"""
@@ -234,11 +235,7 @@ def ind_sim(modelname, paras, condition_, blockIdx_, scheduledDelay_, scheduledR
 		"trialEarnings": trialEarnings_,
 		"sellTime": sellTime_
 	})
-
 	return outputs
-
-
-
 
 
 
