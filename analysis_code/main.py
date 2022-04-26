@@ -34,7 +34,7 @@ import importlib
 
 # plot styles
 plt.style.use('classic')
-sns.set(font_scale = 2)
+sns.set(font_scale = 1)
 sns.set_style("white")
 condition_palette = ["#762a83", "#1b7837"]
 
@@ -463,6 +463,11 @@ if __name__ == "__main__":
     s2_stats = pd.read_csv(os.path.join('..', 'analysis_results', expname, 'taskstats', 'emp_sess2.csv'))
     code.interact(local = dict(globals(), **locals()))
 
+    # better data quality cleaning?
+    ids = np.unique(s2_stats.id)[:5] # "1304"
+    fig, axs = plt.subplots(2, 5)
+    for i, id in enumerate(ids):
+        analysisFxs.plot_ind(trialdata_sess1_[(id, 1)], trialdata_sess2_[(id, 2)], axs[:,i])
     #################################
     ## conduct model-free analysis ##
     #################################
@@ -498,42 +503,42 @@ if __name__ == "__main__":
     ####################
     # calc reliability # 
     ######################
-colvars = ['auc', 'auc1', 'auc2', "auc_rh", 'std_wtw', 'std_wtw1', 'std_wtw2', "std_wtw_rh"]
-s1_HP = s1_stats.loc[s1_stats['condition'] == 'HP', colvars + ['id']]
-s1_LP = s1_stats.loc[s1_stats['condition'] == 'LP', colvars + ['id']]
-s1_df = s1_HP.merge(s1_LP, left_on = 'id', right_on = 'id', suffixes = ['_HP', "_LP"])
+    colvars = ['auc', 'auc1', 'auc2', "auc_rh", 'std_wtw', 'std_wtw1', 'std_wtw2', "std_wtw_rh"]
+    s1_HP = s1_stats.loc[s1_stats['condition'] == 'HP', colvars + ['id']]
+    s1_LP = s1_stats.loc[s1_stats['condition'] == 'LP', colvars + ['id']]
+    s1_df = s1_HP.merge(s1_LP, left_on = 'id', right_on = 'id', suffixes = ['_HP', "_LP"])
 
-s2_HP = s2_stats.loc[s2_stats['condition'] == 'HP', colvars + ['id']]
-s2_LP = s2_stats.loc[s2_stats['condition'] == 'LP', colvars + ['id']]
-s2_df = s2_HP.merge(s2_LP, left_on = 'id', right_on = 'id', suffixes = ['_HP', "_LP"])
+    s2_HP = s2_stats.loc[s2_stats['condition'] == 'HP', colvars + ['id']]
+    s2_LP = s2_stats.loc[s2_stats['condition'] == 'LP', colvars + ['id']]
+    s2_df = s2_HP.merge(s2_LP, left_on = 'id', right_on = 'id', suffixes = ['_HP', "_LP"])
 
-# add delta variables
-auc_vars = ['auc', 'auc1', 'auc2', "auc_rh"]
-s1_df = pd.concat([s1_df, s1_df.filter(like = "auc", axis = 1).filter(like='HP', axis=1).set_axis([x+'_delta' for x in auc_vars], axis = 1) - s1_df.filter(like = "auc", axis = 1).filter(like='LP', axis=1).set_axis([x+'_delta' for x in auc_vars], axis = 1)], axis = 1)
-s2_df = pd.concat([s2_df, s2_df.filter(like = "auc", axis = 1).filter(like='HP', axis=1).set_axis([x+'_delta' for x in auc_vars], axis = 1) - s2_df.filter(like = "auc", axis = 1).filter(like='LP', axis=1).set_axis([x+'_delta' for x in auc_vars], axis = 1)], axis = 1)
+    # add delta variables
+    auc_vars = ['auc', 'auc1', 'auc2', "auc_rh"]
+    s1_df = pd.concat([s1_df, s1_df.filter(like = "auc", axis = 1).filter(like='HP', axis=1).set_axis([x+'_delta' for x in auc_vars], axis = 1) - s1_df.filter(like = "auc", axis = 1).filter(like='LP', axis=1).set_axis([x+'_delta' for x in auc_vars], axis = 1)], axis = 1)
+    s2_df = pd.concat([s2_df, s2_df.filter(like = "auc", axis = 1).filter(like='HP', axis=1).set_axis([x+'_delta' for x in auc_vars], axis = 1) - s2_df.filter(like = "auc", axis = 1).filter(like='LP', axis=1).set_axis([x+'_delta' for x in auc_vars], axis = 1)], axis = 1)
 
-# add mean variables 
-s1_df = pd.concat([s1_df, (s1_df.filter(like = "auc", axis = 1).filter(like='HP', axis=1).set_axis([x+'_ave' for x in auc_vars], axis = 1) + s1_df.filter(like = "auc", axis = 1).filter(like='LP', axis=1).set_axis([x+'_ave' for x in auc_vars], axis = 1)) / 2], axis = 1) 
-s2_df = pd.concat([s2_df, (s2_df.filter(like = "auc", axis = 1).filter(like='HP', axis=1).set_axis([x+'_ave' for x in auc_vars], axis = 1) + s2_df.filter(like = "auc", axis = 1).filter(like='LP', axis=1).set_axis([x+'_ave' for x in auc_vars], axis = 1)) / 2], axis = 1)
+    # add mean variables 
+    s1_df = pd.concat([s1_df, (s1_df.filter(like = "auc", axis = 1).filter(like='HP', axis=1).set_axis([x+'_ave' for x in auc_vars], axis = 1) + s1_df.filter(like = "auc", axis = 1).filter(like='LP', axis=1).set_axis([x+'_ave' for x in auc_vars], axis = 1)) / 2], axis = 1) 
+    s2_df = pd.concat([s2_df, (s2_df.filter(like = "auc", axis = 1).filter(like='HP', axis=1).set_axis([x+'_ave' for x in auc_vars], axis = 1) + s2_df.filter(like = "auc", axis = 1).filter(like='LP', axis=1).set_axis([x+'_ave' for x in auc_vars], axis = 1)) / 2], axis = 1)
 
-# add init_wtw variables
-s1_df = s1_df.merge(s1_stats.loc[s1_stats.block == 1, ["id", "init_wtw"]], on = "id")
-#s1_df = s1_df.merge(s2_stats.loc[s2_stats.block == 1, ["id", "init_wtw"]], on = "id") 
-s1_df['init_wtw'] = s1_df['init_wtw'] + 1
-s2_df = s2_df.merge(s2_stats.loc[s2_stats.block == 1, ["id", "init_wtw"]], on = "id")
+    # add init_wtw variables
+    s1_df = s1_df.merge(s1_stats.loc[s1_stats.block == 1, ["id", "init_wtw"]], on = "id")
+    #s1_df = s1_df.merge(s2_stats.loc[s2_stats.block == 1, ["id", "init_wtw"]], on = "id") 
+    s1_df['init_wtw'] = s1_df['init_wtw'] + 1
+    s2_df = s2_df.merge(s2_stats.loc[s2_stats.block == 1, ["id", "init_wtw"]], on = "id")
 
-        # merge
-df = s1_df.merge(s2_df, on = 'id', suffixes = ['_sess1', '_sess2']) 
+            # merge
+    df = s1_df.merge(s2_df, on = 'id', suffixes = ['_sess1', '_sess2']) 
 
 
-    # variable names 
-vars = ['auc_delta', 'auc1_delta', 'auc2_delta'] + ['auc_ave', 'auc1_ave', 'auc2_ave'] + [x + "_HP" for x in colvars] + [x + "_LP" for x in colvars] + ['init_wtw']
-rows = ['spearman_rho', 'pearson_rho', 'abs_icc', 'con_icc', "ssbs", "ssbm", "sse", "msbs", "msbm", "mse"]
-reliable_df = np.zeros([len(rows), len(vars)])
-for i, var in enumerate(vars):
-    reliable_df[:,i] = analysisFxs.calc_reliability(df.loc[:, var + '_sess1'], df.loc[:, var + '_sess2'])
+        # variable names 
+    vars = ['auc_delta', 'auc1_delta', 'auc2_delta'] + ['auc_ave', 'auc1_ave', 'auc2_ave'] + [x + "_HP" for x in colvars] + [x + "_LP" for x in colvars] + ['init_wtw']
+    rows = ['spearman_rho', 'pearson_rho', 'abs_icc', 'con_icc', "ssbs", "ssbm", "sse", "msbs", "msbm", "mse"]
+    reliable_df = np.zeros([len(rows), len(vars)])
+    for i, var in enumerate(vars):
+        reliable_df[:,i] = analysisFxs.calc_reliability(df.loc[:, var + '_sess1'], df.loc[:, var + '_sess2'])
 
-reliable_df = pd.DataFrame(reliable_df, columns = vars, index = rows)
+    reliable_df = pd.DataFrame(reliable_df, columns = vars, index = rows)
     reliable_df.to_csv(os.path.join("..", "analysis_results", expname, "mf_reliability.csv"))
 
     ######################

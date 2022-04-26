@@ -32,7 +32,9 @@ from subFxs import loadFxs
 from subFxs import figFxs
 from subFxs import analysisFxs
 
-
+plt.style.use('classic')
+sns.set(font_scale = 1)
+sns.set_style("white")
 
 HP_delays = [9000, 10500, 3000, 4500, 3000, 12000, 10500, 10500, 12000, 6000, 12000,
 9000, 1500, 6000, 6000, 10500, 7500, 1500, 4500, 4500, 6000, 7500, 7500, 9000, 12000,
@@ -142,13 +144,13 @@ def ind_threshold_sim(threshold, sigma, condition, duration):
     while elapsedTime < duration:
         if tIdx >= len(delays):
             tIdx = 0
-        delay = delays[tIdx] / 1000
+        delay = delays[tIdx] / 1000 # seconds
         this_threshold = threshold + np.random.normal(0, sigma) 
-        trialEarnings = 10 if this_threshold >= delay else 0
+        trialEarnings = 10 if this_threshold > delay else 0
         timeWaited = np.min([delay, this_threshold])
 
         # if sellTime < ...
-        if elapsedTime + timeWaited < duration:
+        if elapsedTime + timeWaited < duration: # < not <=, otherwise i will get wierd results with strict thresholds 
             sellTime_.append(elapsedTime + timeWaited)
             trialEarnings_.append(trialEarnings)
             timeWaited_.append(timeWaited)
@@ -166,12 +168,13 @@ def ind_threshold_sim(threshold, sigma, condition, duration):
 ######## main #########
 if __name__ == "__main__":
     code.interact(local = dict(locals(), **globals()))
-thresholds = np.linspace(0.5, 11.5, 12)
-durations = np.linspace(1, 5, 5) * 1000
+thresholds = np.linspace(1.5, 11.5, 5) #if threshold happen to be exactly the same as the numbers then when >= ... wierd results
+# thresholds = [1.5]
+durations = np.linspace(1, 5, 5) * 60
 
 n_sim = 20
-condition = "HP"
-sigma = 0
+condition = "LP"
+sigma = 2
 
 
 
@@ -197,8 +200,10 @@ plotdf = pd.DataFrame({
     "duration": duration_,
     "threshold": threshold_,
     })
-
+plotdf.groupby(["duration", "threshold"]).agg({"auc":["mean"]})
 g = sns.FacetGrid(plotdf, col = "duration")
 g.map(sns.boxplot, "threshold", "auc")
+plt.show()
+
 
 # I can update them later 

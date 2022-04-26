@@ -21,7 +21,8 @@ import code
 import importlib
 import random
 
-#############  some basic helper functions 
+
+
 def pivot_by_condition(df, columns, index):
     """ pivot a table of summary statistics based on condition 
     """
@@ -579,6 +580,7 @@ def kmsc(data, tMax, Time, plot_KMSC = False):
     time, psurv = km(event_observed, durations)
     
     # add the first and the last datapoints
+    # ok here is the wierd point
     psurv = psurv[time < tMax]
     time = time[time < tMax]
     time = np.insert(time, 0, 0);  time = np.append(time, tMax)
@@ -1026,5 +1028,53 @@ def plot_group_KMSC(Psurv_block1_, Psurv_block2_, Time, ax, **kwargs):
     ax.set_xlim((0, expParas.tMax))
     ax.get_legend().remove()
     # plt.savefig(savepath)
+
+####### hazard plot
+def psurv2hazard(t, s):
+    # first 
+
+    time = t[1:]
+    f = -np.diff(s)
+    hazard = f / s[:-1]
+    hazard[f == 0] = 0
+
+    # exclude data points after hazard reaches 1
+    time = time[:sum(s > 0)]
+    hazard = hazard[:sum(s > 0)]
+
+    return time, hazard
+
+def plot_ind(trialdata_s1, trialdata_s2, axs, isTrct = True):
+    if isTrct:
+        trialdata_s1 = trialdata_s1[trialdata_s1.sellTime <= expParas.blocksec - np.max(expParas.tMaxs)]
+        trialdata_s2 = trialdata_s2[trialdata_s2.sellTime <= expParas.blocksec - np.max(expParas.tMaxs)]
+    nBlock = len(np.unique(trialdata_s1.blockIdx))
+    for i in range(nBlock):
+        blockdata = trialdata_s1[trialdata_s1.blockIdx == i + 1]
+        condition = blockdata.condition.values[0]
+        conditionColor = expParas.conditionColors[condition]
+        # Survival analysis
+        t, s, _, _, auc, _= kmsc(blockdata, expParas.tMax, expParas.Time, False)
+        time, hazard = psurv2hazard(t, s)
+        axs[0].plot(t, s, color = conditionColor)
+        axs[0].text(0.8, 0.5 - i * 0.1,  condition + "1" + " : " + str(round(auc,2)), transform=axs[0].transAxes)
+        axs[1].plot(time, hazard, color = conditionColor)
+
+    nBlock = len(np.unique(trialdata_s2.blockIdx))
+    for i in range(nBlock):
+       blockdata = trialdata_s2[trialdata_s2.blockIdx == i + 1]
+       condition = blockdata.condition.values[0]
+       conditionColor = expParas.conditionColors[condition]
+       # Survival analysis
+       t, s, _, _, auc, _= kmsc(blockdata, expParas.tMax, expParas.Time, False)
+       time, hazard = psurv2hazard(t, s)
+       axs[0].plot(t, s, color = conditionColor, linestyle='dashed')
+       axs[0].text(0.8, 0.3 - i * 0.1, condition + "2" + " : " + str(round(auc,2)), transform=axs[0].transAxes)
+       axs[1].plot(time, hazard, color = conditionColor, linestyle='dashed')
+
+    axs[0].set_xlabel("Elapsed time (s)")
+    axs[1].set_xlabel("Elapsed time (s)")
+    axs[0].set_ylabel("Survival rate")
+    axs[1].set_ylabel("Hazard rate")
 
 
