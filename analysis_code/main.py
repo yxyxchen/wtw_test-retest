@@ -471,6 +471,10 @@ if __name__ == "__main__":
     #################################
     ## conduct model-free analysis ##
     #################################
+    ids = np.unique(s2_stats.id)[:5]
+    key = ('s1007', 1)
+    trialdata = trialdata_sess1_[key]
+    stats, obj = analysisFxs.ind_MF(trialdata, key, plot_trial = True, plot_WTW = True)
     s1_stats, s1_Psurv_b1_, s1_Psurv_b2_, s1_WTW_ = analysisFxs.group_MF(trialdata_sess1_, plot_each = False)   
     s1_stats.to_csv(os.path.join('..', 'analysis_results', expname, 'taskstats', 'emp_sess1.csv'), index = None)
 

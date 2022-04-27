@@ -667,18 +667,17 @@ def wtwTS(trialEarnings_, timeWaited_, sellTime_, blockIdx_, tMax, TaskTime, plo
     I uppack data here since the required inputs are different sometimes
     """
     # check whether they are values 
-
     # For trials before the first quit trial, wtw = the largest timeWaited value 
     if any(trialEarnings_ == 0):
         first_quit_idx = np.where(trialEarnings_ == 0)[0][0] # in case there is no quitting 
     else:
         first_quit_idx = len(trialEarnings_) - 1
     wtw_now = max(timeWaited_[:first_quit_idx+1])
-    wtw = [wtw_now for i in range(first_quit_idx+1)]
+    wtw = [wtw_now for i in range(first_quit_idx)] # make the change here...
 
     # For trials after the first quit trial, quitting indicates a new wtw value 
     # Otherwise, only update wtw if the current timeWaited is larger 
-    for i in range(first_quit_idx+1, len(trialEarnings_)):
+    for i in range(first_quit_idx, len(trialEarnings_)):
         if trialEarnings_[i] == 0:
             wtw_now = timeWaited_[i]
         else:
@@ -693,12 +692,13 @@ def wtwTS(trialEarnings_, timeWaited_, sellTime_, blockIdx_, tMax, TaskTime, plo
     WTW = resample(wtw, sellTime_, TaskTime)
 
     # plot 
+    # ok so this is problematics....previously...
     if plot_WTW:
         fig, ax = plt.subplots()
         trialIdx_ = np.arange(len(trialEarnings_))
         ax.plot(trialIdx_, wtw)
-        blockbounds = [max(trialIdx_[blockIdx_ == i]) for i in np.unique(blockIdx_)]
-        ax.vlines(blockbounds, 0, tMax, color = "grey", linestyles = "dotted", linewidth = 3)
+        # blockbounds = [max(trialIdx_[blockIdx_ == i]) for i in np.unique(blockIdx_)]
+        # ax.vlines(blockbounds, 0, tMax, color = "grey", linestyles = "dotted", linewidth = 3)
         ax.set_ylabel("WTW (s)")
         ax.set_xlabel("Trial")
         ax.set_ylim([-0.5, tMax + 0.5]) 
@@ -744,9 +744,18 @@ def ind_MF(trialdata, key, isTrct = True, plot_RT = False, plot_trial = False, p
     if plot_trial:
         trialplot_multiblock(trialdata)
 
-    # WTW timecourse
-    wtw, WTW, TaskTime = wtwTS(trialdata['trialEarnings'].values, trialdata['timeWaited'].values, trialdata['accumSellTime'].values, trialdata['blockIdx'].values, expParas.tMax, expParas.TaskTime, plot_WTW)
-    objs['WTW'] = WTW
+    # calc without truncating 
+    nBlock = len(np.unique(trialdata.blockIdx))
+    wtw = []
+    WTW = []
+    for i in range(nBlock):
+        blockdata = trialdata[trialdata.blockIdx == i + 1]
+        condition = blockdata.condition.values[0]
+        conditionColor = expParas.conditionColors[condition]
+        # WTW timecourse
+        block_wtw, block_WTW, _ = wtwTS(blockdata['trialEarnings'].values, blockdata['timeWaited'].values, blockdata['sellTime'].values, blockdata['blockIdx'].values, expParas.tMax, expParas.BlockTime, False)
+        wtw.append(block_wtw)
+        WTW.append(block_WTW)
 
     ################## calculate summary stats for each block ###############
     if isTrct:
@@ -760,8 +769,8 @@ def ind_MF(trialdata, key, isTrct = True, plot_RT = False, plot_trial = False, p
         ax.set_ylim([-0.1, 1.1])
         ax.set_xlabel("Elapsed time (s)")
         ax.set_ylabel("Survival rate")
-        
-    nBlock = len(np.unique(trialdata.blockIdx))
+    
+    # loop over blocks 
     for i in range(nBlock):
         blockdata = trialdata[trialdata.blockIdx == i + 1]
         condition = blockdata.condition.values[0]
@@ -795,10 +804,10 @@ def ind_MF(trialdata, key, isTrct = True, plot_RT = False, plot_trial = False, p
         sell_RT_median, sell_RT_mean, sell_RT_se = desc_RT(blockdata)
         
         # organize the output
-        if i == 0:
-            init_wtw = wtw[0] # initial wtw measure
-        else:
-            init_wtw = np.nan
+        init_wtw =  wtw[i][0]# initial wtw measure
+        end_wtw = wtw[i][-1]
+        junk, _, _ = wtwTS(blockdata['trialEarnings'].values, blockdata['timeWaited'].values, blockdata['sellTime'].values, blockdata['blockIdx'].values, expParas.tMax, expParas.BlockTime, False)
+        end_trct_wtw = junk[-1]
 
         # tmp = pd.DataFrame({"id": key[0], "sess": key[1], "key": str(key), "block": i + 1, "auc": block_auc, "std_wtw": block_std_wtw, "init_wtw": init_wtw, \
         #     "auc1": sub_aucs[0], "auc2": sub_aucs[1], "auc3": sub_aucs[2], "auc4": sub_aucs[3], \
@@ -806,15 +815,27 @@ def ind_MF(trialdata, key, isTrct = True, plot_RT = False, plot_trial = False, p
         #     "sell_RT_median": sell_RT_median,\
         #     "sell_RT_mean": sell_RT_mean, "sell_RT_se": sell_RT_se,\
         #     "condition": condition}, index = [i])
-        tmp = {"id": key[0], "sess": key[1], "key": str(key), "block": i + 1, "auc": block_auc, "auc_rh": block_auc_rh, "std_wtw": block_std_wtw, "std_wtw_rh": block_std_wtw_rh, "init_wtw": init_wtw, \
+        tmp = {"id": key[0], "sess": key[1], "key": str(key), "block": i + 1, "auc": block_auc, "auc_rh": block_auc_rh, "std_wtw": block_std_wtw, "std_wtw_rh": block_std_wtw_rh, \
+        "init_wtw": init_wtw, "end_wtw": end_wtw, "end_trct_wtw": end_trct_wtw, \
             "sell_RT_median": sell_RT_median, "sell_RT_mean": sell_RT_mean, "sell_RT_se": sell_RT_se, "condition": condition}
         tmp.update(dict(zip(['auc' + str((i + 1)) for i in range(n_sublock)], sub_aucs)))
         tmp.update(dict(zip(['std_wtw' + str((i + 1)) for i in range(n_sublock)], sub_std_wtws)))
         stats.append(pd.DataFrame(tmp, index = [i]))
         objs['Psurv_block'+str(i+1)] = Psurv
 
+    WTW = np.concatenate(WTW)
+    wtw =  np.concatenate(wtw)
     stats = pd.concat(stats, ignore_index = True)
-        
+    objs['WTW'] = WTW
+    objs['wtw'] = wtw
+    # plot 
+    if plot_WTW:
+        fig_wtw, ax_wtw = plt.subplots()
+        ax_wtw.plot(np.arange(len(wtw)) + 1, wtw)
+        ax_wtw.vlines(sum(trialdata.blockIdx == 1) + 0.5, 0, expParas.tMax, linestyle = "dashed")
+        ax_wtw.set_xlabel('Trial')
+        ax_wtw.set_ylabel('WTW (s)')
+
     ############ return  ############# y
     return stats, objs
 

@@ -6,6 +6,7 @@ tMax = 12 # maximal analysis time frame
 nBlock = 2
 blocksec = 600
 TaskTime = np.linspace(0, blocksec * nBlock, 600)
+BlockTime = np.linspace(0, blocksec, 300)
 Time = np.linspace(0, tMax,  int(tMax / 0.1))
 tokenValue = 2
 

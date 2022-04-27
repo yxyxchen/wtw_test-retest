@@ -96,6 +96,9 @@ def plot_group_WTW_both(sess1_WTW_, sess2_WTW_, hdrdata_sess1, hdrdata_sess2, ax
     sig_ = [11 if p < 0.005 else None for p in p_corrected]
 
     # fig, ax = plt.subplots()
+    # random selection
+    # idxs = np.random.choice(np.arange(sess1_WTW_.shape[0]), 50)
+    # people are learning faster 
     analysisFxs.plot_group_WTW(sess1_WTW_, expParas.TaskTime, ax)
     analysisFxs.plot_group_WTW(sess2_WTW_, expParas.TaskTime, ax, linestyle = ':')
     ax.plot(expParas.TaskTime, sig_, marker = ".", color = "red")
