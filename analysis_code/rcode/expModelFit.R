@@ -29,6 +29,8 @@ expModelFit = function(expname, sess, modelName, isFirstFit, batchIdx = NULL, fi
     }
   }
   
+  dir.create(outputDir, showWarnings = FALSE)
+  
   # set model fit configurations
   if(isFirstFit){
     config = list(
