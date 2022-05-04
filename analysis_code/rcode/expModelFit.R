@@ -1,4 +1,4 @@
-expModelFit = function(expname, sess, modelName, isFirstFit, batchIdx = NULL, fit_method = NULL, parallel = F){
+expModelFit = function(expname, sess, modelName, isFirstFit, batchIdx = NULL, fit_method, parallel = F){
   # load experiment parameters
   load("expParas.RData")
   
@@ -14,7 +14,7 @@ expModelFit = function(expname, sess, modelName, isFirstFit, batchIdx = NULL, fi
   trialData = allData$trialData
   
   # set output directory 
-  if(is.null(fit_method)){
+  if(fit_method == "whole"){
     outputDir = sprintf("../../analysis_results/%s/modelfit/%s", expname, modelName)
   }else if(fit_method == 'trct'){
     outputDir = sprintf("../../analysis_results/%s/modelfit/%s_trct", expname, modelName)
