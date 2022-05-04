@@ -22,7 +22,6 @@ import importlib
 import random
 
 
-
 def pivot_by_condition(df, columns, index):
     """ pivot a table of summary statistics based on condition 
     """
@@ -661,7 +660,7 @@ def trialplot_multiblock(trialdata):
     ax.set_xlim([-2, trialdata.shape[0] + 2])
     ax.legend(loc='upper right', frameon=False)
 
-def wtwTS(trialEarnings_, timeWaited_, sellTime_, blockIdx_, tMax, TaskTime, plot_WTW = False):
+def wtwTS(trialEarnings_, timeWaited_, sellTime_, tMax, TaskTime, plot_WTW = False):
     """
     sellTime_ here is a continous time.
     I uppack data here since the required inputs are different sometimes
@@ -691,7 +690,6 @@ def wtwTS(trialEarnings_, timeWaited_, sellTime_, blockIdx_, tMax, TaskTime, plo
     # upsample 
     WTW = resample(wtw, sellTime_, TaskTime)
 
-    # plot 
     # ok so this is problematics....previously...
     if plot_WTW:
         fig, ax = plt.subplots()
@@ -753,7 +751,7 @@ def ind_MF(trialdata, key, isTrct = True, plot_RT = False, plot_trial = False, p
         condition = blockdata.condition.values[0]
         conditionColor = expParas.conditionColors[condition]
         # WTW timecourse
-        block_wtw, block_WTW, _ = wtwTS(blockdata['trialEarnings'].values, blockdata['timeWaited'].values, blockdata['sellTime'].values, blockdata['blockIdx'].values, expParas.tMax, expParas.BlockTime, False)
+        block_wtw, block_WTW, _ = wtwTS(blockdata['trialEarnings'].values, blockdata['timeWaited'].values, blockdata['sellTime'].values, expParas.tMax, expParas.BlockTime, False)
         wtw.append(block_wtw)
         WTW.append(block_WTW)
 
@@ -806,7 +804,7 @@ def ind_MF(trialdata, key, isTrct = True, plot_RT = False, plot_trial = False, p
         # organize the output
         init_wtw =  wtw[i][0]# initial wtw measure
         end_wtw = wtw[i][-1]
-        junk, _, _ = wtwTS(blockdata['trialEarnings'].values, blockdata['timeWaited'].values, blockdata['sellTime'].values, blockdata['blockIdx'].values, expParas.tMax, expParas.BlockTime, False)
+        junk, _, _ = wtwTS(blockdata['trialEarnings'].values, blockdata['timeWaited'].values, blockdata['sellTime'].values, expParas.tMax, expParas.BlockTime, False)
         end_trct_wtw = junk[-1]
 
         # tmp = pd.DataFrame({"id": key[0], "sess": key[1], "key": str(key), "block": i + 1, "auc": block_auc, "std_wtw": block_std_wtw, "init_wtw": init_wtw, \
@@ -887,7 +885,6 @@ def ind_sim_MF(simdata, empdata, key, plot_trial = False, plot_KMSC = False, plo
             blockdata['trialEarnings'].values,
             blockdata['timeWaited'].values,
             emp_blockdata['sellTime'].values,
-            blockdata['blockIdx'].values,
             expParas.tMax, 
             np.linspace(0, expParas.blocksec, int(len(expParas.TaskTime) / 2)),
             False

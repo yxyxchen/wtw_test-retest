@@ -13,9 +13,9 @@ expModelFit = function(expname, sess, modelName, isFirstFit, batchIdx = NULL, fi
   hdrData = allData$hdrData
   trialData = allData$trialData
   
-  # I want to make the output dir specific
+  # set output directory 
   if(is.null(fit_method)){
-      outputDir = sprintf("../../analysis_results/%s/modelfit/%s", expname, modelName)
+    outputDir = sprintf("../../analysis_results/%s/modelfit/%s", expname, modelName)
   }else if(fit_method == 'trct'){
     outputDir = sprintf("../../analysis_results/%s/modelfit/%s_trct", expname, modelName)
     # truncate the first half block
@@ -29,7 +29,7 @@ expModelFit = function(expname, sess, modelName, isFirstFit, batchIdx = NULL, fi
     }
   }
   
-  # I also want to add a 
+  # set model fit configurations
   if(isFirstFit){
     config = list(
       nChain = 4,
@@ -39,7 +39,6 @@ expModelFit = function(expname, sess, modelName, isFirstFit, batchIdx = NULL, fi
       warningFile = sprintf("stanWarnings/exp_%s.txt", modelName)
     )
     # divide data into small batches if batchIdx exists 
-    # work onn this one later
     if(!is.null(batchIdx)){
       if(batchIdx == 1){
         trialData = trialData[1 : 57]
@@ -59,9 +58,8 @@ expModelFit = function(expname, sess, modelName, isFirstFit, batchIdx = NULL, fi
     ids = names(trialData)
     paraNames = getParaNames(modelName)
     expPara = loadExpPara(paraNames, outputDir, sess)
-    # passCheck = checkFit(paraNames, expPara)
-    # trialData = trialData[!passCheck]
-    trialData = trialData[!ids %in% paste0("s", expPara$id)]
+    passCheck = checkFit(paraNames, expPara)
+    trialData = trialData[!passCheck]
     
     # increase the num of Iterations 
     config = list(
@@ -72,12 +70,12 @@ expModelFit = function(expname, sess, modelName, isFirstFit, batchIdx = NULL, fi
       warningFile = sprintf("stanWarnings/exp_refit_%s.txt", modelName)
     )
   }
-
   # fit the model for all participants
   modelFitGroup(sess, modelName, trialData, config, outputDir, parallel = parallel, isTrct = T)
 }
+
+############## main script ##############
 if (sys.nframe() == 0){
-  # use this command to test: Rscript expModelFit_trct.R 'active' 1 'QL2' T 1
   args = commandArgs(trailingOnly = T)
   # print(args)
   # print(length(args))

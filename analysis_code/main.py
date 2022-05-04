@@ -119,7 +119,7 @@ def plot_parameter_selfreport_corr(modelname, hdrdata_sess1, hdrdata_sess2):
     #     p_table[i,:] = [x[1] for x in tmp]
     # code.interact(local = dict(locals(), **globals()))
 
-#################################
+##############################Fortin, N. J., Agster, K. L., & Eichenbaum, H. B. (2002). Critical role of the hippocampus in memory for sequences of events. Nature Neuroscience, 5(5), 458–462. https://doi.org/10.1038/nn834###
 def selfreport_selfcorr(expname):
     # load selfreport data
     self_sess1 = pd.read_csv(os.path.join("..", "analysis_results", expname, "selfreport", "selfreport_sess1.csv"))
@@ -471,17 +471,16 @@ if __name__ == "__main__":
     #################################
     ## conduct model-free analysis ##
     #################################
-    ids = np.unique(s2_stats.id)[:5]
-    key = ('s1007', 1)
-    trialdata = trialdata_sess1_[key]
-    stats, obj = analysisFxs.ind_MF(trialdata, key, plot_trial = True, plot_WTW = True)
+    # ids = np.unique(s2_stats.id)[:5]
+    # key = ('s1007', 1)
+    # trialdata = trialdata_sess1_[key]
+    # stats, obj = analysisFxs.ind_MF(trialdata, key, plot_trial = True, plot_WTW = True)
     s1_stats, s1_Psurv_b1_, s1_Psurv_b2_, s1_WTW_ = analysisFxs.group_MF(trialdata_sess1_, plot_each = False)   
     s1_stats.to_csv(os.path.join('..', 'analysis_results', expname, 'taskstats', 'emp_sess1.csv'), index = None)
 
     s2_stats, s2_Psurv_b1_, s2_Psurv_b2_, s2_WTW_ = analysisFxs.group_MF(trialdata_sess2_, plot_each = False)   
     s2_stats.to_csv(os.path.join('..', 'analysis_results', expname, 'taskstats', 'emp_sess2.csv'), index = None)
     
-
     # I want to plot example survival curve
     # pltdata = pd.DataFrame({
     #     "time": np.tile(expParas.Time, 2),
@@ -500,9 +499,7 @@ if __name__ == "__main__":
     ############################
     ## group-level behavior  ##
     ############################
-    # replicate Wtw 
-
-
+    # replicate wtw 
 
     ####################
     # calc reliability # 
@@ -530,12 +527,10 @@ if __name__ == "__main__":
     #s1_df = s1_df.merge(s2_stats.loc[s2_stats.block == 1, ["id", "init_wtw"]], on = "id") 
     s1_df['init_wtw'] = s1_df['init_wtw'] + 1
     s2_df = s2_df.merge(s2_stats.loc[s2_stats.block == 1, ["id", "init_wtw"]], on = "id")
-
-            # merge
+    # merge
     df = s1_df.merge(s2_df, on = 'id', suffixes = ['_sess1', '_sess2']) 
 
-
-        # variable names 
+    # variable names 
     vars = ['auc_delta', 'auc1_delta', 'auc2_delta'] + ['auc_ave', 'auc1_ave', 'auc2_ave'] + [x + "_HP" for x in colvars] + [x + "_LP" for x in colvars] + ['init_wtw']
     rows = ['spearman_rho', 'pearson_rho', 'abs_icc', 'con_icc', "ssbs", "ssbm", "sse", "msbs", "msbm", "mse"]
     reliable_df = np.zeros([len(rows), len(vars)])
@@ -567,22 +562,22 @@ if __name__ == "__main__":
     ##############
     ## modelrep ##
     ##############
-    for modelname in modelnames:
-        s1_paradf = loadFxs.load_parameter_estimates(expname, 1, hdrdata_sess1, modelname, modelname)
-        s2_paradf = loadFxs.load_parameter_estimates(expname, 2, hdrdata_sess2, modelname, modelname)
-        s1_stats_rep, s1_WTW_rep = modelFxs.group_model_rep(trialdata_sess1_, s1_paradf, modelname, isTrct = True, plot_each = False)
-        s2_stats_rep, s2_WTW_rep = modelFxs.group_model_rep(trialdata_sess2_, s2_paradf, modelname, isTrct = True, plot_each = False)
-        s1_stats_rep.to_csv(os.path.join('..', 'analysis_results', expname, 'taskstats', 'rep_%s_sess1.csv'%modelname), index = None)
-        s2_stats_rep.to_csv(os.path.join('..', 'analysis_results', expname, 'taskstats', 'rep_%s_sess2.csv'%modelname), index = None)
+for modelname in modelnames:
+    s1_paradf = loadFxs.load_parameter_estimates(expname, 1, hdrdata_sess1, modelname, modelname)
+    s2_paradf = loadFxs.load_parameter_estimates(expname, 2, hdrdata_sess2, modelname, modelname)
+    s1_stats_rep, s1_WTW_rep = modelFxs.group_model_rep(trialdata_sess1_, s1_paradf, modelname, isTrct = True, plot_each = False)
+    s2_stats_rep, s2_WTW_rep = modelFxs.group_model_rep(trialdata_sess2_, s2_paradf, modelname, isTrct = True, plot_each = False)
+    s1_stats_rep.to_csv(os.path.join('..', 'analysis_results', expname, 'taskstats', 'rep_%s_sess1.csv'%modelname), index = None)
+    s2_stats_rep.to_csv(os.path.join('..', 'analysis_results', expname, 'taskstats', 'rep_%s_sess2.csv'%modelname), index = None)
 
 
-        figFxs.plot_group_emp_rep(modelname, s1_stats_rep, s2_stats_rep, s1_stats, s2_stats)
-        plt.gcf().set_size_inches(8, 4)
-        plt.savefig(os.path.join('..', 'figures', expname, 'auc_emp_rep_%s.pdf'%modelname))
+    figFxs.plot_group_emp_rep(modelname, s1_stats_rep, s2_stats_rep, s1_stats, s2_stats)
+    plt.gcf().set_size_inches(8, 4)
+    plt.savefig(os.path.join('..', 'figures', expname, 'auc_emp_rep_%s.pdf'%modelname))
 
-        figFxs.plot_group_emp_rep_wtw(modelname, s1_WTW_rep, s2_WTW_rep, s1_WTW_, s2_WTW_, hdrdata_sess1, hdrdata_sess2, s1_paradf, s2_paradf)
-        plt.gcf().set_size_inches(8, 4)
-        plt.savefig(os.path.join('..', 'figures', expname, 'wtw_emp_rep_%s.pdf'%modelname))
+    figFxs.plot_group_emp_rep_wtw(modelname, s1_WTW_rep, s2_WTW_rep, s1_WTW_, s2_WTW_, hdrdata_sess1, hdrdata_sess2, s1_paradf, s2_paradf)
+    plt.gcf().set_size_inches(8, 4)
+    plt.savefig(os.path.join('..', 'figures', expname, 'wtw_emp_rep_%s.pdf'%modelname))
 
     ##########################
     ## parameter histograms ##
