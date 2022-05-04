@@ -36,8 +36,8 @@ transformed parameters{
   // scale raw parameters into real parameters
   real alpha = (raw_alpha + 0.5) * 0.3; // alpha ~ unif(0, 0.3)
   real tau = (raw_tau + 0.5) * 21.9 + 0.1; // tau ~ unif(0.1, 22)
-  real gamma = (raw_gamma + 0.5) * 0.3 + 0.7; // gamma ~ unif(0.7, 1)
-  real eta = (raw_eta + 0.5) * 6.5; // eta ~ unif(0, 6.5)
+  real gamma = (raw_gamma + 0.5) * 0.5 + 0.5; // gamma ~ unif(0.5, 1)
+  real eta = (raw_eta + 0.5) * 15; // eta ~ unif(0, 15)
   
   // declare variables 
   // // state value of t = 0

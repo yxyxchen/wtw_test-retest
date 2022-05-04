@@ -33,7 +33,7 @@ expModelFit = function(expname, sess, modelName, isFirstFit, batchIdx = NULL, fi
   if(isFirstFit){
     config = list(
       nChain = 4,
-      nIter = 100,
+      nIter = 2000,
       adapt_delta = 0.99,
       max_treedepth = 11,
       warningFile = sprintf("stanWarnings/exp_%s.txt", modelName)
@@ -70,6 +70,7 @@ expModelFit = function(expname, sess, modelName, isFirstFit, batchIdx = NULL, fi
       warningFile = sprintf("stanWarnings/exp_refit_%s.txt", modelName)
     )
   }
+
   # fit the model for all participants
   modelFitGroup(sess, modelName, trialData, config, outputDir, parallel = parallel, isTrct = T)
 }
@@ -86,4 +87,8 @@ if (sys.nframe() == 0){
     expModelFit(args[1], as.numeric(args[2]), args[3], as.logical(args[4]), as.numeric(args[5]), args[6])
   }
 }
+
+expname = "passive"
+sess = 1
+modelName = "QL1"
 

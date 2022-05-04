@@ -1,4 +1,5 @@
 # ignore consent csv  files and bonus  csv files
+keypress_data/
 analysis-code/data/consent*.csv
 analysis-code/data/bonus*.csv
 analysis-code/parse_data.py

@@ -1,13 +1,14 @@
 # fit a reinforcement learning model for a single participant in Rstan 
 # inputs:
-# thisTrialData: behavioral data for this participant
-# fileName: the name of the output file
-# modelName: the name of   the model 
-# paraNames: parameters for the model
-# model: the Bayesian model 
-# config: a list containing the Rstab configuration 
+  # thisTrialData: behavioral data for this participant
+  # modelName: the name of   the model 
+  # paraNames: parameters for the model
+  # model: the Bayesian model 
+  # config: a list containing the Rstab configuration 
+  # outputFile: filename to save the data
+
 modelFitSingle = function(id, thisTrialData, modelName, paraNames, model, config, outputFile){
-    # load experiment paras
+    # load experiment constants 
     load('expParas.RData')
     
     # parse the stan configuration
@@ -18,16 +19,14 @@ modelFitSingle = function(id, thisTrialData, modelName, paraNames, model, config
     warningFile = config[['warningFile']] # output file for stan warnings and errors
     
     # analysis constants 
-    stepSec = 1  # duration of one time step (namely one temporal state) 
+    stepSec = 0.5  # duration of one time step 
     iti = 1.5  # duration of iti # I need to change the ITI 
     
-    ## ensure timeWaited = scheduledWait on rewarded trials
-    thisTrialData = within(thisTrialData, {timeWaited[trialEarnings!= 0] = scheduledWait[trialEarnings!= 0]})
-    # cap timeWaited. sometimes a person waited longer than 24s because errors in rewarded time
-    thisTrialData$timeWaited = pmin(thisTrialData$timeWaited, max(delayMaxs)) # not necessary in other analyses since they are capped automatically
-    
     # prepare inputs for fitting the model
-    condition = unique(thisTrialData$condition)
+    ## ensure timeWaited = the actual delay on rewarded trials
+    thisTrialData = within(thisTrialData, {timeWaited[trialEarnings!= 0] = rewardedTime[trialEarnings!= 0] - trialStartTime[trialEarnings!= 0]})
+    ## cap timeWaited. sometimes a person waited longer than 24s because errors in rewarded time
+    thisTrialData$timeWaited = pmin(thisTrialData$timeWaited, max(delayMaxs)) 
     ## number of possible decision points in a trial
     delayMax = max(delayMaxs)
     tWaits = seq(0, delayMax - stepSec, by = stepSec)
@@ -50,20 +49,19 @@ modelFitSingle = function(id, thisTrialData, modelName, paraNames, model, config
       nMadeActions = nMadeActions
     )
     if(modelName %in% c("QL1", "QL2")){
-      V0_ini = 0.27782194519542547 * stepSec / (1 - 0.85) # I need to shamelessly fill it in
+      V0_ini = 0.27782194519542547  / (1 - 0.85) # unit: cents
       inputs$V0_ini = V0_ini
     }else{
-      rewardRate_ini = 0.27782194519542547 # the default unit is 1 s since I times it by time diff 
+      rewardRate_ini = 0.27782194519542547 # unit: cents per second 
       inputs$rewardRate_ini = rewardRate_ini
     }
    
    # get the path in outputFile
-   subName = sub(pattern = sprintf("../../analysis_results/modelfit/[A-Z0-9]*/*%s/", modelName),
-                      replacement = "", outputFile)
+   subName = sub(pattern = sprintf("../../analysis_results/modelfit/[A-Z0-9]*/*%s/", modelName), replacement = "", outputFile)
    print(subName)
     
    # fit the model
-    withCallingHandlers({
+   withCallingHandlers({
       fit = sampling(object = model, data = inputs, cores = 1, chains = nChain,
                      iter = nIter, control = controlList) 
       print(sprintf("Finish %s %s !", modelName, subName))
