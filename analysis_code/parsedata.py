@@ -342,7 +342,7 @@ def parsedata(expname, sess):
             if numblock > 0:
                 cleandata.to_csv(os.path.join(outdir, "task-" + thisid + "-sess%s.csv"%sess), index = False)
                 if expname == "active":
-                    keypress_df.to_csv(os.path.join(outdir, "keypress-" + thisid + "-sess%s.csv"%sess), index = False)
+                    keypress_df.to_csv(os.path.join("../keypress_data", "keypress-" + thisid + "-sess%s.csv"%sess), index = False)
             thisbonusentry = pd.DataFrame({
                 "worker_id": worker_id,
                 "bonus": max(cleandata.totalEarnings) / 100 if numblock > 0 else 0,
@@ -421,7 +421,6 @@ def parsedata(expname, sess):
 if __name__ == "__main__":
 
     expname = 'active'
-    print("Parse data files for SESS1")
     parsedata(expname, 1)
     parsedata(expname, 2)
     # print("Parse data files for SESS2")
