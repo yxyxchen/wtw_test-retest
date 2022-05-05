@@ -1,4 +1,4 @@
-expModelFit = function(expname, sess, modelName, isFirstFit, batchIdx = NULL, fit_method, parallel = F){
+expModelFit = function(expname, sess, modelName, isFirstFit, fit_method, batchIdx = NULL, parallel = F){
   # load experiment parameters
   load("expParas.RData")
   
@@ -28,14 +28,15 @@ expModelFit = function(expname, sess, modelName, isFirstFit, batchIdx = NULL, fi
       trialData[[id]] = thisTrialData
     }
   }
-  
+  dir.create(sprintf("../../analysis_results/%s/modelfit", expname), showWarnings = FALSE)
   dir.create(outputDir, showWarnings = FALSE)
   
   # set model fit configurations
   if(isFirstFit){
     config = list(
       nChain = 4,
-      nIter = 2000,
+      nIter = 1000 + 1000,
+      warmup = 1000,
       adapt_delta = 0.99,
       max_treedepth = 11,
       warningFile = sprintf("stanWarnings/exp_%s.txt", modelName)
@@ -66,7 +67,8 @@ expModelFit = function(expname, sess, modelName, isFirstFit, batchIdx = NULL, fi
     # increase the num of Iterations 
     config = list(
       nChain = 4,
-      nIter = 4000,
+      nIter = 1000 + 5000,
+      warmup = 5000,
       adapt_delta = 0.99,
       max_treedepth = 11,
       warningFile = sprintf("stanWarnings/exp_refit_%s.txt", modelName)

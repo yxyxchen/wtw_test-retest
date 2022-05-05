@@ -174,7 +174,7 @@ durations = np.linspace(1, 5, 5) * 60
 
 n_sim = 20
 condition = "LP"
-sigma = 2
+sigma = 0
 
 
 

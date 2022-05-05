@@ -73,7 +73,9 @@ modelFitSingle = function(id, thisTrialData, modelName, paraNames, model, config
   # extract posterior samples
   samples = fit %>% rstan::extract(permuted = F, pars = c(paraNames, "totalLL")) %>%
     adply(2, function(x) x) %>% dplyr::select(-chains) 
-  
+  write.table(samples, file = sprintf("%s_sample.txt", outputFile), 
+              sep = ",", col.names = F, row.names=FALSE)
+
   # calculate WAIC and Efficient approximate leave-one-out cross-validation (LOO)
   log_lik = extract_log_lik(fit) 
   WAIC = waic(log_lik)
