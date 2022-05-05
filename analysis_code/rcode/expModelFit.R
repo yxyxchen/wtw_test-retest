@@ -82,17 +82,12 @@ expModelFit = function(expname, sess, modelName, isFirstFit, fit_method, batchId
 ############## main script ##############
 if (sys.nframe() == 0){
   args = commandArgs(trailingOnly = T)
-  # print(args)
+  print(args)
   # print(length(args))
   # print(args[1])
   if(length(args) == 6){
-    expModelFit(args[1], as.numeric(args[2]), args[3], as.logical(args[4]), as.numeric(args[5]))
-  }else{
-    expModelFit(args[1], as.numeric(args[2]), args[3], as.logical(args[4]), as.numeric(args[5]), args[6])
+    expModelFit(args[1], as.numeric(args[2]), args[3], as.logical(args[4]), args[5], as.numeric(args[6]))
   }
 }
 
-expname = "passive"
-sess = 1
-modelName = "QL1"
 
