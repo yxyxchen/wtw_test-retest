@@ -13,7 +13,8 @@ modelFitSingle = function(id, thisTrialData, modelName, paraNames, model, config
     
     # parse the stan configuration
     nChain = config[['nChain']] # number of MCMC chains
-    nIter = config[['nIter']] # number of iterations on each chain
+    nIter = config[['nIter']] # number of total iterations on each chain
+    warmup = config[['warmup']] # number of warm-up iterations on each chain
     controlList = list(adapt_delta = config[['adapt_delta']],
                        max_treedepth = config[['max_treedepth']] )
     warningFile = config[['warningFile']] # output file for stan warnings and errors
@@ -62,7 +63,7 @@ modelFitSingle = function(id, thisTrialData, modelName, paraNames, model, config
     
    # fit the model
    withCallingHandlers({
-      fit = sampling(object = model, data = inputs, cores = 1, chains = nChain,
+      fit = sampling(object = model, data = inputs, cores = 1, chains = nChain, warmup = warmup,
                      iter = nIter, control = controlList) 
       print(sprintf("Finish %s %s !", modelName, subName))
       write(sprintf("Finish %s %s !", modelName, subName), warningFile, append = T, sep = "\n")
