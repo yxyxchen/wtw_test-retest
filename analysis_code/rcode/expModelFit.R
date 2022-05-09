@@ -21,10 +21,31 @@ expModelFit = function(expname, sess, modelName, isFirstFit, fit_method, batchId
     # truncate the first half block
     ids = names(trialData)
     nSub = length(ids)
-    for(i in length(ids)){
+    for(i in 1 : length(ids)){
       id = ids[i]
       thisTrialData = trialData[[id]]
       thisTrialData = thisTrialData[thisTrialData$trialStartTime >= 300 | thisTrialData$blockNum > 1,]
+      trialData[[id]] = thisTrialData
+    }
+  }else if(fit_method == 'onlyLP'){
+    outputDir = sprintf("../../analysis_results/%s/modelfit/%s_%s", expname, modelName, fit_method)
+    # only include the first block 
+    ids = names(trialData)
+    nSub = length(ids)
+    for(i in 1 : length(ids)){
+      id = ids[i]
+      thisTrialData = trialData[[id]]
+      thisTrialData = thisTrialData[thisTrialData$condition == "LP",]
+      trialData[[id]] = thisTrialData
+    }
+  }else if(fit_method == 'onlyHalfLP'){
+    outputDir = sprintf("../../analysis_results/%s/modelfit/%s_%s", expname, modelName, fit_method)
+    ids = names(trialData)
+    nSub = length(ids)
+    for(i in 1 : length(ids)){
+      id = ids[i]
+      thisTrialData = trialData[[id]]
+      thisTrialData = thisTrialData[thisTrialData$condition == "LP" & thisTrialData$trialStartTime <300,]
       trialData[[id]] = thisTrialData
     }
   }
@@ -37,18 +58,22 @@ expModelFit = function(expname, sess, modelName, isFirstFit, fit_method, batchId
       nChain = 4,
       nIter = 1000 + 1000,
       warmup = 1000,
+      # nIter = 200 + 200,
+      # warmup = 200,
       adapt_delta = 0.99,
       max_treedepth = 11,
       warningFile = sprintf("stanWarnings/exp_%s.txt", modelName)
     )
     # divide data into small batches if batchIdx exists 
     if(!is.null(batchIdx)){
+      nSub = length(trialData)
+      batchsize = floor(nSub / 3)
       if(batchIdx == 1){
-        trialData = trialData[1 : 57]
+        trialData = trialData[1 : batchsize]
       }else if(batchIdx == 2){
-        trialData = trialData[58 : 114]
+        trialData = trialData[(batchsize + 1) : (batchsize * 2)]
       }else if(batchIdx == 3){
-        trialData = trialData[115 : length(trialData)]
+        trialData = trialData[(batchsize * 2 + 1) : nSub]
       }
     }
   }

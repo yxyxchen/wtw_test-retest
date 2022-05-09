@@ -27,10 +27,7 @@ from subFxs import normFxs
 from subFxs import loadFxs
 from subFxs import figFxs
 from subFxs import analysisFxs
-import os
-import importlib
 from datetime import datetime as dt
-import importlib
 
 # plot styles
 plt.style.use('classic')
@@ -456,18 +453,28 @@ if __name__ == "__main__":
     ##############################
     ###        load data       ###
     ##############################
-    expname = 'passive'
+    expname = "passive"
     hdrdata_sess1, trialdata_sess1_ = loadFxs.group_quality_check(expname, 1, plot_quality_check = True)
     hdrdata_sess2, trialdata_sess2_ = loadFxs.group_quality_check(expname, 2, plot_quality_check = True)
     s1_stats = pd.read_csv(os.path.join('..', 'analysis_results', expname, 'taskstats', 'emp_sess1.csv'))
     s2_stats = pd.read_csv(os.path.join('..', 'analysis_results', expname, 'taskstats', 'emp_sess2.csv'))
     code.interact(local = dict(globals(), **locals()))
 
-    # better data quality cleaning?
+    # load demographic information
+    demo_sess1 = pd.read_csv(os.path.join('data', expname, "demographic_sess1.csv"))
+    demo_sess2 = pd.read_csv(os.path.join('data', expname, "demographic_sess2.csv"))
+
+        # relationships 
+    plotdf = demo_sess1.merge(s1_stats, on = "id")
+    g = sns.FacetGrid(col = "block", data = plotdf)
+    g.map(sns.regplot, 'age', 'auc') 
+
+    # look at sessions one by one 
     ids = np.unique(s2_stats.id)[:5] # "1304"
-    fig, axs = plt.subplots(2, 5)
+    fig, axs = plt.subplots(5)
     for i, id in enumerate(ids):
-        analysisFxs.plot_ind(trialdata_sess1_[(id, 1)], trialdata_sess2_[(id, 2)], axs[:,i])
+        analysisFxs.plot_ind_both_wtw(trialdata_sess1_[(id, 1)], trialdata_sess2_[(id, 2)], axs[i])
+    
     #################################
     ## conduct model-free analysis ##
     #################################
@@ -559,25 +566,64 @@ if __name__ == "__main__":
     plt.savefig(os.path.join("..", "figures", expname, "delta_auc_reliability.pdf"))
 
 
+    #############
+    #############
+    
+
     ##############
     ## modelrep ##
     ##############
-for modelname in modelnames:
-    s1_paradf = loadFxs.load_parameter_estimates(expname, 1, hdrdata_sess1, modelname, modelname)
-    s2_paradf = loadFxs.load_parameter_estimates(expname, 2, hdrdata_sess2, modelname, modelname)
-    s1_stats_rep, s1_WTW_rep = modelFxs.group_model_rep(trialdata_sess1_, s1_paradf, modelname, isTrct = True, plot_each = False)
-    s2_stats_rep, s2_WTW_rep = modelFxs.group_model_rep(trialdata_sess2_, s2_paradf, modelname, isTrct = True, plot_each = False)
-    s1_stats_rep.to_csv(os.path.join('..', 'analysis_results', expname, 'taskstats', 'rep_%s_sess1.csv'%modelname), index = None)
-    s2_stats_rep.to_csv(os.path.join('..', 'analysis_results', expname, 'taskstats', 'rep_%s_sess2.csv'%modelname), index = None)
+
+    # compare different versions of model fitting methods:
+    modelname = "QL1"
+    foldernames = [modelname + x for x in ["", "_onlyLP", "_onlyHalfLP"]]
+    for i, foldername in enumerate(foldernames):
+        s1_paradf = loadFxs.load_parameter_estimates(expname, 1, hdrdata_sess1[:10], modelname, foldername)
+        s2_paradf = loadFxs.load_parameter_estimates(expname, 2, hdrdata_sess2[:10], modelname, foldername)
+        if i == 0:
+            s1_ids = s1_paradf['id']
+            s2_ids = s2_paradf['id']
+            s1_para = s1_paradf
+            s2_para = s2_paradf
+        else:
+            s1_ids = np.intersect1d(s1_ids, s1_paradf['id'])
+            s2_ids = np.intersect1d(s2_ids, s2_paradf['id'])
+            s1_para = s1_para.merge(s1_paradf, on = "id", suffixes = ["", str(i)])
+            s2_para = s2_para.merge(s2_paradf, on = "id", suffixes = ["", str(i)])
+
+    g_ = []
+    for i, foldername in enumerate(foldernames):
+        s1_paradf = loadFxs.load_parameter_estimates(expname, 1, hdrdata_sess1.loc[np.isin(hdrdata_sess1.id,s1_ids)], modelname, foldername)
+        s2_paradf = loadFxs.load_parameter_estimates(expname, 2, hdrdata_sess2.loc[np.isin(hdrdata_sess2.id,s2_ids)], modelname, foldername)
+        s1_stats_rep, s1_WTW_rep = modelFxs.group_model_rep(trialdata_sess1_, s1_paradf, modelname, isTrct = True, plot_each = False)
+        s2_stats_rep, s2_WTW_rep = modelFxs.group_model_rep(trialdata_sess2_, s2_paradf, modelname, isTrct = True, plot_each = False)
+        # I kinda want to compare these effects though
+        # g = figFxs.plot_group_emp_rep_wtw(modelname, s1_WTW_rep, s2_WTW_rep, s1_WTW_, s2_WTW_, hdrdata_sess1, hdrdata_sess2, s1_paradf, s2_paradf)
+        # g_.append(g)
+        # plt.show()
+        #plt.gcf().set_size_inches(8, 4)
+        #plt.savefig(os.path.join('..', 'figures', expname, 'wtw_emp_rep_%s_%s.pdf'%(modelname, foldername)))
+        # input("Press Enter to continue...")
 
 
-    figFxs.plot_group_emp_rep(modelname, s1_stats_rep, s2_stats_rep, s1_stats, s2_stats)
-    plt.gcf().set_size_inches(8, 4)
-    plt.savefig(os.path.join('..', 'figures', expname, 'auc_emp_rep_%s.pdf'%modelname))
+    for modelname in modelnames:
+        s1_paradf = loadFxs.load_parameter_estimates(expname, 1, hdrdata_sess1, modelname, modelname)
+        s2_paradf = loadFxs.load_parameter_estimates(expname, 2, hdrdata_sess2, modelname, modelname)
+        s1_stats_rep, s1_WTW_rep = modelFxs.group_model_rep(trialdata_sess1_, s1_paradf, modelname, isTrct = True, plot_each = False)
+        s2_stats_rep, s2_WTW_rep = modelFxs.group_model_rep(trialdata_sess2_, s2_paradf, modelname, isTrct = True, plot_each = False)
+        s1_stats_rep.to_csv(os.path.join('..', 'analysis_results', expname, 'taskstats', 'rep_%s_sess1.csv'%modelname), index = None)
+        s2_stats_rep.to_csv(os.path.join('..', 'analysis_results', expname, 'taskstats', 'rep_%s_sess2.csv'%modelname), index = None)
 
-    figFxs.plot_group_emp_rep_wtw(modelname, s1_WTW_rep, s2_WTW_rep, s1_WTW_, s2_WTW_, hdrdata_sess1, hdrdata_sess2, s1_paradf, s2_paradf)
-    plt.gcf().set_size_inches(8, 4)
-    plt.savefig(os.path.join('..', 'figures', expname, 'wtw_emp_rep_%s.pdf'%modelname))
+
+        figFxs.plot_group_emp_rep(modelname, s1_stats_rep, s2_stats_rep, s1_stats, s2_stats)
+        # figFxs.plot_group_emp_rep(modelname, s1_stats_rep, s1_stats_rep, s1_stats, s1_stats)
+        plt.gcf().set_size_inches(8, 4)
+        plt.savefig(os.path.join('..', 'figures', expname, 'auc_emp_rep_%s.pdf'%modelname))
+
+        figFxs.plot_group_emp_rep_wtw(modelname, s1_WTW_rep, s2_WTW_rep, s1_WTW_, s2_WTW_, hdrdata_sess1, hdrdata_sess2, s1_paradf, s2_paradf)
+        # figFxs.plot_group_emp_rep_wtw(modelname, s1_WTW_rep, s1_WTW_rep, s1_WTW_, s1_WTW_, hdrdata_sess1, hdrdata_sess1, s1_paradf, s1_paradf)
+        plt.gcf().set_size_inches(8, 4)
+        plt.savefig(os.path.join('..', 'figures', expname, 'wtw_emp_rep_%s.pdf'%modelname))
 
     ##########################
     ## parameter histograms ##
@@ -600,7 +646,7 @@ for modelname in modelnames:
             subtitles = [r'$\mathbf{log(\alpha)}$', r'$\mathbf{\tau}$', r'$\mathbf{\gamma}$', r'$\mathbf{log(\eta)}$']
         elif modelname == "QL2":
             subtitles = [r'$\mathbf{log(\alpha)}$', r'$\mathbf{log(\nu)}$', r'$\mathbf{\tau}$', r'$\mathbf{\gamma}$', r'$\mathbf{log(\eta)}$']
-        figFxs.plot_parameter_reliability('QL2', s1_paradf.iloc[:,:-1], s2_paradf.iloc[:,:-1], subtitles)
+        figFxs.plot_parameter_reliability('QL1', s1_paradf.iloc[:,:-1], s2_paradf.iloc[:,:-1], subtitles)
         plt.gcf().set_size_inches(4 * len(paranames), 5)
         plt.savefig(os.path.join("..", 'figures', expname, "%s_para_reliability.pdf"%modelname))
 
@@ -801,7 +847,7 @@ for modelname in modelnames:
 
     ###############################################################################################
     ########### load data #############
-    expname = 'active'
+    expname = 'passive'
     hdrdata_sess1, trialdata_sess1_ = loadFxs.group_quality_check(expname, 1, plot_quality_check = False)
     hdrdata_sess2, trialdata_sess2_ = loadFxs.group_quality_check(expname, 2, plot_quality_check = False)
     s1_stats = pd.read_csv(os.path.join('..', 'analysis_results', expname, 'taskstats', 'emp_sess1.csv'))
@@ -1055,22 +1101,24 @@ for modelname in ['QL2']:
     s2_waic_df.melt(id_vars = 'id', value_vars = ['waic_' + x for x in modelnames]).groupby('variable').agg({'value':['mean', lambda x: np.std(x) / np.sqrt(len(x))]}).round(2)
 
     # calc n_best_fit
-s1_waic_df = s1_waic_df.iloc[:, 1:3]
-s2_waic_df = s2_waic_df.iloc[:, 1:3]
-s1_lowest_waic = s1_waic_df.apply(min, axis = 1)
-s2_lowest_waic = s2_waic_df.apply(min, axis = 1)
-s1_n_bestfit = dict()
-s2_n_bestfit = dict()
-for i, modelname in enumerate(['QL1', 'QL2']):
-    s1_n_bestfit[modelname] = np.sum(s1_lowest_waic  == s1_waic_df['waic_' + modelname])
-    s2_n_bestfit[modelname] = np.sum(s2_lowest_waic  == s2_waic_df['waic_' + modelname])
+    s1_waic_df = s1_waic_df.iloc[:, 1:3]
+    s2_waic_df = s2_waic_df.iloc[:, 1:3]
+    s1_lowest_waic = s1_waic_df.apply(min, axis = 1)
+    s2_lowest_waic = s2_waic_df.apply(min, axis = 1)
+    s1_n_bestfit = dict()
+    s2_n_bestfit = dict()
+    for i, modelname in enumerate(['QL1', 'QL2']):
+        s1_n_bestfit[modelname] = np.sum(s1_lowest_waic  == s1_waic_df['waic_' + modelname])
+        s2_n_bestfit[modelname] = np.sum(s2_lowest_waic  == s2_waic_df['waic_' + modelname])
    
     ################ modeling replication ###########
+
+
     for modelname in modelnames:
-        # s1_paradf = loadFxs.load_parameter_estimates(expname, 1, hdrdata_sess1, modelname, modelname)
-        # s2_paradf = loadFxs.load_parameter_estimates(expname, 2, hdrdata_sess2, modelname, modelname)
-        # s1_stats_rep = modelFxs.group_model_rep(trialdata_sess1_, s1_paradf, modelname, isTrct = True, plot_each = False)
-        # s2_stats_rep = modelFxs.group_model_rep(trialdata_sess2_, s2_paradf, modelname, isTrct = True, plot_each = False)
+        s1_paradf = loadFxs.load_parameter_estimates(expname, 1, hdrdata_sess1, modelname, modelname)
+        s2_paradf = loadFxs.load_parameter_estimates(expname, 2, hdrdata_sess2, modelname, modelname)
+        s1_stats_rep = modelFxs.group_model_rep(trialdata_sess1_, s1_paradf, modelname, isTrct = True, plot_each = False)
+        s2_stats_rep = modelFxs.group_model_rep(trialdata_sess2_, s2_paradf, modelname, isTrct = True, plot_each = False)
         s1_stats_rep.to_csv(os.path.join('..', 'analysis_results', expname, 'taskstats', 'rep_%s_sess1.csv'%modelname), index = None)
         s2_stats_rep.to_csv(os.path.join('..', 'analysis_results', expname, 'taskstats', 'rep_%s_sess2.csv'%modelname), index = None)
 

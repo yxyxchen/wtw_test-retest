@@ -38,16 +38,19 @@ condition_palette = ["#762a83", "#1b7837"]
 
 ######## 
 def plot_group_emp_rep_wtw(modelname, s1_WTW_rep, s2_WTW_rep, s1_WTW_emp, s2_WTW_emp, hdrdata_sess1, hdrdata_sess2, s1_paradf, s2_paradf):
+    # how do I truncate the ending part of data?
     s1_WTW_emp = s1_WTW_emp[np.isin(hdrdata_sess1.id, s1_paradf.id), ]
     s1_ave_emp = s1_WTW_emp.mean(axis = 0)
     s1_ave_rep = s1_WTW_rep.mean(axis = 0)
-
+    #s1_ave_emp = np.median(s1_WTW_emp, axis = 0)
+    #s1_ave_rep = np.median(s1_WTW_rep, axis = 0)
 
     s2_WTW_emp = s2_WTW_emp[np.isin(hdrdata_sess2.id, s2_paradf.id), ]
     s2_ave_emp = s2_WTW_emp.mean(axis = 0)
     s2_ave_rep = s2_WTW_rep.mean(axis = 0)
+    # s2_ave_emp = np.median(s1_WTW_emp, axis = 0)
+    # s2_ave_rep = np.median(s1_WTW_rep, axis = 0)
 
-    # it is kinda problematic
     plotdf = pd.DataFrame({
         "wtw": np.concatenate([s1_ave_emp, s1_ave_rep, s2_ave_emp, s2_ave_rep]),
         "type": np.tile(np.repeat(["emp", "rep"], len(expParas.TaskTime)), 2),
@@ -57,10 +60,12 @@ def plot_group_emp_rep_wtw(modelname, s1_WTW_rep, s2_WTW_rep, s1_WTW_emp, s2_WTW
 
     g = sns.FacetGrid(plotdf, col= "sess", hue = 'type', sharex = True, sharey = True, palette = ["black", "red"])
     g.map(sns.lineplot, "time", "wtw")
-    g.set(ylim=(-0.5, expParas.tMax + 0.5), ylabel = "WTW (s)", xlabel = "Task time (s)")
+    g.set(ylim=(3, 10), ylabel = "WTW (s)", xlabel = "Task time (s)")
+    g.set(ylabel = "WTW (s)", xlabel = "Task time (s)")
     axs = g.axes_dict.values()
     for i, ax in enumerate(axs):
         ax.set_title("SESS%d"%(i+1))
+        ax.axvline(expParas.blocksec, color = "grey", linestyle = "dashed")
     return g
 
 def plot_group_emp_rep(modelname, rep_sess1, rep_sess2, emp_sess1, emp_sess2):
@@ -300,7 +305,7 @@ def my_regplot(x, y, ax = None, exclude_outliers = True, **kwargs):
     if(ax is None):
         ax = plt.gca()
     # cacl realibility 
-    spearman_rho, pearson_rho, abs_icc, con_icc, = analysisFxs.calc_reliability(x, y)
+    spearman_rho, pearson_rho, abs_icc, con_icc = analysisFxs.calc_reliability(x, y)
     # set boundaries to exclude outliers: either based on the min/max value or the 1.5 iqr limit
     # x_min = x.min(); x_max = x.max()
     # y_min = y.min(); y_max = y.max()

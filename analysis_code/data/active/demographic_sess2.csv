@@ -1,0 +1,168 @@
+id,consent_date,age,gender,education,handness,language,race,batch
+s0001,9/13/21 11:37,30,Male,12,Right-handed,english,Other,1
+s0003,9/13/21 11:26,34,Male,12,Right-handed,English,White,1
+s0005,9/13/21 11:52,45,Male,15,Right-handed,English,White,1
+s0006,9/13/21 12:19,66,Female,14,Right-handed,English,White,1
+s0007,9/13/21 15:44,30,Male,16,Right-handed,English,White,1
+s0008,9/13/21 13:55,54,Female,15,Right-handed,English,White,1
+s0009,9/13/21 11:54,56,Female,14,Right-handed,English,"American Indian or Alaska Native,White",1
+s0010,9/13/21 11:29,71,Male,20,Right-handed,English,White,1
+s0011,9/13/21 11:57,59,Female,12,Right-handed,English,White,1
+s0012,9/13/21 11:30,57,Female,15,Right-handed,English,Black or African American,1
+s0013,9/13/21 12:06,31,Male,16,Right-handed,English,White,1
+s0014,9/13/21 11:50,67,Male,14,Right-handed,English,White,1
+s0015,9/13/21 21:50,48,Male,16,Right-handed,English,White,1
+s0017,9/13/21 13:22,56,Female,16,Right-handed,english,White,1
+s0018,9/13/21 14:10,74,Male,12,Right-handed,english,White,1
+s0020,9/14/21 21:46,39,Male,22,Right-handed,English,White,1
+s0021,9/13/21 11:50,45,Male,22,Right-handed,Chinese,Asian,1
+s0022,9/13/21 12:04,38,Male,16,Right-handed,English,White,1
+s0025,9/13/21 11:39,58,Female,15,Right-handed,English,White,1
+s0026,9/13/21 11:40,56,Male,13,Right-handed,English,White,1
+s0027,9/13/21 11:47,49,Male,12,Left-handed,English,White,1
+s0028,9/13/21 16:05,59,Female,16,Right-handed,English,White,1
+s0029,9/13/21 17:42,42,Male,18,Right-handed,english,Asian,1
+s0030,9/13/21 12:27,33,Male,12,Right-handed,english,White,1
+s0031,9/14/21 05:49,56,Female,14,Right-handed,English,White,1
+s0032,9/13/21 16:59,44,Male,12,Right-handed,english,White,1
+s0034,9/13/21 11:43,39,Male,16,Right-handed,English,White,1
+s0036,9/13/21 16:18,27,Male,12,Left-handed,English,Black or African American,1
+s0037,9/14/21 13:33,54,Female,14,Right-handed,English,White,1
+s0038,9/13/21 12:34,35,Male,19,Right-handed,English,Black or African American,1
+s0039,9/14/21 07:34,26,Male,16,Right-handed,English,White,1
+s0040,9/13/21 16:15,37,Male,16,Right-handed,English,Asian,1
+s0041,9/13/21 11:50,33,Female,16,Right-handed,English,White,1
+s0043,9/13/21 11:27,23,Male,12,Right-handed,english,"Black or African American,White",1
+s0044,9/23/21 06:11,32,Male,14,Right-handed,english,White,2
+s0045,9/22/21 08:01,39,Female,12,Left-handed,English,White,2
+s0046,9/22/21 06:56,26,Male,14,Left-handed,English,"Asian,White",2
+s0047,9/22/21 06:08,60,Female,16,Right-handed,english,White,2
+s0048,9/22/21 07:06,36,Female,16,Right-handed,English,White,2
+s0049,9/22/21 06:21,25,Male,15,Left-handed,english,Asian,2
+s0050,9/22/21 06:01,25,Female,16,Right-handed,English,White,2
+s0051,9/22/21 08:24,26,Male,15,Right-handed,English,White,2
+s0052,9/22/21 07:33,27,Male,16,Right-handed,English,White,2
+s0054,9/22/21 08:47,27,Male,12,Right-handed,english,White,2
+s0057,9/22/21 06:29,37,Male,16,Right-handed,English,White,2
+s0058,9/22/21 10:05,34,Female,12,Right-handed,English,Black or African American,2
+s0059,9/22/21 06:08,65,Female,16,Right-handed,English,White,2
+s0060,9/24/21 08:31,50,Female,14,Right-handed,English,White,2
+s0061,9/22/21 07:20,39,Female,12,Right-handed,english,White,2
+s0062,9/22/21 07:18,42,Female,16,Right-handed,English,White,2
+s0063,9/22/21 06:00,32,Female,15,Right-handed,English,White,2
+s0064,9/22/21 06:59,39,Male,16,Left-handed,English,White,2
+s0065,9/22/21 06:09,31,Female,16,Right-handed,english,White,2
+s0066,9/22/21 08:36,56,Female,14,Right-handed,english,White,2
+s0068,9/22/21 06:14,46,Male,16,Right-handed,english,White,2
+s0069,9/23/21 21:06,31,Male,16,Right-handed,English,White,2
+s0071,9/22/21 07:29,44,Male,14,Right-handed,English,White,2
+s0072,9/23/21 14:51,28,Male,12,Right-handed,english,"Black or African American,Other",2
+s0074,9/22/21 06:44,48,Male,14,Right-handed,english,White,2
+s0075,9/22/21 07:15,36,Male,16,Right-handed,English,White,2
+s0076,9/22/21 07:18,31,Male,11,Right-handed,English,White,2
+s0077,9/22/21 06:06,53,Male,14,Right-handed,english,White,2
+s0079,9/22/21 06:38,43,Male,14,Right-handed,English,White,2
+s0081,9/22/21 08:31,31,Male,16,Left-handed,English,White,2
+s0082,9/22/21 07:15,43,Male,16,Right-handed,english,White,2
+s0083,9/24/21 05:03,51,Male,22,Right-handed,English,"Native Hawaiian or Other Pacific Islander,White",2
+s0084,9/24/21 06:43,53,Male,18,Right-handed,English,White,2
+s0085,9/22/21 06:02,36,Male,16,Right-handed,english,Black or African American,2
+s0088,9/24/21 09:13,64,Female,12,Right-handed,English,White,2
+s0091,9/24/21 07:58,39,Female,16,Right-handed,English,White,2
+s0092,9/22/21 12:56,49,Male,18,Right-handed,english,White,2
+s0093,9/22/21 07:28,32,Male,13,Right-handed,English,White,2
+s0094,9/22/21 18:56,32,Male,12,Right-handed,English,White,2
+s0096,9/22/21 06:12,32,Male,15,Right-handed,English,White,2
+s0097,9/23/21 21:19,50,Male,16,Right-handed,English,White,2
+s0098,9/22/21 07:09,49,Male,16,Right-handed,English,White,2
+s0100,9/25/21 20:33,59,Male,16,Right-handed,English,White,2
+s0101,9/24/21 07:25,43,Male,16,Left-handed,English,"American Indian or Alaska Native,White",2
+s0103,9/22/21 12:09,44,Male,13,Right-handed,English,White,2
+s0104,9/22/21 06:24,47,Female,16,Right-handed,English,White,2
+s0105,9/22/21 06:41,52,Female,14,Right-handed,English,White,2
+s0106,9/23/21 17:42,41,Male,12,Right-handed,English,White,2
+s0107,9/24/21 12:30,52,Male,16,Right-handed,English,White,2
+s0108,9/22/21 11:26,38,Male,12,Right-handed,English,White,2
+s0109,9/22/21 09:32,41,Female,14,Right-handed,English,Black or African American,2
+s0110,9/22/21 06:48,40,Male,17,Left-handed,English,White,2
+s0111,9/22/21 08:07,44,Female,16,Right-handed,English,White,2
+s0113,9/22/21 18:24,34,Male,16,Right-handed,english,White,2
+s0114,9/22/21 11:30,39,Male,18,Right-handed,English,"American Indian or Alaska Native,White,Other",2
+s0115,9/22/21 07:40,31,Male,16,Right-handed,English,Black or African American,2
+s0116,9/22/21 07:30,39,Male,12,Right-handed,English,Black or African American,2
+s0117,9/24/21 05:59,45,Male,14,Right-handed,English,White,2
+s0119,9/22/21 08:02,61,Female,12,Right-handed,English,White,2
+s0120,9/22/21 06:12,50,Female,14,Right-handed,English,White,2
+s0121,9/23/21 13:20,32,Male,16,Right-handed,English,White,2
+s0122,9/22/21 06:20,46,Female,16,Right-handed,English,White,2
+s0124,9/24/21 07:47,33,Female,14,Right-handed,English,White,2
+s0126,9/22/21 10:02,32,Male,12,Right-handed,English,Black or African American,2
+s0127,9/22/21 08:59,36,Male,16,Right-handed,English,White,2
+s0128,9/22/21 12:15,34,Female,14,Left-handed,english,White,2
+s0129,9/22/21 06:48,27,Male,16,Right-handed,English,White,2
+s0130,9/24/21 08:04,57,Female,18,Right-handed,English,White,2
+s0131,9/22/21 12:42,37,Male,16,Right-handed,English,White,2
+s0132,9/22/21 09:33,28,Female,16,Right-handed,english,White,2
+s0133,9/22/21 07:16,47,Female,14,Left-handed,english,White,2
+s0134,9/27/21 13:58,23,Male,13,Right-handed,English,White,2
+s0136,9/22/21 08:51,52,Female,12,Right-handed,English,White,2
+s0137,9/22/21 06:54,58,Female,16,Right-handed,English,White,2
+s0138,9/22/21 12:02,22,Male,13,Right-handed,English,White,2
+s0139,9/22/21 07:02,28,Female,16,Right-handed,english,"Black or African American,White",2
+s0140,9/22/21 06:51,30,Female,18,Right-handed,English,Black or African American,2
+s0141,9/22/21 10:56,38,Male,12,Right-handed,English,White,2
+s0142,9/22/21 10:18,71,Female,16,Right-handed,English,White,2
+s0143,9/22/21 13:12,48,Male,14,Left-handed,English,White,2
+s0145,9/22/21 11:16,38,Male,16,Left-handed,English,White,2
+s0146,9/22/21 11:13,35,Male,14,Right-handed, English,White,2
+s0147,9/22/21 06:31,28,Male,12,Right-handed,English,White,2
+s0148,9/22/21 14:59,30,Male,16,Right-handed,English,White,2
+s0150,9/22/21 13:14,33,Female,14,Right-handed,english,White,2
+s0151,9/22/21 11:10,28,Male,17,Right-handed,english,American Indian or Alaska Native,2
+s0152,9/24/21 09:53,35,Male,15,Right-handed,English,White,2
+s0153,9/22/21 06:03,31,Male,16,Right-handed,English,Other,2
+s0154,9/22/21 07:32,47,Female,16,Right-handed,english,White,2
+s0155,9/22/21 06:40,43,Male,17,Right-handed,English,White,2
+s0156,9/22/21 09:36,34,Male,16,Right-handed,English,Asian,2
+s0157,9/24/21 10:14,55,Female,14,Right-handed,English,White,2
+s0158,9/24/21 13:50,29,Female,12,Right-handed,English,White,2
+s0159,9/22/21 13:55,30,Male,12,Right-handed,Bilingual English and Armenian,White,2
+s0160,9/22/21 09:57,55,Male,19,Right-handed,English,White,2
+s0162,9/24/21 14:09,43,Female,16,Right-handed,English,White,2
+s0164,9/24/21 15:40,25,Female,16,Right-handed,English,"Asian,White",2
+s0165,9/22/21 08:01,42,Male,18,Right-handed,English,White,2
+s0166,9/22/21 07:23,29,Male,16,Right-handed,English,White,2
+s0167,9/22/21 07:17,37,Female,18,Right-handed,english,White,2
+s0168,9/22/21 10:07,54,Female,13,Left-handed,English,White,2
+s0169,9/22/21 11:29,62,Female,13,Right-handed,English,White,2
+s0170,9/22/21 11:39,32,Female,13,Right-handed,English,Other,2
+s0171,9/22/21 13:45,28,Female,16,Left-handed,English,White,2
+s0172,9/23/21 14:02,45,Male,12,Right-handed,English,White,2
+s0173,9/22/21 09:12,30,Male,16,Right-handed,English,White,2
+s0174,9/22/21 06:03,38,Male,14,Right-handed,English,White,2
+s0177,9/22/21 07:45,38,Female,16,Right-handed,english,White,2
+s0178,9/22/21 09:49,60,Male,21,Left-handed,English,White,2
+s0179,9/22/21 06:14,47,Male,12,Right-handed,English,White,2
+s0180,9/22/21 06:58,34,Male,16,Right-handed,Eglish,Black or African American,2
+s0181,9/22/21 06:04,36,Male,12,Right-handed,English,Black or African American,2
+s0182,9/22/21 08:10,31,Male,12,Right-handed,English,Black or African American,2
+s0183,9/23/21 21:52,42,Female,12,Right-handed,english,White,2
+s0185,9/22/21 10:59,53,Female,16,Right-handed,English,White,2
+s0187,9/22/21 08:24,30,Male,16,Left-handed,English,White,2
+s0188,9/22/21 07:45,49,Female,16,Right-handed,English,White,2
+s0189,9/22/21 06:40,40,Male,16,Right-handed,english,White,2
+s0190,9/22/21 06:02,43,Male,16,Right-handed,English,Black or African American,2
+s0192,9/23/21 12:15,40,Female,14,Right-handed,English,Asian,2
+s0194,9/22/21 12:23,48,Female,24,Right-handed,English,White,2
+s0195,9/22/21 10:11,28,Male,16,Left-handed,English,White,2
+s0196,9/28/21 19:05,61,Male,15,Right-handed,English,White,2
+s0197,9/28/21 01:33,32,Male,12,Right-handed,english,White,2
+s0198,9/22/21 11:05,39,Male,12,Right-handed,English,Black or African American,2
+s0199,9/22/21 23:07,42,Female,16,Right-handed,English,White,2
+s0200,9/22/21 06:05,36,Male,16,Right-handed,english,White,2
+s0201,9/24/21 08:39,35,Female,16,Right-handed,English,Black or African American,2
+s0203,9/22/21 15:29,55,Female,19,Right-handed,english,White,2
+s0204,9/23/21 05:32,43,Female,18,Right-handed,English,White,2
+,9/12/21 14:03,,,,,,,
+,9/22/21 06:08,,,,,,,
+,9/21/21 18:43,,,,,,,

@@ -1062,7 +1062,7 @@ def psurv2hazard(t, s):
 
     return time, hazard
 
-def plot_ind(trialdata_s1, trialdata_s2, axs, isTrct = True):
+def plot_ind_both_kmsc(trialdata_s1, trialdata_s2, axs, isTrct = True):
     if isTrct:
         trialdata_s1 = trialdata_s1[trialdata_s1.sellTime <= expParas.blocksec - np.max(expParas.tMaxs)]
         trialdata_s2 = trialdata_s2[trialdata_s2.sellTime <= expParas.blocksec - np.max(expParas.tMaxs)]
@@ -1094,5 +1094,43 @@ def plot_ind(trialdata_s1, trialdata_s2, axs, isTrct = True):
     axs[1].set_xlabel("Elapsed time (s)")
     axs[0].set_ylabel("Survival rate")
     axs[1].set_ylabel("Hazard rate")
+
+def plot_ind_both_wtw(trialdata_s1, trialdata_s2, ax, isTrct = True):
+    if isTrct:
+        trialdata_s1 = trialdata_s1[trialdata_s1.sellTime <= expParas.blocksec - np.max(expParas.tMaxs)]
+        trialdata_s2 = trialdata_s2[trialdata_s2.sellTime <= expParas.blocksec - np.max(expParas.tMaxs)]
+    
+    # plot wtw for the first session
+    nBlock = len(np.unique(trialdata_s1.blockIdx))
+    WTW_sess1 = []
+    for i in range(nBlock):
+        blockdata = trialdata_s1[trialdata_s1.blockIdx == i + 1]
+        condition = blockdata.condition.values[0]
+        conditionColor = expParas.conditionColors[condition]
+        # wtw analysis 
+        _, WTW, TaskTime = wtwTS(blockdata['trialEarnings'].values, blockdata['timeWaited'].values, blockdata['sellTime'].values, expParas.tMax, expParas.BlockTime, plot_WTW = False)
+        WTW_sess1 = WTW_sess1 + WTW
+
+    ax.plot(expParas.TaskTime, WTW_sess1, color = conditionColor)
+
+    # plot for block 2
+    nBlock = len(np.unique(trialdata_s2.blockIdx))
+    WTW_sess2 = []
+    for i in range(nBlock):
+        blockdata = trialdata_s2[trialdata_s2.blockIdx == i + 1]
+        condition = blockdata.condition.values[0]
+        conditionColor = expParas.conditionColors[condition]
+        # wtw analysis 
+        _, WTW, TaskTime = wtwTS(blockdata['trialEarnings'].values, blockdata['timeWaited'].values, blockdata['sellTime'].values, expParas.tMax, expParas.BlockTime, plot_WTW = False)
+        WTW_sess2 = WTW_sess2 + WTW
+
+    ax.plot(expParas.TaskTime, WTW_sess2, color = conditionColor, linestyle='dashed')
+    
+    # add block boundary 
+    ax.vlines(expParas.blocksec, -1, 14, color = "red")
+    ax.set_ylim([-1, 14])
+    # Add labels 
+    ax.set_xlabel("Task time (s)")
+    ax.set_ylabel("WTW (s)")
 
 

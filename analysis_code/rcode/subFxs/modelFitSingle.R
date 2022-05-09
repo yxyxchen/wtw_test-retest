@@ -60,7 +60,6 @@ modelFitSingle = function(id, thisTrialData, modelName, paraNames, model, config
    # get the path in outputFile
    subName = sub(pattern = sprintf("../../analysis_results/modelfit/[A-Z0-9]*/*%s/", modelName), replacement = "", outputFile)
    print(subName)
-    
    # fit the model
    withCallingHandlers({
       fit = sampling(object = model, data = inputs, cores = 1, chains = nChain, warmup = warmup,
