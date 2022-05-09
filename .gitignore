@@ -1,5 +1,7 @@
 # ignore consent csv  files and bonus  csv files
 keypress_data/
+analysis_results/passive/backup/
+analysis_results/active/backup/
 analysis_results/passive/modelfit/
 analysis_results/active/modelfit/
 analysis_code/data/*/consent*.csv
