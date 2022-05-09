@@ -114,5 +114,11 @@ if (sys.nframe() == 0){
     expModelFit(args[1], as.numeric(args[2]), args[3], as.logical(args[4]), args[5], as.numeric(args[6]))
   }
 }
-
+expname = "passive"
+sess = 2
+modelName = "QL1reset"
+isFirstFit = TRUE
+fit_method = "whole"
+batchIdx = NULL
+parallel = F
 

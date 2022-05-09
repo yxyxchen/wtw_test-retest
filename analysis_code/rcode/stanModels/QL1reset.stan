@@ -10,6 +10,7 @@ data {
   
   // empirical data
   int N; // number of trials
+  int N_block1; // number of trials in block1
   int Rs[N]; // payoff in each trial
   real Ts[N]; // a trial ends at t == T
   int nMadeActions[N];// number of made actions in each trial 
@@ -30,14 +31,16 @@ parameters {
   real<lower = -0.5, upper = 0.5> raw_alpha;
   real<lower = -0.5, upper = 0.5> raw_tau;
   real<lower = -0.5, upper = 0.5> raw_gamma;
-  real<lower = -0.5, upper = 0.5> raw_eta;
+  real<lower = -0.5, upper = 0.5> raw_eta1;
+  real<lower = -0.5, upper = 0.5> raw_eta2;
 }
 transformed parameters{
   // scale raw parameters into real parameters
   real alpha = (raw_alpha + 0.5) * 0.3; // alpha ~ unif(0, 0.3)
   real tau = (raw_tau + 0.5) * 21.9 + 0.1; // tau ~ unif(0.1, 22)
   real gamma = (raw_gamma + 0.5) * 0.5 + 0.5; // gamma ~ unif(0.5, 1)
-  real eta = (raw_eta + 0.5) * 15; // eta ~ unif(0, 15)
+  real eta1 = (raw_eta1 + 0.5) * 15; // eta ~ unif(0, 15)
+  real eta2 = (raw_eta2 + 0.5) * 15; // eta ~ unif(0, 15)
   
   // declare variables 
   // // state value of t = 0
@@ -56,7 +59,7 @@ transformed parameters{
   // the initial waiting value delines with elapsed time 
   // and the prior parameter determines at which step it falls below V0
   for(i in 1 : nWaitOrQuit){
-    Qwaits[i] = - tWaits[i] * 0.1 + eta + V0;
+    Qwaits[i] = - tWaits[i] * 0.1 + eta1 + V0;
   }
   
   // record initial action values
@@ -64,7 +67,37 @@ transformed parameters{
   V0_[1] = V0;
  
   //loop over trials
-  for(tIdx in 1 : (N - 1)){
+  // make changes here
+  for(tIdx in 1 : (N_block1 - 1)){
+    real T = Ts[tIdx]; // this trial ends on t = T
+    int R = Rs[tIdx]; // payoff in this trial
+    int nMadeAction = nMadeActions[tIdx]; // last decision point in this trial
+    
+    // update Qwaits towards the discounted returns
+    for(i in 1 : nMadeAction){
+      real t = tWaits[i]; // time for this decision points 
+      real Gt = exp(log(gamma) * (T - t)) * (R + V0);
+      Qwaits[i] = Qwaits[i] + alpha * (Gt - Qwaits[i]);
+    }
+    
+    // update V0 towards the discounted returns 
+    G0 = exp(log(gamma) * (T - (- iti))) * (R + V0);
+    V0 = V0 + alpha * (G0 - V0);
+    
+    // save action values
+    Qwaits_[,tIdx+1] = Qwaits;
+    V0_[tIdx+1] = V0;
+  }
+  
+  // reset
+  V0 = V0_ini; 
+  for(i in 1 : nWaitOrQuit){
+    Qwaits[i] = - tWaits[i] * 0.1 + eta2 + V0;
+  }
+  Qwaits_[,N_block1 + 1] = Qwaits;
+  V0_[N_block1 + 1] = V0; 
+  
+  for(tIdx in (N_block1 + 1) : (N - 1)){
     real T = Ts[tIdx]; // this trial ends on t = T
     int R = Rs[tIdx]; // payoff in this trial
     int nMadeAction = nMadeActions[tIdx]; // last decision point in this trial
@@ -93,7 +126,8 @@ model {
   raw_alpha ~ uniform(-0.5, 0.5);
   raw_tau ~ uniform(-0.5, 0.5);
   raw_gamma ~ uniform(-0.5, 0.5);
-  raw_eta ~ uniform(-0.5, 0.5);
+  raw_eta1 ~ uniform(-0.5, 0.5);
+  raw_eta2 ~ uniform(-0.5, 0.5);
   
   // loop over trials
   for(tIdx in 1 : N){

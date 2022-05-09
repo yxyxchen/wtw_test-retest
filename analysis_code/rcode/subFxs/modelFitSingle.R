@@ -45,11 +45,12 @@ modelFitSingle = function(id, thisTrialData, modelName, paraNames, model, config
       nWaitOrQuit = nWaitOrQuit, # number of all possible decision time points
       tWaits = tWaits, # decision time points
       N = length(thisTrialData$trialEarnings), # number of trials
+      N_block1 = sum(thisTrialData$condition == "LP"),
       Rs = thisTrialData$trialEarnings, # rewards on each trial
       Ts = Ts, # time spent on waiting 
       nMadeActions = nMadeActions
     )
-    if(modelName %in% c("QL1", "QL2")){
+    if(modelName %in% c("QL1", "QL2", "QL1reset", "QL2reset")){
       V0_ini = 0.27782194519542547  / (1 - 0.85) # unit: cents
       inputs$V0_ini = V0_ini
     }else{

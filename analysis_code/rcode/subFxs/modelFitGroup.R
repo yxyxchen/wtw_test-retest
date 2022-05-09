@@ -28,10 +28,10 @@ modelFitGroup = function(sess, modelName, trialData, config, outputDir, parallel
   
   # compile the Rstan model 
   options(warn= 1) 
-  Sys.setenv(USE_CXX14=1) # settings for the local PC
+  #Sys.setenv(USE_CXX14=1) # settings for the local PC
   rstan_options(auto_write = TRUE) 
   model = stan_model(file = sprintf("stanModels/%s.stan", modelName))
-  
+
   # determine parameters 
   paraNames = getParaNames(modelName)
   
