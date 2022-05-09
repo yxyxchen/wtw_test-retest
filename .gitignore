@@ -4,7 +4,8 @@ analysis_results/passive/modelfit/
 analysis_results/active/modelfit/
 analysis_code/data/*/consent*.csv
 analysis_code/data/*/bonus*.csv
-analysis_code/parse_data.py
+analysis_code/parsedata.py
+analysis_code/parse_single_datafile.py
 analysis_code/manual_check.py
 original_data_backup/
 **/__pycache__/
