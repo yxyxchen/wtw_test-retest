@@ -10,7 +10,6 @@ import itertools
 import copy # pay attention to copy 
 import statsmodels.api as sm
 import statsmodels.formula.api as smf
-from sksurv.nonparametric import kaplan_meier_estimator as km
 from scipy.interpolate import interp1d
 import code
 # my customized modules
@@ -577,35 +576,34 @@ if __name__ == "__main__":
     # compare different versions of model fitting methods:
     modelname = "QL1"
     foldernames = [modelname + x for x in ["", "_onlyLP"]]
-    for i, foldername in enumerate(foldernames):
-        s1_paradf = loadFxs.load_parameter_estimates(expname, 1, hdrdata_sess1, modelname, foldername)
-        s2_paradf = loadFxs.load_parameter_estimates(expname, 2, hdrdata_sess2, modelname, foldername)
-        if i == 0:
-            s1_ids = s1_paradf['id']
-            s2_ids = s2_paradf['id']
-            s1_para = s1_paradf
-            s2_para = s2_paradf
-        else:
-            s1_ids = np.intersect1d(s1_ids, s1_paradf['id'])
-            s2_ids = np.intersect1d(s2_ids, s2_paradf['id'])
-            s1_para = s1_para.merge(s1_paradf, on = "id", suffixes = ["", str(i)])
-            s2_para = s2_para.merge(s2_paradf, on = "id", suffixes = ["", str(i)])
+
 
 
     # save data 
     s1_stats_rep_ = []
     s2_stats_rep_ = []
+    s1_WTW_rep_ = []
+    s2_WTW_rep_ = []
+    s1_paradf_ = []
+    s2_paradf_ = []
     for i, foldername in enumerate(foldernames):
-        s1_paradf = loadFxs.load_parameter_estimates(expname, 1, hdrdata_sess1.loc[np.isin(hdrdata_sess1.id,s1_ids)], modelname, foldername)
-        s2_paradf = loadFxs.load_parameter_estimates(expname, 2, hdrdata_sess2.loc[np.isin(hdrdata_sess2.id,s2_ids)], modelname, foldername)
+        s1_paradf = loadFxs.load_parameter_estimates(expname, 1, hdrdata_sess1, modelname, foldername)
+        s2_paradf = loadFxs.load_parameter_estimates(expname, 2, hdrdata_sess2, modelname, foldername)
         s1_stats_rep, s1_WTW_rep = modelFxs.group_model_rep(trialdata_sess1_, s1_paradf, modelname, isTrct = True, plot_each = False)
         s2_stats_rep, s2_WTW_rep = modelFxs.group_model_rep(trialdata_sess2_, s2_paradf, modelname, isTrct = True, plot_each = False)
+        s1_stats_rep_.append(s1_stats_rep)
+        s2_stats_rep_.append(s2_stats_rep)
+        s1_WTW_rep_.append(s1_WTW_rep)
+        s2_WTW_rep_.append(s2_WTW_rep)   
+        s1_paradf_.append(s1_paradf)
+        s2_paradf_.append(s2_paradf)
+        g = figFxs.plot_group_emp_rep_wtw_multi(modelname, s1_WTW_rep_, s2_WTW_rep_, s1_WTW_, s2_WTW_, hdrdata_sess1, hdrdata_sess2, s1_paradf_, s2_paradf_, foldernames)
         # I kinda want to compare these effects though
         # g = figFxs.plot_group_emp_rep_wtw(modelname, s1_WTW_rep, s2_WTW_rep, s1_WTW_, s2_WTW_, hdrdata_sess1, hdrdata_sess2, s1_paradf, s2_paradf)
         # g_.append(g)
         # plt.show()
-        #plt.gcf().set_size_inches(8, 4)
-        #plt.savefig(os.path.join('..', 'figures', expname, 'wtw_emp_rep_%s_%s.pdf'%(modelname, foldername)))
+        plt.gcf().set_size_inches(8, 4)
+        plt.savefig(os.path.join('..', 'figures', expname, 'wtw_emp_rep_%s_multiple.pdf'%modelname))
         # input("Press Enter to continue...")
 
 

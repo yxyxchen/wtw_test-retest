@@ -10,8 +10,8 @@ import itertools
 import copy # pay attention to copy 
 import statsmodels.api as sm
 import statsmodels.formula.api as smf
-from sksurv.nonparametric import kaplan_meier_estimator as km
 from scipy.interpolate import interp1d
+from sksurv.nonparametric import kaplan_meier_estimator as km
 import code
 # my customized modules
 import subFxs
@@ -62,6 +62,50 @@ def plot_group_emp_rep_wtw(modelname, s1_WTW_rep, s2_WTW_rep, s1_WTW_emp, s2_WTW
     g.map(sns.lineplot, "time", "wtw")
     g.set(ylim=(3, 10), ylabel = "WTW (s)", xlabel = "Task time (s)")
     g.set(ylabel = "WTW (s)", xlabel = "Task time (s)")
+    axs = g.axes_dict.values()
+    for i, ax in enumerate(axs):
+        ax.set_title("SESS%d"%(i+1))
+        ax.axvline(expParas.blocksec, color = "grey", linestyle = "dashed")
+    return g
+
+def plot_group_emp_rep_wtw_multi(modelname, s1_WTW_rep_, s2_WTW_rep_, s1_WTW_emp, s2_WTW_emp, hdrdata_sess1, hdrdata_sess2, s1_paradf_, s2_paradf_, methods):
+    # 
+    from functools import reduce
+    s1_ids = reduce(np.intersect1d, [paradf.id for paradf in s1_paradf_])
+    s2_ids = reduce(np.intersect1d, [paradf.id for paradf in s2_paradf_])
+
+    # average empirical wtw data
+    s1_WTW_emp = s1_WTW_emp[np.isin(hdrdata_sess1.id, s1_ids), :]
+    s1_ave_emp = s1_WTW_emp.mean(axis = 0)
+    s2_WTW_emp = s2_WTW_emp[np.isin(hdrdata_sess2.id, s2_ids), :]
+    s2_ave_emp = s2_WTW_emp.mean(axis = 0)
+
+    # average replicated wtw data 
+    nmethod = len(methods)
+    s1_ave_rep_ = []
+    s2_ave_rep_ = []
+    for i in np.arange(nmethod):
+        s1_WTW_rep = s1_WTW_rep_[i]
+        s2_WTW_rep = s2_WTW_rep_[i]
+        s1_paradf = s1_paradf_[i]
+        s2_paradf = s2_paradf_[i]
+        s1_ave_rep = s1_WTW_rep[np.isin(s1_paradf.id, s1_ids)].mean(axis = 0)
+        s2_ave_rep = s2_WTW_rep[np.isin(s2_paradf.id, s2_ids)].mean(axis = 0)
+        s1_ave_rep_.append(s1_ave_rep)
+        s2_ave_rep_.append(s2_ave_rep)
+
+    plotdf = pd.DataFrame({
+        "wtw": np.concatenate([s1_ave_emp, s2_ave_emp, np.concatenate(s1_ave_rep_), np.concatenate(s2_ave_rep_)]),
+        "type": ['emp'] * len(expParas.TaskTime) * 2 + list(np.repeat(methods, len(expParas.TaskTime))) + list(np.repeat(methods, len(expParas.TaskTime))),
+        "time": np.tile(expParas.TaskTime, 2 + 2 * nmethod),
+        "sess": np.concatenate([np.repeat(["SESS1", "SESS2"], len(expParas.TaskTime)), np.repeat(["SESS1", "SESS2"], len(expParas.TaskTime) * nmethod)])
+        })
+
+    g = sns.FacetGrid(plotdf, col= "sess", hue = 'type', sharex = True, sharey = True, palette = ["black", "red", "pink"])
+    g.map(sns.lineplot, "time", "wtw")
+    g.set(ylim=(3, 10), ylabel = "WTW (s)", xlabel = "Task time (s)")
+    g.set(ylabel = "WTW (s)", xlabel = "Task time (s)")
+    plt.legend(labels=["emp"] + methods)
     axs = g.axes_dict.values()
     for i, ax in enumerate(axs):
         ax.set_title("SESS%d"%(i+1))
