@@ -464,7 +464,7 @@ if __name__ == "__main__":
     demo_sess1 = pd.read_csv(os.path.join('data', expname, "demographic_sess1.csv"))
     demo_sess2 = pd.read_csv(os.path.join('data', expname, "demographic_sess2.csv"))
 
-        # relationships 
+    # relationships 
     plotdf = demo_sess1.merge(s1_stats, on = "id")
     g = sns.FacetGrid(col = "block", data = plotdf)
     g.map(sns.regplot, 'age', 'auc') 
@@ -576,10 +576,10 @@ if __name__ == "__main__":
 
     # compare different versions of model fitting methods:
     modelname = "QL1"
-    foldernames = [modelname + x for x in ["", "_onlyLP", "_onlyHalfLP"]]
+    foldernames = [modelname + x for x in ["", "_onlyLP"]]
     for i, foldername in enumerate(foldernames):
-        s1_paradf = loadFxs.load_parameter_estimates(expname, 1, hdrdata_sess1[:10], modelname, foldername)
-        s2_paradf = loadFxs.load_parameter_estimates(expname, 2, hdrdata_sess2[:10], modelname, foldername)
+        s1_paradf = loadFxs.load_parameter_estimates(expname, 1, hdrdata_sess1, modelname, foldername)
+        s2_paradf = loadFxs.load_parameter_estimates(expname, 2, hdrdata_sess2, modelname, foldername)
         if i == 0:
             s1_ids = s1_paradf['id']
             s2_ids = s2_paradf['id']
@@ -591,7 +591,10 @@ if __name__ == "__main__":
             s1_para = s1_para.merge(s1_paradf, on = "id", suffixes = ["", str(i)])
             s2_para = s2_para.merge(s2_paradf, on = "id", suffixes = ["", str(i)])
 
-    g_ = []
+
+    # save data 
+    s1_stats_rep_ = []
+    s2_stats_rep_ = []
     for i, foldername in enumerate(foldernames):
         s1_paradf = loadFxs.load_parameter_estimates(expname, 1, hdrdata_sess1.loc[np.isin(hdrdata_sess1.id,s1_ids)], modelname, foldername)
         s2_paradf = loadFxs.load_parameter_estimates(expname, 2, hdrdata_sess2.loc[np.isin(hdrdata_sess2.id,s2_ids)], modelname, foldername)
