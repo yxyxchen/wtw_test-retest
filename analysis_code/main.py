@@ -455,8 +455,14 @@ if __name__ == "__main__":
     expname = "passive"
     hdrdata_sess1, trialdata_sess1_ = loadFxs.group_quality_check(expname, 1, plot_quality_check = True)
     hdrdata_sess2, trialdata_sess2_ = loadFxs.group_quality_check(expname, 2, plot_quality_check = True)
-    s1_stats = pd.read_csv(os.path.join('..', 'analysis_results', expname, 'taskstats', 'emp_sess1.csv'))
-    s2_stats = pd.read_csv(os.path.join('..', 'analysis_results', expname, 'taskstats', 'emp_sess2.csv'))
+    s1_stats, s1_Psurv_b1_, s1_Psurv_b2_, s1_WTW_ = analysisFxs.group_MF(trialdata_sess1_, plot_each = False)   
+
+    #s1_stats.to_csv(os.path.join('..', 'analysis_results', expname, 'taskstats', 'emp_sess1.csv'), index = None)
+
+    s2_stats, s2_Psurv_b1_, s2_Psurv_b2_, s2_WTW_ = analysisFxs.group_MF(trialdata_sess2_, plot_each = False)   
+    #s2_stats.to_csv(os.path.join('..', 'analysis_results', expname, 'taskstats', 'emp_sess2.csv'), index = None)
+    #s1_stats = pd.read_csv(os.path.join('..', 'analysis_results', expname, 'taskstats', 'emp_sess1.csv'))
+    #s2_stats = pd.read_csv(os.path.join('..', 'analysis_results', expname, 'taskstats', 'emp_sess2.csv'))
     code.interact(local = dict(globals(), **locals()))
 
     # load demographic information
@@ -574,10 +580,9 @@ if __name__ == "__main__":
     ##############
 
     # compare different versions of model fitting methods:
+    import pickle
     modelname = "QL1"
     foldernames = [modelname + x for x in ["", "_onlyLP"]]
-
-
 
     # save data 
     s1_stats_rep_ = []
@@ -597,15 +602,50 @@ if __name__ == "__main__":
         s2_WTW_rep_.append(s2_WTW_rep)   
         s1_paradf_.append(s1_paradf)
         s2_paradf_.append(s2_paradf)
-        g = figFxs.plot_group_emp_rep_wtw_multi(modelname, s1_WTW_rep_, s2_WTW_rep_, s1_WTW_, s2_WTW_, hdrdata_sess1, hdrdata_sess2, s1_paradf_, s2_paradf_, foldernames)
-        # I kinda want to compare these effects though
-        # g = figFxs.plot_group_emp_rep_wtw(modelname, s1_WTW_rep, s2_WTW_rep, s1_WTW_, s2_WTW_, hdrdata_sess1, hdrdata_sess2, s1_paradf, s2_paradf)
-        # g_.append(g)
-        # plt.show()
-        plt.gcf().set_size_inches(8, 4)
-        plt.savefig(os.path.join('..', 'figures', expname, 'wtw_emp_rep_%s_multiple.pdf'%modelname))
-        # input("Press Enter to continue...")
+        # modelrep_obj = {'s1_paradf': s1_paradf, 's2_paradf': s2_paradf, "s1_stats_rep": s1_stats_rep,\
+        # "s2_stats_rep": s2_stats_rep, "s1_WTW_rep": s1_WTW_rep, "s2_WTW_rep": s2_WTW_rep}
+        # with open(os.path.join('..', 'analysis_results', expname, "modelrep", method), 'wb') as modelrep_file:   
+        #     pickle.dump(modelrep_obj, modelrep_file)
+    
+    # compare WTW
+    g = figFxs.plot_group_emp_rep_wtw_multi(modelname, s1_WTW_rep_, s2_WTW_rep_, s1_WTW_, s2_WTW_, hdrdata_sess1, hdrdata_sess2, s1_paradf_, s2_paradf_, foldernames)
+    plt.gcf().set_size_inches(8, 4)
+    plt.savefig(os.path.join('..', 'figures', expname, 'wtw_emp_rep_%s_multiple.pdf'%modelname))
 
+    # compare parameter reliability 
+    methods = foldernames
+    subtitles = [r'$\mathbf{log(\alpha)}$', r'$\mathbf{\tau}$', r'$\mathbf{\gamma}$', r'$\mathbf{log(\eta)}$']
+    from functools import reduce
+    s1_ids = reduce(np.intersect1d, [paradf.id for paradf in s1_paradf_])
+    s2_ids = reduce(np.intersect1d, [paradf.id for paradf in s2_paradf_])
+    for i in np.arange(len(methods)):
+        s1_paradf = s1_paradf_[i]
+        s2_paradf = s2_paradf_[i]
+        rep_sess1 = s1_stats_rep_[i]
+        rep_sess2 = s2_stats_rep_[i]
+        s1_paradf = s1_paradf[np.isin(s1_paradf.id, s1_ids)]
+        s2_paradf = s2_paradf[np.isin(s2_paradf.id, s2_ids)]
+        rep_sess1 = rep_sess1[np.isin(rep_sess1.id, s1_ids)]
+        rep_sess2 = rep_sess2[np.isin(rep_sess2.id, s2_ids)]
+        figFxs.plot_group_emp_rep_diff(modelname, rep_sess1, rep_sess2, s1_stats, s2_stats)
+        figFxs.plot_parameter_compare(modelname, s1_paradf.iloc[:,:-1], s2_paradf.iloc[:,:-1], subtitles)
+        figFxs.plot_parameter_reliability(modelname, s1_paradf.iloc[:,:-1], s2_paradf.iloc[:,:-1], subtitles)
+        plt.show()
+        input("Enter")
+        plt.clf()
+
+
+# input("Press Enter to continue...")
+    rep_sess1 = s1_stats_rep_[0]
+    rep_sess2 = s2_stats_rep_[0]
+    emp_sess1 = s1_stats
+    emp_sess2 = s2_stats
+    rep = pd.concat([rep_sess1[['auc', 'id', 'condition', 'sess']], rep_sess2[['auc', 'id', 'condition', 'sess']]])
+    emp = pd.concat([emp_sess1[['auc', 'id', 'condition', 'sess']], emp_sess2[['auc', 'id', 'condition', 'sess']]])
+    plotdf['diff'] = plotdf['auc_emp'] - plotdf['auc_rep']
+    g = sns.FacetGrid(plotdf, col= "sess", hue = 'condition', sharex = True, sharey = True, palette = condition_palette)
+    g.set(xlabel = "Observed AUC (s)")
+    g.map(sns.scatterplot, 'auc_emp', 'diff', s = 50, marker = "+", alpha = 0.8)
 
     for modelname in modelnames:
         s1_paradf = loadFxs.load_parameter_estimates(expname, 1, hdrdata_sess1, modelname, modelname)
@@ -616,7 +656,7 @@ if __name__ == "__main__":
         s2_stats_rep.to_csv(os.path.join('..', 'analysis_results', expname, 'taskstats', 'rep_%s_sess2.csv'%modelname), index = None)
 
 
-        figFxs.plot_group_emp_rep(modelname, s1_stats_rep, s2_stats_rep, s1_stats, s2_stats)
+        'figFxs.plot_group_emp_rep(modelname, s1_stats_rep, s2_stats_rep, s1_stats, s2_stats)'
         # figFxs.plot_group_emp_rep(modelname, s1_stats_rep, s1_stats_rep, s1_stats, s1_stats)
         plt.gcf().set_size_inches(8, 4)
         plt.savefig(os.path.join('..', 'figures', expname, 'auc_emp_rep_%s.pdf'%modelname))

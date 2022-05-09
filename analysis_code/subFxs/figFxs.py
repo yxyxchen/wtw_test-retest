@@ -127,6 +127,20 @@ def plot_group_emp_rep(modelname, rep_sess1, rep_sess2, emp_sess1, emp_sess2):
         ax.set_aspect("equal")
         ax.plot([0, expParas.tMax], [0, expParas.tMax], ls = '--', color = 'grey', zorder = 10)
 
+def plot_group_emp_rep_diff(modelname, rep_sess1, rep_sess2, emp_sess1, emp_sess2):
+    # plot AUC against AUC
+    # code.interact(local = dict(locals(), **globals()))
+    rep = pd.concat([rep_sess1[['auc', 'id', 'condition', 'sess']], rep_sess2[['auc', 'id', 'condition', 'sess']]])
+    emp = pd.concat([emp_sess1[['auc', 'id', 'condition', 'sess']], emp_sess2[['auc', 'id', 'condition', 'sess']]])
+    plotdf = rep.merge(emp, left_on = ('id', 'condition', 'sess'), right_on = ('id', 'condition', 'sess'), suffixes = ('_rep', '_emp'))
+    plotdf['diff'] = plotdf['auc_emp'] - plotdf['auc_rep']
+    g = sns.FacetGrid(plotdf, col= "sess", hue = 'condition', sharex = True, sharey = True, palette = condition_palette)
+    g.map(sns.scatterplot, 'auc_emp', 'diff', s = 50, marker = "+", alpha = 0.8)
+    for ax in g.axes.flat:
+        ax.set_xlabel('Observed AUC (s)')
+        ax.set_ylabel('Observed AUC - Generated AUC (s)')
+        ax.axhline(0)
+
 def plot_group_KMSC_both(s1_Psurv_b1_, s1_Psurv_b2_, s2_Psurv_b1_, s2_Psurv_b2_, hdrdata_sess1, hdrdata_sess2, ax):
     analysisFxs.plot_group_KMSC(s1_Psurv_b1_[np.isin(hdrdata_sess1['id'], hdrdata_sess2['id'])], s1_Psurv_b2_[np.isin(hdrdata_sess1['id'], hdrdata_sess2['id'])], expParas.Time, ax)
     analysisFxs.plot_group_KMSC(s2_Psurv_b1_, s2_Psurv_b2_, expParas.Time, ax, linestyle = '--')
@@ -349,7 +363,7 @@ def my_regplot(x, y, ax = None, exclude_outliers = True, **kwargs):
     if(ax is None):
         ax = plt.gca()
     # cacl realibility 
-    spearman_rho, pearson_rho, abs_icc, con_icc = analysisFxs.calc_reliability(x, y)
+    spearman_rho, pearson_rho, abs_icc, con_icc, ssbs, ssbm, sse, msbs, msbm, mse = analysisFxs.calc_reliability(x, y)
     # set boundaries to exclude outliers: either based on the min/max value or the 1.5 iqr limit
     # x_min = x.min(); x_max = x.max()
     # y_min = y.min(); y_max = y.max()
