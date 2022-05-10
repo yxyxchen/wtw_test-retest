@@ -511,43 +511,60 @@ if __name__ == "__main__":
     ############################
     ## group-level behavior  ##
     ############################
-    # replicate wtw 
-
+    # calc sub-auc
+    tmp = s2_stats.melt(id_vars = ["id", "condition"], value_vars = ['auc1', 'auc2'])
+    plotdf = tmp.groupby(["condition", "variable"]).agg(mean = ("value", np.mean), se = ("value", analysisFxs.calc_se)).reset_index()
+    g = sns.FacetGrid(plotdf, col = "condition")
+    g.map(sns.barplot, "variable", "mean")
+    g.map(plt.errorbar, "variable", "mean", "se", color = "red")
     ####################
     # calc reliability # 
     ######################
-    colvars = ['auc', 'auc1', 'auc2', "auc_rh", 'std_wtw', 'std_wtw1', 'std_wtw2', "std_wtw_rh"]
-    s1_HP = s1_stats.loc[s1_stats['condition'] == 'HP', colvars + ['id']]
-    s1_LP = s1_stats.loc[s1_stats['condition'] == 'LP', colvars + ['id']]
-    s1_df = s1_HP.merge(s1_LP, left_on = 'id', right_on = 'id', suffixes = ['_HP', "_LP"])
+s1_stats['end_start'] = s1_stats['auc2'] - s1_stats['auc1']
+s2_stats['end_start'] = s2_stats['auc2'] - s2_stats['auc1']
+s1_stats['total_std'] = (s1_stats['std_wtw1']**2 + s1_stats['std_wtw2']**2 + s1_stats['std_wtw3']**2)**(0.5)
+s2_stats['total_std'] = (s2_stats['std_wtw1']**2 + s2_stats['std_wtw2']**2 + s2_stats['std_wtw3']**2)**(0.5)
+s1_stats.groupby("condition").agg(mean = ("end_start", np.mean))
 
-    s2_HP = s2_stats.loc[s2_stats['condition'] == 'HP', colvars + ['id']]
-    s2_LP = s2_stats.loc[s2_stats['condition'] == 'LP', colvars + ['id']]
-    s2_df = s2_HP.merge(s2_LP, left_on = 'id', right_on = 'id', suffixes = ['_HP', "_LP"])
+    # colvars = ['auc_end_start', 'auc', 'auc1', 'auc2', "auc_rh", 'std_wtw', 'std_wtw1', 'std_wtw2', "std_wtw_rh"]
+colvars = ['end_start', 'auc', "total_std", "std_wtw", "std_wtw2", "std_wtw1"]
+s1_HP = s1_stats.loc[s1_stats['condition'] == 'HP', colvars + ['id']]
+s1_LP = s1_stats.loc[s1_stats['condition'] == 'LP', colvars + ['id']]
+s1_df = s1_HP.merge(s1_LP, left_on = 'id', right_on = 'id', suffixes = ['_HP', "_LP"])
 
-    # add delta variables
-    auc_vars = ['auc', 'auc1', 'auc2', "auc_rh"]
-    s1_df = pd.concat([s1_df, s1_df.filter(like = "auc", axis = 1).filter(like='HP', axis=1).set_axis([x+'_delta' for x in auc_vars], axis = 1) - s1_df.filter(like = "auc", axis = 1).filter(like='LP', axis=1).set_axis([x+'_delta' for x in auc_vars], axis = 1)], axis = 1)
-    s2_df = pd.concat([s2_df, s2_df.filter(like = "auc", axis = 1).filter(like='HP', axis=1).set_axis([x+'_delta' for x in auc_vars], axis = 1) - s2_df.filter(like = "auc", axis = 1).filter(like='LP', axis=1).set_axis([x+'_delta' for x in auc_vars], axis = 1)], axis = 1)
+s2_HP = s2_stats.loc[s2_stats['condition'] == 'HP', colvars + ['id']]
+s2_LP = s2_stats.loc[s2_stats['condition'] == 'LP', colvars + ['id']]
+s2_df = s2_HP.merge(s2_LP, left_on = 'id', right_on = 'id', suffixes = ['_HP', "_LP"])
 
-    # add mean variables 
-    s1_df = pd.concat([s1_df, (s1_df.filter(like = "auc", axis = 1).filter(like='HP', axis=1).set_axis([x+'_ave' for x in auc_vars], axis = 1) + s1_df.filter(like = "auc", axis = 1).filter(like='LP', axis=1).set_axis([x+'_ave' for x in auc_vars], axis = 1)) / 2], axis = 1) 
-    s2_df = pd.concat([s2_df, (s2_df.filter(like = "auc", axis = 1).filter(like='HP', axis=1).set_axis([x+'_ave' for x in auc_vars], axis = 1) + s2_df.filter(like = "auc", axis = 1).filter(like='LP', axis=1).set_axis([x+'_ave' for x in auc_vars], axis = 1)) / 2], axis = 1)
+# add delta variables
+auc_vars = ['auc']
+s1_df = pd.concat([s1_df, s1_df.filter(like = "auc", axis = 1).filter(like='HP', axis=1).set_axis([x+'_delta' for x in auc_vars], axis = 1) - s1_df.filter(like = "auc", axis = 1).filter(like='LP', axis=1).set_axis([x+'_delta' for x in auc_vars], axis = 1)], axis = 1)
+s2_df = pd.concat([s2_df, s2_df.filter(like = "auc", axis = 1).filter(like='HP', axis=1).set_axis([x+'_delta' for x in auc_vars], axis = 1) - s2_df.filter(like = "auc", axis = 1).filter(like='LP', axis=1).set_axis([x+'_delta' for x in auc_vars], axis = 1)], axis = 1)
 
-    # add init_wtw variables
-    s1_df = s1_df.merge(s1_stats.loc[s1_stats.block == 1, ["id", "init_wtw"]], on = "id")
-    #s1_df = s1_df.merge(s2_stats.loc[s2_stats.block == 1, ["id", "init_wtw"]], on = "id") 
-    s1_df['init_wtw'] = s1_df['init_wtw'] + 1
-    s2_df = s2_df.merge(s2_stats.loc[s2_stats.block == 1, ["id", "init_wtw"]], on = "id")
-    # merge
-    df = s1_df.merge(s2_df, on = 'id', suffixes = ['_sess1', '_sess2']) 
+# add mean variables 
+s1_df = pd.concat([s1_df, (s1_df.filter(like = "auc", axis = 1).filter(like='HP', axis=1).set_axis([x+'_ave' for x in auc_vars], axis = 1) + s1_df.filter(like = "auc", axis = 1).filter(like='LP', axis=1).set_axis([x+'_ave' for x in auc_vars], axis = 1)) / 2], axis = 1) 
+s2_df = pd.concat([s2_df, (s2_df.filter(like = "auc", axis = 1).filter(like='HP', axis=1).set_axis([x+'_ave' for x in auc_vars], axis = 1) + s2_df.filter(like = "auc", axis = 1).filter(like='LP', axis=1).set_axis([x+'_ave' for x in auc_vars], axis = 1)) / 2], axis = 1)
 
-    # variable names 
-    vars = ['auc_delta', 'auc1_delta', 'auc2_delta'] + ['auc_ave', 'auc1_ave', 'auc2_ave'] + [x + "_HP" for x in colvars] + [x + "_LP" for x in colvars] + ['init_wtw']
-    rows = ['spearman_rho', 'pearson_rho', 'abs_icc', 'con_icc', "ssbs", "ssbm", "sse", "msbs", "msbm", "mse"]
-    reliable_df = np.zeros([len(rows), len(vars)])
-    for i, var in enumerate(vars):
-        reliable_df[:,i] = analysisFxs.calc_reliability(df.loc[:, var + '_sess1'], df.loc[:, var + '_sess2'])
+std_vars = ['total_std', "std_wtw", "std_wtw2", "std_wtw1"]
+s1_df = pd.concat([s1_df, (s1_df.filter(like = "std", axis = 1).filter(like='HP', axis=1).set_axis([x+'_ave' for x in std_vars], axis = 1) + s1_df.filter(like = "std", axis = 1).filter(like='LP', axis=1).set_axis([x+'_ave' for x in std_vars], axis = 1)) / 2], axis = 1) 
+s2_df = pd.concat([s2_df, (s2_df.filter(like = "std", axis = 1).filter(like='HP', axis=1).set_axis([x+'_ave' for x in std_vars], axis = 1) + s2_df.filter(like = "std", axis = 1).filter(like='LP', axis=1).set_axis([x+'_ave' for x in std_vars], axis = 1)) / 2], axis = 1)
+
+# add init_wtw variables
+s1_df = s1_df.merge(s1_stats.loc[s1_stats.block == 1, ["id", "init_wtw"]], on = "id")
+#s1_df = s1_df.merge(s2_stats.loc[s2_stats.block == 1, ["id", "init_wtw"]], on = "id") 
+s1_df['init_wtw'] = s1_df['init_wtw'] + 1
+s2_df = s2_df.merge(s2_stats.loc[s2_stats.block == 1, ["id", "init_wtw"]], on = "id")
+# merge
+df = s1_df.merge(s2_df, on = 'id', suffixes = ['_sess1', '_sess2']) 
+
+# variable names 
+spearmanr(df['total_std_ave_sess1'], df['auc_ave_sess1'])
+vars = ['auc_delta', 'auc1_delta', 'auc2_delta'] + ['auc_ave', 'auc1_ave', 'auc2_ave'] + [x + "_HP" for x in colvars] + [x + "_LP" for x in colvars] + ['init_wtw']
+vars = ['auc_delta'] + ['auc_ave'] + [x + "_HP" for x in colvars] + [x + "_LP" for x in colvars] + ['init_wtw'] + [x + "_ave" for x in std_vars]
+rows = ['spearman_rho', 'pearson_rho', 'abs_icc', 'con_icc', "ssbs", "ssbm", "sse", "msbs", "msbm", "mse"]
+reliable_df = np.zeros([len(rows), len(vars)])
+for i, var in enumerate(vars):
+    reliable_df[:,i] = analysisFxs.calc_reliability(df.loc[:, var + '_sess1'], df.loc[:, var + '_sess2'])
 
     reliable_df = pd.DataFrame(reliable_df, columns = vars, index = rows)
     reliable_df.to_csv(os.path.join("..", "analysis_results", expname, "mf_reliability.csv"))
@@ -581,27 +598,28 @@ if __name__ == "__main__":
 
     # compare different versions of model fitting methods:
     import pickle
-    modelname = "QL1"
-    foldernames = [modelname + x for x in ["", "_onlyLP"]]
 
-    # save data 
-    s1_stats_rep_ = []
-    s2_stats_rep_ = []
-    s1_WTW_rep_ = []
-    s2_WTW_rep_ = []
-    s1_paradf_ = []
-    s2_paradf_ = []
-    for i, foldername in enumerate(foldernames):
-        s1_paradf = loadFxs.load_parameter_estimates(expname, 1, hdrdata_sess1, modelname, foldername)
-        s2_paradf = loadFxs.load_parameter_estimates(expname, 2, hdrdata_sess2, modelname, foldername)
-        s1_stats_rep, s1_WTW_rep = modelFxs.group_model_rep(trialdata_sess1_, s1_paradf, modelname, isTrct = True, plot_each = False)
-        s2_stats_rep, s2_WTW_rep = modelFxs.group_model_rep(trialdata_sess2_, s2_paradf, modelname, isTrct = True, plot_each = False)
-        s1_stats_rep_.append(s1_stats_rep)
-        s2_stats_rep_.append(s2_stats_rep)
-        s1_WTW_rep_.append(s1_WTW_rep)
-        s2_WTW_rep_.append(s2_WTW_rep)   
-        s1_paradf_.append(s1_paradf)
-        s2_paradf_.append(s2_paradf)
+foldernames = ['QL1reset']
+modelnames = ['QL1reset']
+# save data 
+s1_stats_rep_ = []
+s2_stats_rep_ = []
+s1_WTW_rep_ = []
+s2_WTW_rep_ = []
+s1_paradf_ = []
+s2_paradf_ = []
+for i, foldername in enumerate(foldernames):
+    modelname = modelnames[i]
+    s1_paradf = loadFxs.load_parameter_estimates(expname, 1, hdrdata_sess1.iloc[:10,], modelname, foldername)
+    s2_paradf = loadFxs.load_parameter_estimates(expname, 2, hdrdata_sess2.iloc[:10,], modelname, foldername)
+    s1_stats_rep, s1_WTW_rep = modelFxs.group_model_rep(trialdata_sess1_, s1_paradf, modelname, isTrct = True, plot_each = False)
+    s2_stats_rep, s2_WTW_rep = modelFxs.group_model_rep(trialdata_sess2_, s2_paradf, modelname, isTrct = True, plot_each = False)
+    s1_stats_rep_.append(s1_stats_rep)
+    s2_stats_rep_.append(s2_stats_rep)
+    s1_WTW_rep_.append(s1_WTW_rep)
+    s2_WTW_rep_.append(s2_WTW_rep)   
+    s1_paradf_.append(s1_paradf)
+    s2_paradf_.append(s2_paradf)
         # modelrep_obj = {'s1_paradf': s1_paradf, 's2_paradf': s2_paradf, "s1_stats_rep": s1_stats_rep,\
         # "s2_stats_rep": s2_stats_rep, "s1_WTW_rep": s1_WTW_rep, "s2_WTW_rep": s2_WTW_rep}
         # with open(os.path.join('..', 'analysis_results', expname, "modelrep", method), 'wb') as modelrep_file:   

@@ -782,7 +782,7 @@ def ind_MF(trialdata, key, isTrct = True, plot_RT = False, plot_trial = False, p
         # Survival analysis into subblocks 
         sub_aucs = []
         sub_std_wtws = []
-        n_sublock = 2
+        n_sublock = 3
         for k in range(n_sublock):
             # code.interact(local = dict(locals(), **globals()))
             filter = np.logical_and(blockdata['sellTime'] >= k * expParas.blocksec / n_sublock, blockdata['sellTime'] < (k + 1) * expParas.blocksec / n_sublock)
@@ -803,9 +803,9 @@ def ind_MF(trialdata, key, isTrct = True, plot_RT = False, plot_trial = False, p
         
         # organize the output
         init_wtw =  wtw[i][0]# initial wtw measure
-        end_wtw = wtw[i][-1]
-        junk, _, _ = wtwTS(blockdata['trialEarnings'].values, blockdata['timeWaited'].values, blockdata['sellTime'].values, expParas.tMax, expParas.BlockTime, False)
-        end_trct_wtw = junk[-1]
+        # end_wtw = wtw[i][-1]
+        # junk, _, _ = wtwTS(blockdata['trialEarnings'].values, blockdata['timeWaited'].values, blockdata['sellTime'].values, expParas.tMax, expParas.BlockTime, False)
+        # end_trct_wtw = junk[-1]
 
         # tmp = pd.DataFrame({"id": key[0], "sess": key[1], "key": str(key), "block": i + 1, "auc": block_auc, "std_wtw": block_std_wtw, "init_wtw": init_wtw, \
         #     "auc1": sub_aucs[0], "auc2": sub_aucs[1], "auc3": sub_aucs[2], "auc4": sub_aucs[3], \
@@ -813,9 +813,8 @@ def ind_MF(trialdata, key, isTrct = True, plot_RT = False, plot_trial = False, p
         #     "sell_RT_median": sell_RT_median,\
         #     "sell_RT_mean": sell_RT_mean, "sell_RT_se": sell_RT_se,\
         #     "condition": condition}, index = [i])
-        tmp = {"id": key[0], "sess": key[1], "key": str(key), "block": i + 1, "auc": block_auc, "auc_rh": block_auc_rh, "std_wtw": block_std_wtw, "std_wtw_rh": block_std_wtw_rh, \
-        "init_wtw": init_wtw, "end_wtw": end_wtw, "end_trct_wtw": end_trct_wtw, \
-            "sell_RT_median": sell_RT_median, "sell_RT_mean": sell_RT_mean, "sell_RT_se": sell_RT_se, "condition": condition}
+        tmp = {"id": key[0], "sess": key[1], "key": str(key), "block": i + 1, "auc": block_auc,  "std_wtw": block_std_wtw, \
+        "init_wtw": init_wtw, "sell_RT_median": sell_RT_median, "sell_RT_mean": sell_RT_mean, "sell_RT_se": sell_RT_se, "condition": condition}
         tmp.update(dict(zip(['auc' + str((i + 1)) for i in range(n_sublock)], sub_aucs)))
         tmp.update(dict(zip(['std_wtw' + str((i + 1)) for i in range(n_sublock)], sub_std_wtws)))
         stats.append(pd.DataFrame(tmp, index = [i]))

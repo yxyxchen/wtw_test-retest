@@ -24,7 +24,23 @@ def QL_initialize(ts, paras):
 		paras: a dictionary of parameters
 	"""
 	Qquit = np.mean(expParas.optimRewardRates) / 0.15
+
 	Qwaits = -0.1 * ts + paras['eta'] + Qquit
+
+	return Qwaits, Qquit
+
+def QLreset_initialize(ts, paras, reset = False):
+	""" A helper function to initialize action values for Q-Learning models
+	
+	inputs:
+		ts: a vector of time steps
+		paras: a dictionary of parameters
+	"""
+	Qquit = np.mean(expParas.optimRewardRates) / 0.15
+	if not reset:
+		Qwaits = -0.1 * ts + paras['eta1'] + Qquit
+	else:
+		Qwaits = -0.1 * ts + paras['eta2'] + Qquit
 	return Qwaits, Qquit
 
 def softmax_dec(Qwait, Qquit, paras):
@@ -159,6 +175,8 @@ def ind_sim(modelname, paras, condition_, blockIdx_, scheduledDelay_, scheduledR
 	ts = np.arange(0, max(expParas.tMaxs), expParas.stepsize) 
 	if modelname == 'QL1' or modelname == 'QL2':
 		Qwaits, Qquit = QL_initialize(ts, paras)
+	elif modelname == 'QL1reset' or modelname == 'QL2reset':
+		Qwaits, Qquit = QLreset_initialize(ts, paras)
 	elif modelname == 'RL1' or modelname == 'RL2':
 		Qwaits, Qquit, reward_rate = RL_initialize(ts, paras)
 
@@ -172,6 +190,10 @@ def ind_sim(modelname, paras, condition_, blockIdx_, scheduledDelay_, scheduledR
 		# reset elapsedTime at the beginning of each block
 		if tIdx == 0 or blockIdx_[tIdx - 1] != blockIdx_[tIdx]:
 			elapsedTime = 0
+
+		if modelname == 'QL1reset' or modelname == 'QL2reset':
+			if tIdx == sum(condition_ == "LP") + 1:
+				Qwaits, Qquit = QLreset_initialize(ts, paras, reset = True)
 
 		# start to track time and exist_status within a trial
 		t = 0
@@ -211,10 +233,10 @@ def ind_sim(modelname, paras, condition_, blockIdx_, scheduledDelay_, scheduledR
 		elapsedTime = elapsedTime + timeWaited + empirical_iti
 
 		# update value functions
-		if modelname == "QL1":
+		if modelname == "QL1" or modelname == "QL1reset":
 			# code.interact(local = dict(locals(), **globals()))
 			Qwaits, Qquit = QL1_learn(Qwaits, Qquit, ts, timeWaited, trialEarnings, paras, empirical_iti = expParas.iti)
-		elif modelname == "QL2":
+		elif modelname == "QL2" or modelname == "QL2reset":
 			Qwaits, Qquit = QL2_learn(Qwaits, Qquit, ts, timeWaited, trialEarnings, paras, empirical_iti = expParas.iti)
 		elif modelname == 'RL1':
 			Qwaits, Qquit, reward_rate = RL1_learn(Qwaits, Qquit, reward_rate, ts, timeWaited, trialEarnings, paras, empirical_iti = expParas.iti)
