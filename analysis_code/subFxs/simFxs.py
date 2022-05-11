@@ -192,7 +192,7 @@ def ind_sim(modelname, paras, condition_, blockIdx_, scheduledDelay_, scheduledR
 			elapsedTime = 0
 
 		if modelname == 'QL1reset' or modelname == 'QL2reset':
-			if tIdx == sum(condition_ == "LP") + 1:
+			if blockIdx_[tIdx - 1] != blockIdx_[tIdx]:
 				Qwaits, Qquit = QLreset_initialize(ts, paras, reset = True)
 
 		# start to track time and exist_status within a trial

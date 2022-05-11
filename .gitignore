@@ -1,4 +1,7 @@
 # ignore consent csv  files and bonus  csv files
+.DS_Store
+analysis_results/passive/modelrep/
+analysis_results/active/modelrep/
 keypress_data/
 analysis_results/passive/backup/
 analysis_results/active/backup/

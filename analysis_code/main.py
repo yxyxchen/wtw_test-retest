@@ -677,7 +677,6 @@ if __name__ == "__main__":
 
     # compare different versions of model fitting methods:
     import pickle
-
     foldernames = ['QL1reset']
     modelnames = ['QL1reset']
     # save data 
@@ -730,7 +729,6 @@ if __name__ == "__main__":
             plt.show()
             input("Enter")
             plt.clf()
-
 
 # input("Press Enter to continue...")
     rep_sess1 = s1_stats_rep_[0]
