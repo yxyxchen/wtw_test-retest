@@ -599,8 +599,8 @@ for i, var in enumerate(vars):
     # compare different versions of model fitting methods:
     import pickle
 
-foldernames = ['QL1reset']
-modelnames = ['QL1reset']
+foldernames = ['QL1', 'QL1_onlyLP', 'QL1reset']
+modelnames = ['QL1', ' QL1', 'QL1reset']
 # save data 
 s1_stats_rep_ = []
 s2_stats_rep_ = []
@@ -610,47 +610,53 @@ s1_paradf_ = []
 s2_paradf_ = []
 for i, foldername in enumerate(foldernames):
     modelname = modelnames[i]
-    s1_paradf = loadFxs.load_parameter_estimates(expname, 1, hdrdata_sess1.iloc[:10,], modelname, foldername)
-    s2_paradf = loadFxs.load_parameter_estimates(expname, 2, hdrdata_sess2.iloc[:10,], modelname, foldername)
-    s1_stats_rep, s1_WTW_rep = modelFxs.group_model_rep(trialdata_sess1_, s1_paradf, modelname, isTrct = True, plot_each = False)
-    s2_stats_rep, s2_WTW_rep = modelFxs.group_model_rep(trialdata_sess2_, s2_paradf, modelname, isTrct = True, plot_each = False)
-    s1_stats_rep_.append(s1_stats_rep)
-    s2_stats_rep_.append(s2_stats_rep)
-    s1_WTW_rep_.append(s1_WTW_rep)
-    s2_WTW_rep_.append(s2_WTW_rep)   
-    s1_paradf_.append(s1_paradf)
-    s2_paradf_.append(s2_paradf)
-        # modelrep_obj = {'s1_paradf': s1_paradf, 's2_paradf': s2_paradf, "s1_stats_rep": s1_stats_rep,\
-        # "s2_stats_rep": s2_stats_rep, "s1_WTW_rep": s1_WTW_rep, "s2_WTW_rep": s2_WTW_rep}
-        # with open(os.path.join('..', 'analysis_results', expname, "modelrep", method), 'wb') as modelrep_file:   
-        #     pickle.dump(modelrep_obj, modelrep_file)
-    
+    # s1_paradf = loadFxs.load_parameter_estimates(expname, 1, hdrdata_sess1, modelname, foldername)
+    # s2_paradf = loadFxs.load_parameter_estimates(expname, 2, hdrdata_sess2, modelname, foldername)
+    # s1_stats_rep, s1_WTW_rep = modelFxs.group_model_rep(trialdata_sess1_, s1_paradf, modelname, isTrct = True, plot_each = False)
+    # s2_stats_rep, s2_WTW_rep = modelFxs.group_model_rep(trialdata_sess2_, s2_paradf, modelname, isTrct = True, plot_each = False)
+    # modelrep_obj = {'s1_paradf': s1_paradf, 's2_paradf': s2_paradf, "s1_stats_rep": s1_stats_rep, "s2_stats_rep": s2_stats_rep, "s1_WTW_rep": s1_WTW_rep, "s2_WTW_rep": s2_WTW_rep}
+    # with open(os.path.join('..', 'analysis_results', expname, "modelrep", foldername), 'wb') as modelrep_file:   
+    #     pickle.dump(modelrep_obj, modelrep_file)
+    modelrep_obj = pd.read_pickle(os.path.join('..', 'analysis_results', expname, "modelrep", foldername))
+    s1_stats_rep_.append(modelrep_obj['s1_stats_rep'])
+    s2_stats_rep_.append(modelrep_obj['s2_stats_rep'])
+    s1_WTW_rep_.append(modelrep_obj['s1_WTW_rep'])
+    s2_WTW_rep_.append(modelrep_obj['s2_WTW_rep'])   
+    s1_paradf_.append(modelrep_obj['s1_paradf'])
+    s2_paradf_.append(modelrep_obj['s2_paradf'])
+
     # compare WTW
-    g = figFxs.plot_group_emp_rep_wtw_multi(modelname, s1_WTW_rep_, s2_WTW_rep_, s1_WTW_, s2_WTW_, hdrdata_sess1, hdrdata_sess2, s1_paradf_, s2_paradf_, foldernames)
-    plt.gcf().set_size_inches(8, 4)
-    plt.savefig(os.path.join('..', 'figures', expname, 'wtw_emp_rep_%s_multiple.pdf'%modelname))
+figFxs.plot_group_emp_rep_wtw_multi(modelname, s1_WTW_rep_, s2_WTW_rep_, s1_WTW_, s2_WTW_, hdrdata_sess1, hdrdata_sess2, s1_paradf_, s2_paradf_, foldernames)
+plt.legend(bbox_to_anchor=(1.02, 1), loc='upper left', borderaxespad=0, fontsize='xx-small')
+plt.gcf().set_size_inches(8, 4)
+plt.tight_layout()
+plt.savefig(os.path.join('..', 'figures', expname, 'wtw_emp_rep_%s_multiple_mean.pdf'%modelname))
 
     # compare parameter reliability 
-    methods = foldernames
-    subtitles = [r'$\mathbf{log(\alpha)}$', r'$\mathbf{\tau}$', r'$\mathbf{\gamma}$', r'$\mathbf{log(\eta)}$']
-    from functools import reduce
-    s1_ids = reduce(np.intersect1d, [paradf.id for paradf in s1_paradf_])
-    s2_ids = reduce(np.intersect1d, [paradf.id for paradf in s2_paradf_])
-    for i in np.arange(len(methods)):
-        s1_paradf = s1_paradf_[i]
-        s2_paradf = s2_paradf_[i]
-        rep_sess1 = s1_stats_rep_[i]
-        rep_sess2 = s2_stats_rep_[i]
-        s1_paradf = s1_paradf[np.isin(s1_paradf.id, s1_ids)]
-        s2_paradf = s2_paradf[np.isin(s2_paradf.id, s2_ids)]
-        rep_sess1 = rep_sess1[np.isin(rep_sess1.id, s1_ids)]
-        rep_sess2 = rep_sess2[np.isin(rep_sess2.id, s2_ids)]
-        figFxs.plot_group_emp_rep_diff(modelname, rep_sess1, rep_sess2, s1_stats, s2_stats)
-        figFxs.plot_parameter_compare(modelname, s1_paradf.iloc[:,:-1], s2_paradf.iloc[:,:-1], subtitles)
-        figFxs.plot_parameter_reliability(modelname, s1_paradf.iloc[:,:-1], s2_paradf.iloc[:,:-1], subtitles)
-        plt.show()
-        input("Enter")
-        plt.clf()
+methods = foldernames
+from functools import reduce
+s1_ids = reduce(np.intersect1d, [paradf.id for paradf in s1_paradf_])
+s2_ids = reduce(np.intersect1d, [paradf.id for paradf in s2_paradf_])
+for i in np.arange(len(methods)):
+    modelname = modelnames[i]
+    if modelname == "QL1":
+        subtitles = [r'$\mathbf{log(\alpha)}$', r'$\mathbf{\tau}$', r'$\mathbf{\gamma}$', r'$\mathbf{log(\eta)}$']
+    else:
+        subtitles = [r'$\mathbf{log(\alpha)}$', r'$\mathbf{\tau}$', r'$\mathbf{\gamma}$', r'$\mathbf{log(\eta1)}$', r'$\mathbf{log(\eta2}$']
+    s1_paradf = s1_paradf_[i]
+    s2_paradf = s2_paradf_[i]
+    rep_sess1 = s1_stats_rep_[i]
+    rep_sess2 = s2_stats_rep_[i]
+    s1_paradf = s1_paradf[np.isin(s1_paradf.id, s1_ids)]
+    s2_paradf = s2_paradf[np.isin(s2_paradf.id, s2_ids)]
+    rep_sess1 = rep_sess1[np.isin(rep_sess1.id, s1_ids)]
+    rep_sess2 = rep_sess2[np.isin(rep_sess2.id, s2_ids)]
+    figFxs.plot_group_emp_rep_diff(modelname, rep_sess1, rep_sess2, s1_stats, s2_stats)
+    figFxs.plot_parameter_compare(modelname, s1_paradf.iloc[:,:-1], s2_paradf.iloc[:,:-1], subtitles)
+    figFxs.plot_parameter_reliability(modelname, s1_paradf.iloc[:,:-1], s2_paradf.iloc[:,:-1], subtitles)
+    plt.show()
+    input("Enter")
+    plt.clf()
 
 
 # input("Press Enter to continue...")

@@ -68,7 +68,7 @@ def plot_group_emp_rep_wtw(modelname, s1_WTW_rep, s2_WTW_rep, s1_WTW_emp, s2_WTW
         ax.axvline(expParas.blocksec, color = "grey", linestyle = "dashed")
     return g
 
-def plot_group_emp_rep_wtw_multi(modelname, s1_WTW_rep_, s2_WTW_rep_, s1_WTW_emp, s2_WTW_emp, hdrdata_sess1, hdrdata_sess2, s1_paradf_, s2_paradf_, methods):
+def plot_group_emp_rep_wtw_multi(modelname, s1_WTW_rep_, s2_WTW_rep_, s1_WTW_emp, s2_WTW_emp, hdrdata_sess1, hdrdata_sess2, s1_paradf_, s2_paradf_, methods, estimation = "mean"):
     # 
     from functools import reduce
     s1_ids = reduce(np.intersect1d, [paradf.id for paradf in s1_paradf_])
@@ -76,9 +76,15 @@ def plot_group_emp_rep_wtw_multi(modelname, s1_WTW_rep_, s2_WTW_rep_, s1_WTW_emp
 
     # average empirical wtw data
     s1_WTW_emp = s1_WTW_emp[np.isin(hdrdata_sess1.id, s1_ids), :]
-    s1_ave_emp = s1_WTW_emp.mean(axis = 0)
+
     s2_WTW_emp = s2_WTW_emp[np.isin(hdrdata_sess2.id, s2_ids), :]
-    s2_ave_emp = s2_WTW_emp.mean(axis = 0)
+
+    if estimation == "mean":
+        s1_ave_emp = s1_WTW_emp.mean(axis = 0)
+        s2_ave_emp = s2_WTW_emp.mean(axis = 0)
+    else:
+        s1_ave_emp = np.median(s1_WTW_emp, axis = 0)
+        s2_ave_emp = np.median(s2_WTW_emp, axis = 0)
 
     # average replicated wtw data 
     nmethod = len(methods)
@@ -89,8 +95,12 @@ def plot_group_emp_rep_wtw_multi(modelname, s1_WTW_rep_, s2_WTW_rep_, s1_WTW_emp
         s2_WTW_rep = s2_WTW_rep_[i]
         s1_paradf = s1_paradf_[i]
         s2_paradf = s2_paradf_[i]
-        s1_ave_rep = s1_WTW_rep[np.isin(s1_paradf.id, s1_ids)].mean(axis = 0)
-        s2_ave_rep = s2_WTW_rep[np.isin(s2_paradf.id, s2_ids)].mean(axis = 0)
+        if estimation == "mean":
+            s1_ave_rep = s1_WTW_rep[np.isin(s1_paradf.id, s1_ids)].mean(axis = 0)
+            s2_ave_rep = s2_WTW_rep[np.isin(s2_paradf.id, s2_ids)].mean(axis = 0)
+        else: 
+            s1_ave_rep = np.median(s1_WTW_rep[np.isin(s1_paradf.id, s1_ids)], axis = 0)
+            s2_ave_rep = np.median(s2_WTW_rep[np.isin(s2_paradf.id, s2_ids)], axis = 0)
         s1_ave_rep_.append(s1_ave_rep)
         s2_ave_rep_.append(s2_ave_rep)
 
@@ -101,7 +111,7 @@ def plot_group_emp_rep_wtw_multi(modelname, s1_WTW_rep_, s2_WTW_rep_, s1_WTW_emp
         "sess": np.concatenate([np.repeat(["SESS1", "SESS2"], len(expParas.TaskTime)), np.repeat(["SESS1", "SESS2"], len(expParas.TaskTime) * nmethod)])
         })
 
-    g = sns.FacetGrid(plotdf, col= "sess", hue = 'type', sharex = True, sharey = True, palette = ["black", "red", "pink"])
+    g = sns.FacetGrid(plotdf, col= "sess", hue = 'type', sharex = True, sharey = True)
     g.map(sns.lineplot, "time", "wtw")
     g.set(ylim=(3, 10), ylabel = "WTW (s)", xlabel = "Task time (s)")
     g.set(ylabel = "WTW (s)", xlabel = "Task time (s)")
