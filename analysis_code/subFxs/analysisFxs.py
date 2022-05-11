@@ -64,7 +64,7 @@ def calc_zip_reliability(df, vars):
     n_ = np.zeros(n_var)
 
     for i, var in enumerate(vars):
-        spearman_rho, pearson_rho, abs_icc, con_icc = calc_reliability(df[var[0]].values, df[var[1]].values)
+        spearman_rho, pearson_rho, abs_icc, con_icc, ssbs, ssbm, sse, msbs, msbm, mse = calc_reliability(df[var[0]].values, df[var[1]].values)
         spearman_rho_[i] = spearman_rho
         pearson_rho_[i] = pearson_rho
         abs_icc_[i] = abs_icc
@@ -722,7 +722,7 @@ def desc_RT(trialdata):
     sell_RT_se  = calc_se(trialdata.loc[trialdata.trialEarnings != 0, :].RT)
     return sell_RT_median, sell_RT_mean, sell_RT_se
 ############################ individual level analysis functions ###############
-def ind_MF(trialdata, key, isTrct = True, plot_RT = False, plot_trial = False, plot_KMSC = False, plot_WTW = False):
+def ind_MF(trialdata, key, isTrct = True, plot_RT = False, plot_trial = False, plot_KMSC = False, plot_WTW = False, n_subblock = 2):
     """Conduct model-free (MF) analysis for a single participant 
     Inputs:
         trialdata: a pd dataframe that contains task data
@@ -782,14 +782,17 @@ def ind_MF(trialdata, key, isTrct = True, plot_RT = False, plot_trial = False, p
         # Survival analysis into subblocks 
         sub_aucs = []
         sub_std_wtws = []
-        n_sublock = 3
-        for k in range(n_sublock):
+        subblocksec = (expParas.blocksec - np.max(expParas.tMaxs)) / n_subblock
+        for k in range(n_subblock):
             # code.interact(local = dict(locals(), **globals()))
-            filter = np.logical_and(blockdata['sellTime'] >= k * expParas.blocksec / n_sublock, blockdata['sellTime'] < (k + 1) * expParas.blocksec / n_sublock)
+            filter = np.logical_and(blockdata['sellTime'] >= k * subblocksec, blockdata['sellTime'] < (k + 1) * subblocksec)
             try:
                 time, psurv, Time, Psurv, auc, std_wtw = kmsc(blockdata.loc[filter, :], expParas.tMax, Time, False)
             except:
-                code.interact(local = dict(locals(), **globals()))
+                if sum(filter) == 0:
+                    auc = np.nan
+                    std_wtw = np.nan
+                    # code.interact(local = dict(locals(), **globals()))
             sub_aucs.append(auc) 
             sub_std_wtws.append(std_wtw)
 
@@ -801,11 +804,10 @@ def ind_MF(trialdata, key, isTrct = True, plot_RT = False, plot_trial = False, p
         # ready_RT_median, ready_RT_mean, ready_RT_se
         sell_RT_median, sell_RT_mean, sell_RT_se = desc_RT(blockdata)
         
-        # organize the output
-        init_wtw =  wtw[i][0]# initial wtw measure
-        # end_wtw = wtw[i][-1]
-        # junk, _, _ = wtwTS(blockdata['trialEarnings'].values, blockdata['timeWaited'].values, blockdata['sellTime'].values, expParas.tMax, expParas.BlockTime, False)
-        # end_trct_wtw = junk[-1]
+        # get init_wtw and end_wtw
+        junk, _, _ = wtwTS(blockdata['trialEarnings'].values, blockdata['timeWaited'].values, blockdata['sellTime'].values, expParas.tMax, expParas.BlockTime, False)
+        init_wtw = junk[0]
+        end_wtw = junk[-1]
 
         # tmp = pd.DataFrame({"id": key[0], "sess": key[1], "key": str(key), "block": i + 1, "auc": block_auc, "std_wtw": block_std_wtw, "init_wtw": init_wtw, \
         #     "auc1": sub_aucs[0], "auc2": sub_aucs[1], "auc3": sub_aucs[2], "auc4": sub_aucs[3], \
@@ -814,9 +816,9 @@ def ind_MF(trialdata, key, isTrct = True, plot_RT = False, plot_trial = False, p
         #     "sell_RT_mean": sell_RT_mean, "sell_RT_se": sell_RT_se,\
         #     "condition": condition}, index = [i])
         tmp = {"id": key[0], "sess": key[1], "key": str(key), "block": i + 1, "auc": block_auc,  "std_wtw": block_std_wtw, \
-        "init_wtw": init_wtw, "sell_RT_median": sell_RT_median, "sell_RT_mean": sell_RT_mean, "sell_RT_se": sell_RT_se, "condition": condition}
-        tmp.update(dict(zip(['auc' + str((i + 1)) for i in range(n_sublock)], sub_aucs)))
-        tmp.update(dict(zip(['std_wtw' + str((i + 1)) for i in range(n_sublock)], sub_std_wtws)))
+        "init_wtw": init_wtw, "end_wtw": end_wtw, "sell_RT_median": sell_RT_median, "sell_RT_mean": sell_RT_mean, "sell_RT_se": sell_RT_se, "condition": condition}
+        tmp.update(dict(zip(['auc' + str((i + 1)) for i in range(n_subblock)], sub_aucs)))
+        tmp.update(dict(zip(['std_wtw' + str((i + 1)) for i in range(n_subblock)], sub_std_wtws)))
         stats.append(pd.DataFrame(tmp, index = [i]))
         objs['Psurv_block'+str(i+1)] = Psurv
 
@@ -905,7 +907,7 @@ def ind_sim_MF(simdata, empdata, key, plot_trial = False, plot_KMSC = False, plo
     return stats, objs
 
 ########################## group-level analysis functions ##############
-def group_MF(trialdata_, plot_each = False):
+def group_MF(trialdata_, plot_each = False, n_subblock = 2):
     # check sample sizes 
     nsub = len(trialdata_)
     print("Analyze %d valid participants"%nsub)
@@ -923,12 +925,12 @@ def group_MF(trialdata_, plot_each = False):
     idx = 0
     for key, trialdata in trialdata_.items():
         if plot_each:
-            stats, objs  = ind_MF(trialdata, key, plot_RT = False, plot_trial = True, plot_KMSC = False, plot_WTW = True)
+            stats, objs  = ind_MF(trialdata, key, plot_RT = False, plot_trial = True, plot_KMSC = False, plot_WTW = True, n_subblock = n_subblock)
             plt.show()
             input("Press Enter to continue...")
             plt.clf()
         else:
-            stats, objs  = ind_MF(trialdata, key)
+            stats, objs  = ind_MF(trialdata, key, n_subblock = n_subblock)
             stats_.append(stats)
         Psurv_block1_[idx, :] = objs['Psurv_block1']
         Psurv_block2_[idx, :] = objs['Psurv_block2']
