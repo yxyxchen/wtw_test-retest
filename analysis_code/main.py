@@ -531,59 +531,59 @@ if __name__ == "__main__":
     # calc reliability # 
     ######################
     # calc within-block adaptation using AUC values
-    reliable_df_ = []
-    s1_stats_ = []
-    s2_stats_ = []
-    for n_subblock in [3, 4, 5, 6, 7, 8]:
-        s1_stats, s1_Psurv_b1_, s1_Psurv_b2_, s1_WTW_ = analysisFxs.group_MF(trialdata_sess1_, plot_each = False, n_subblock = n_subblock)   
-        s2_stats, s2_Psurv_b1_, s2_Psurv_b2_, s2_WTW_ = analysisFxs.group_MF(trialdata_sess2_, plot_each = False, n_subblock = n_subblock)   
-        s1_stats['wb_adapt'] = s1_stats['auc'+str(n_subblock)] - s1_stats['auc1']
-        s2_stats['wb_adapt'] = s2_stats['auc'+str(n_subblock)] - s2_stats['auc1']
-        # calc std_wtw using the moving window method
-        s1_stats['std_wtw_mw'] = np.nanmean(s1_stats[['std_wtw' + str(i+1) for i in np.arange(n_subblock)]]**2,axis = 1)**0.5
-        s2_stats['std_wtw_mw'] = np.nanmean(s2_stats[['std_wtw' + str(i+1) for i in np.arange(n_subblock)]]**2,axis = 1)**0.5
-        # melt HP and LP conditions
-        colvars = ['wb_adapt', "std_wtw_mw", "std_wtw"]
-        s1_HP = s1_stats.loc[s1_stats['condition'] == 'HP', colvars + ['id']]
-        s1_LP = s1_stats.loc[s1_stats['condition'] == 'LP', colvars + ['id']]
-        s1_df = s1_HP.merge(s1_LP, left_on = 'id', right_on = 'id', suffixes = ['_HP', "_LP"])
-        s2_HP = s2_stats.loc[s2_stats['condition'] == 'HP', colvars + ['id']]
-        s2_LP = s2_stats.loc[s2_stats['condition'] == 'LP', colvars + ['id']]
-        s2_df = s2_HP.merge(s2_LP, left_on = 'id', right_on = 'id', suffixes = ['_HP', "_LP"])
-        # add std_wtw_mv_ave and wb_adapt_ave
-        s1_df['std_wtw_mw_ave'] = ((s1_df['std_wtw_mw_HP']**2 + s1_df['std_wtw_mw_LP']**2) / 2) ** 0.5
-        s2_df['std_wtw_mw_ave'] = ((s2_df['std_wtw_mw_HP']**2 + s2_df['std_wtw_mw_LP']**2) / 2) ** 0.5
-        s1_df['std_wtw_ave'] = ((s1_df['std_wtw_HP']**2 + s1_df['std_wtw_LP']**2) / 2) ** 0.5
-        s2_df['std_wtw_ave'] = ((s2_df['std_wtw_HP']**2 + s2_df['std_wtw_LP']**2) / 2) ** 0.5
-        s1_df['wb_adapt_ave'] = (s1_df['wb_adapt_HP'] +  s1_df['wb_adapt_LP']) / 2
-        s2_df['wb_adapt_ave'] = (s2_df['wb_adapt_HP'] +  s2_df['wb_adapt_LP']) / 2
-        # s1_df['std_wtw_mw_ave'] = (s1_df['std_wtw_mw_HP']+ s1_df['std_wtw_mw_LP']) / 2
-        # s2_df['std_wtw_mw_ave'] = (s2_df['std_wtw_mw_HP']+ s2_df['std_wtw_mw_LP']) / 2
-        # s1_df['std_wtw_ave'] = (s1_df['std_wtw_HP']+ s1_df['std_wtw_LP']) / 2
-        # s2_df['std_wtw_ave'] = (s2_df['std_wtw_HP']+ s2_df['std_wtw_LP']) / 2
-        # s1_df['wb_adapt_ave'] = (s1_df['wb_adapt_HP'] +  s1_df['wb_adapt_LP']) / 2
-        # s2_df['wb_adapt_ave'] = (s2_df['wb_adapt_HP'] +  s2_df['wb_adapt_LP']) / 2
-        # s1_df['std_wtw_mw_ave'] = (s1_df['std_wtw_mw_HP'] * s1_df['std_wtw_mw_LP']) ** 0.5
-        # s2_df['std_wtw_mw_ave'] = (s2_df['std_wtw_mw_HP'] *  s2_df['std_wtw_mw_LP']) ** 0.5
-        # s1_df['std_wtw_ave'] = (s1_df['std_wtw_HP'] * s1_df['std_wtw_LP']) ** 0.5
-        # s2_df['std_wtw_ave'] = (s2_df['std_wtw_HP'] * s2_df['std_wtw_LP']) ** 0.5
-        # s1_df['wb_adapt_ave'] = (s1_df['wb_adapt_HP'] *  s1_df['wb_adapt_LP']) ** 0.5
-        # s2_df['wb_adapt_ave'] = (s2_df['wb_adapt_HP'] *   s2_df['wb_adapt_LP']) ** 0.5
-        # merge sess1 and sess2
-        df = s1_df.merge(s2_df, on = 'id', suffixes = ['_sess1', '_sess2']) 
-        vars = ["std_wtw_LP", "std_wtw_HP", "std_wtw_ave", "std_wtw_mw_HP", "std_wtw_mw_LP", "std_wtw_mw_ave","wb_adapt_HP", "wb_adapt_LP", "wb_adapt_ave"]
-        rows = ['spearman_rho', 'pearson_rho', 'abs_icc', 'con_icc', "ssbs", "ssbm", "sse", "msbs", "msbm", "mse"]
-        reliable_df = np.zeros([len(rows), len(vars)])
-        for i, var in enumerate(vars):
-            reliable_df[:,i] = analysisFxs.calc_reliability(df.loc[:, var + '_sess1'], df.loc[:, var + '_sess2'])
-        reliable_df = pd.DataFrame(reliable_df, columns = vars, index = rows)
-        reliable_df_.append(reliable_df.iloc[2])
-        s1_stats_.append(s1_stats)
-        s2_stats_.append(s2_stats)
+	reliable_df_ = []
+	s1_stats_ = []
+	s2_stats_ = []
+	for n_subblock in [3, 4, 5, 6, 7, 8]:
+	    s1_stats, s1_Psurv_b1_, s1_Psurv_b2_, s1_WTW_ = analysisFxs.group_MF(trialdata_sess1_, plot_each = False, n_subblock = n_subblock)   
+	    s2_stats, s2_Psurv_b1_, s2_Psurv_b2_, s2_WTW_ = analysisFxs.group_MF(trialdata_sess2_, plot_each = False, n_subblock = n_subblock)   
+	    s1_stats['wb_adapt'] = s1_stats['auc'+str(n_subblock)] - s1_stats['auc1']
+	    s2_stats['wb_adapt'] = s2_stats['auc'+str(n_subblock)] - s2_stats['auc1']
+	    # calc std_wtw using the moving window method
+	    s1_stats['std_wtw_mw'] = np.nanmean(s1_stats[['std_wtw' + str(i+1) for i in np.arange(n_subblock)]]**2,axis = 1)**0.5
+	    s2_stats['std_wtw_mw'] = np.nanmean(s2_stats[['std_wtw' + str(i+1) for i in np.arange(n_subblock)]]**2,axis = 1)**0.5
+	    # melt HP and LP conditions
+	    colvars = ['wb_adapt', "std_wtw_mw", "std_wtw"]
+	    s1_HP = s1_stats.loc[s1_stats['condition'] == 'HP', colvars + ['id']]
+	    s1_LP = s1_stats.loc[s1_stats['condition'] == 'LP', colvars + ['id']]
+	    s1_df = s1_HP.merge(s1_LP, left_on = 'id', right_on = 'id', suffixes = ['_HP', "_LP"])
+	    s2_HP = s2_stats.loc[s2_stats['condition'] == 'HP', colvars + ['id']]
+	    s2_LP = s2_stats.loc[s2_stats['condition'] == 'LP', colvars + ['id']]
+	    s2_df = s2_HP.merge(s2_LP, left_on = 'id', right_on = 'id', suffixes = ['_HP', "_LP"])
+	    # add std_wtw_mv_ave and wb_adapt_ave
+	    s1_df['std_wtw_mw_ave'] = ((s1_df['std_wtw_mw_HP']**2 + s1_df['std_wtw_mw_LP']**2) / 2) ** 0.5
+	    s2_df['std_wtw_mw_ave'] = ((s2_df['std_wtw_mw_HP']**2 + s2_df['std_wtw_mw_LP']**2) / 2) ** 0.5
+	    s1_df['std_wtw_ave'] = ((s1_df['std_wtw_HP']**2 + s1_df['std_wtw_LP']**2) / 2) ** 0.5
+	    s2_df['std_wtw_ave'] = ((s2_df['std_wtw_HP']**2 + s2_df['std_wtw_LP']**2) / 2) ** 0.5
+	    s1_df['wb_adapt_ave'] = (s1_df['wb_adapt_HP'] +  s1_df['wb_adapt_LP']) / 2
+	    s2_df['wb_adapt_ave'] = (s2_df['wb_adapt_HP'] +  s2_df['wb_adapt_LP']) / 2
+	    # s1_df['std_wtw_mw_ave'] = (s1_df['std_wtw_mw_HP']+ s1_df['std_wtw_mw_LP']) / 2
+	    # s2_df['std_wtw_mw_ave'] = (s2_df['std_wtw_mw_HP']+ s2_df['std_wtw_mw_LP']) / 2
+	    # s1_df['std_wtw_ave'] = (s1_df['std_wtw_HP']+ s1_df['std_wtw_LP']) / 2
+	    # s2_df['std_wtw_ave'] = (s2_df['std_wtw_HP']+ s2_df['std_wtw_LP']) / 2
+	    # s1_df['wb_adapt_ave'] = (s1_df['wb_adapt_HP'] +  s1_df['wb_adapt_LP']) / 2
+	    # s2_df['wb_adapt_ave'] = (s2_df['wb_adapt_HP'] +  s2_df['wb_adapt_LP']) / 2
+	    # s1_df['std_wtw_mw_ave'] = (s1_df['std_wtw_mw_HP'] * s1_df['std_wtw_mw_LP']) ** 0.5
+	    # s2_df['std_wtw_mw_ave'] = (s2_df['std_wtw_mw_HP'] *  s2_df['std_wtw_mw_LP']) ** 0.5
+	    # s1_df['std_wtw_ave'] = (s1_df['std_wtw_HP'] * s1_df['std_wtw_LP']) ** 0.5
+	    # s2_df['std_wtw_ave'] = (s2_df['std_wtw_HP'] * s2_df['std_wtw_LP']) ** 0.5
+	    # s1_df['wb_adapt_ave'] = (s1_df['wb_adapt_HP'] *  s1_df['wb_adapt_LP']) ** 0.5
+	    # s2_df['wb_adapt_ave'] = (s2_df['wb_adapt_HP'] *   s2_df['wb_adapt_LP']) ** 0.5
+	    # merge sess1 and sess2
+	    df = s1_df.merge(s2_df, on = 'id', suffixes = ['_sess1', '_sess2']) 
+	    vars = ["std_wtw_LP", "std_wtw_HP", "std_wtw_ave", "std_wtw_mw_HP", "std_wtw_mw_LP", "std_wtw_mw_ave","wb_adapt_HP", "wb_adapt_LP", "wb_adapt_ave"]
+	    rows = ['spearman_rho', 'pearson_rho', 'abs_icc', 'con_icc', "ssbs", "ssbm", "sse", "msbs", "msbm", "mse"]
+	    reliable_df = np.zeros([len(rows), len(vars)])
+	    for i, var in enumerate(vars):
+	        reliable_df[:,i] = analysisFxs.calc_reliability(df.loc[:, var + '_sess1'], df.loc[:, var + '_sess2'])
+	    reliable_df = pd.DataFrame(reliable_df, columns = vars, index = rows)
+	    reliable_df_.append(reliable_df.iloc[2])
+	    s1_stats_.append(s1_stats)
+	    s2_stats_.append(s2_stats)
 
-    reliable_subblock = pd.concat(reliable_df_, axis = 1).transpose()
-    # reliable_subblock = reliable_subblock.iloc[:,3:6]
-    reliable_subblock['n_subblock'] = [3, 4, 5, 6, 7, 8]
+	reliable_subblock = pd.concat(reliable_df_, axis = 1).transpose()
+	# reliable_subblock = reliable_subblock.iloc[:,3:6]
+	reliable_subblock['n_subblock'] = [3, 4, 5, 6, 7, 8]
     plotdf = reliable_subblock.melt(["n_subblock"], ["std_wtw_mw_HP", "std_wtw_mw_LP", "std_wtw_mw_ave"])
     sns.lineplot("n_subblock", "value", hue = "variable", data = plotdf)
     plt.legend(bbox_to_anchor=(0, 1), loc='upper left', ncol=1)
@@ -591,66 +591,66 @@ if __name__ == "__main__":
     # calc reliability # 
     ######################
     # calc within-block adaptation using the non-parametric method
-    s1_stats['wb_adapt_np'] = s1_stats['end_wtw'] - s1_stats['init_wtw']
-    s2_stats['wb_adapt_np'] = s2_stats['end_wtw'] - s2_stats['init_wtw']
+	s1_stats['wb_adapt_np'] = s1_stats['end_wtw'] - s1_stats['init_wtw']
+	s2_stats['wb_adapt_np'] = s2_stats['end_wtw'] - s2_stats['init_wtw']
 
-    # calc within-block adaptation using AUC values
-    n_subblock = 2
-    s1_stats['wb_adapt'] = s1_stats['auc'+str(n_subblock)] - s1_stats['auc1']
-    s2_stats['wb_adapt'] = s2_stats['auc'+str(n_subblock)] - s2_stats['auc1']
+	# calc within-block adaptation using AUC values
+	n_subblock = 2
+	s1_stats['wb_adapt'] = s1_stats['auc'+str(n_subblock)] - s1_stats['auc1']
+	s2_stats['wb_adapt'] = s2_stats['auc'+str(n_subblock)] - s2_stats['auc1']
 
-    # calc std_wtw using the moving window method
-    s1_stats['std_wtw_mw'] = np.mean(s1_stats[['std_wtw' + str(i+1) for i in np.arange(n_subblock)]]**2,axis = 1)**0.5
-    s2_stats['std_wtw_mw'] = np.mean(s2_stats[['std_wtw' + str(i+1) for i in np.arange(n_subblock)]]**2,axis = 1)**0.5
+	# calc std_wtw using the moving window method
+	s1_stats['std_wtw_mw'] = np.mean(s1_stats[['std_wtw' + str(i+1) for i in np.arange(n_subblock)]]**2,axis = 1)**0.5
+	s2_stats['std_wtw_mw'] = np.mean(s2_stats[['std_wtw' + str(i+1) for i in np.arange(n_subblock)]]**2,axis = 1)**0.5
 
 
-    # colvars = ['auc_end_start', 'auc', 'auc1', 'auc2', "auc_rh", 'std_wtw', 'std_wtw1', 'std_wtw2', "std_wtw_rh"]
-    # colvars = ['auc', "std_wtw", "std_wtw_mw", "init_wtw", "wb_adapt_np", 'wb_adapt']
-    colvars = ['auc', "std_wtw", "std_wtw_mw", "wb_adapt_np", "wb_adapt", "init_wtw"]
-    s1_HP = s1_stats.loc[s1_stats['condition'] == 'HP', colvars + ['id']]
-    s1_LP = s1_stats.loc[s1_stats['condition'] == 'LP', colvars + ['id']]
-    s1_df = s1_HP.merge(s1_LP, left_on = 'id', right_on = 'id', suffixes = ['_HP', "_LP"])
+	# colvars = ['auc_end_start', 'auc', 'auc1', 'auc2', "auc_rh", 'std_wtw', 'std_wtw1', 'std_wtw2', "std_wtw_rh"]
+	# colvars = ['auc', "std_wtw", "std_wtw_mw", "init_wtw", "wb_adapt_np", 'wb_adapt']
+	colvars = ['auc', "std_wtw", "std_wtw_mw", "wb_adapt_np", "wb_adapt", "init_wtw"]
+	s1_HP = s1_stats.loc[s1_stats['condition'] == 'HP', colvars + ['id']]
+	s1_LP = s1_stats.loc[s1_stats['condition'] == 'LP', colvars + ['id']]
+	s1_df = s1_HP.merge(s1_LP, left_on = 'id', right_on = 'id', suffixes = ['_HP', "_LP"])
 
-    s2_HP = s2_stats.loc[s2_stats['condition'] == 'HP', colvars + ['id']]
-    s2_LP = s2_stats.loc[s2_stats['condition'] == 'LP', colvars + ['id']]
-    s2_df = s2_HP.merge(s2_LP, left_on = 'id', right_on = 'id', suffixes = ['_HP', "_LP"])
+	s2_HP = s2_stats.loc[s2_stats['condition'] == 'HP', colvars + ['id']]
+	s2_LP = s2_stats.loc[s2_stats['condition'] == 'LP', colvars + ['id']]
+	s2_df = s2_HP.merge(s2_LP, left_on = 'id', right_on = 'id', suffixes = ['_HP', "_LP"])
 
-        # add auc_delta and auc_ave
-    auc_vars = ['auc']
-    s1_df = pd.concat([s1_df, s1_df.filter(like = "auc", axis = 1).filter(like='HP', axis=1).set_axis([x+'_delta' for x in auc_vars], axis = 1) - s1_df.filter(like = "auc", axis = 1).filter(like='LP', axis=1).set_axis([x+'_delta' for x in auc_vars], axis = 1)], axis = 1)
-    s2_df = pd.concat([s2_df, s2_df.filter(like = "auc", axis = 1).filter(like='HP', axis=1).set_axis([x+'_delta' for x in auc_vars], axis = 1) - s2_df.filter(like = "auc", axis = 1).filter(like='LP', axis=1).set_axis([x+'_delta' for x in auc_vars], axis = 1)], axis = 1)
-    s1_df = pd.concat([s1_df, (s1_df.filter(like = "auc", axis = 1).filter(like='HP', axis=1).set_axis([x+'_ave' for x in auc_vars], axis = 1) + s1_df.filter(like = "auc", axis = 1).filter(like='LP', axis=1).set_axis([x+'_ave' for x in auc_vars], axis = 1)) / 2], axis = 1) 
-    s2_df = pd.concat([s2_df, (s2_df.filter(like = "auc", axis = 1).filter(like='HP', axis=1).set_axis([x+'_ave' for x in auc_vars], axis = 1) + s2_df.filter(like = "auc", axis = 1).filter(like='LP', axis=1).set_axis([x+'_ave' for x in auc_vars], axis = 1)) / 2], axis = 1)
+	    # add auc_delta and auc_ave
+	auc_vars = ['auc']
+	s1_df = pd.concat([s1_df, s1_df.filter(like = "auc", axis = 1).filter(like='HP', axis=1).set_axis([x+'_delta' for x in auc_vars], axis = 1) - s1_df.filter(like = "auc", axis = 1).filter(like='LP', axis=1).set_axis([x+'_delta' for x in auc_vars], axis = 1)], axis = 1)
+	s2_df = pd.concat([s2_df, s2_df.filter(like = "auc", axis = 1).filter(like='HP', axis=1).set_axis([x+'_delta' for x in auc_vars], axis = 1) - s2_df.filter(like = "auc", axis = 1).filter(like='LP', axis=1).set_axis([x+'_delta' for x in auc_vars], axis = 1)], axis = 1)
+	s1_df = pd.concat([s1_df, (s1_df.filter(like = "auc", axis = 1).filter(like='HP', axis=1).set_axis([x+'_ave' for x in auc_vars], axis = 1) + s1_df.filter(like = "auc", axis = 1).filter(like='LP', axis=1).set_axis([x+'_ave' for x in auc_vars], axis = 1)) / 2], axis = 1) 
+	s2_df = pd.concat([s2_df, (s2_df.filter(like = "auc", axis = 1).filter(like='HP', axis=1).set_axis([x+'_ave' for x in auc_vars], axis = 1) + s2_df.filter(like = "auc", axis = 1).filter(like='LP', axis=1).set_axis([x+'_ave' for x in auc_vars], axis = 1)) / 2], axis = 1)
 
-    # add std_wtw_ave
-    std_vars = ['std_wtw_mv', "std_wtw"]
-    s1_df = pd.concat([s1_df, (s1_df.filter(like = "std", axis = 1).filter(like='HP', axis=1).set_axis([x+'_ave' for x in std_vars], axis = 1) **2 / 2 + s1_df.filter(like = "std", axis = 1).filter(like='LP', axis=1).set_axis([x+'_ave' for x in std_vars], axis = 1)**2 / 2) ** 0.5], axis = 1) 
-    s2_df = pd.concat([s2_df, (s2_df.filter(like = "std", axis = 1).filter(like='HP', axis=1).set_axis([x+'_ave' for x in std_vars], axis = 1) **2 / 2 + s2_df.filter(like = "std", axis = 1).filter(like='LP', axis=1).set_axis([x+'_ave' for x in std_vars], axis = 1)**2 / 2) ** 0.5], axis = 1)
+	# add std_wtw_ave
+	std_vars = ['std_wtw_mv', "std_wtw"]
+	s1_df = pd.concat([s1_df, (s1_df.filter(like = "std", axis = 1).filter(like='HP', axis=1).set_axis([x+'_ave' for x in std_vars], axis = 1) **2 / 2 + s1_df.filter(like = "std", axis = 1).filter(like='LP', axis=1).set_axis([x+'_ave' for x in std_vars], axis = 1)**2 / 2) ** 0.5], axis = 1) 
+	s2_df = pd.concat([s2_df, (s2_df.filter(like = "std", axis = 1).filter(like='HP', axis=1).set_axis([x+'_ave' for x in std_vars], axis = 1) **2 / 2 + s2_df.filter(like = "std", axis = 1).filter(like='LP', axis=1).set_axis([x+'_ave' for x in std_vars], axis = 1)**2 / 2) ** 0.5], axis = 1)
 
-    # add init_wtw_ave
-    s1_df['init_wtw_ave'] = (s1_df['init_wtw_HP'] + s1_df['init_wtw_LP']) / 2
-    s2_df['init_wtw_ave'] = (s2_df['init_wtw_HP'] + s2_df['init_wtw_LP']) / 2
+	# add init_wtw_ave
+	s1_df['init_wtw_ave'] = (s1_df['init_wtw_HP'] + s1_df['init_wtw_LP']) / 2
+	s2_df['init_wtw_ave'] = (s2_df['init_wtw_HP'] + s2_df['init_wtw_LP']) / 2
 
-    # add wb_adapt_ave and wb_adapt_np_ave
-    s1_df['wb_adapt_ave'] = (s1_df['wb_adapt_HP'] - s1_df['wb_adapt_LP']) / 2
-    s2_df['wb_adapt_ave'] = (s2_df['wb_adapt_HP'] - s2_df['wb_adapt_LP']) / 2
-    s1_df['wb_adapt_np_ave'] = (s1_df['wb_adapt_np_HP'] - s1_df['wb_adapt_np_LP']) / 2
-    s2_df['wb_adapt_np_ave'] = (s2_df['wb_adapt_np_HP'] - s2_df['wb_adapt_np_LP']) / 2
+	# add wb_adapt_ave and wb_adapt_np_ave
+	s1_df['wb_adapt_ave'] = (s1_df['wb_adapt_HP'] - s1_df['wb_adapt_LP']) / 2
+	s2_df['wb_adapt_ave'] = (s2_df['wb_adapt_HP'] - s2_df['wb_adapt_LP']) / 2
+	s1_df['wb_adapt_np_ave'] = (s1_df['wb_adapt_np_HP'] - s1_df['wb_adapt_np_LP']) / 2
+	s2_df['wb_adapt_np_ave'] = (s2_df['wb_adapt_np_HP'] - s2_df['wb_adapt_np_LP']) / 2
 
-    # merge
-    df = s1_df.merge(s2_df, on = 'id', suffixes = ['_sess1', '_sess2']) 
+	# merge
+	df = s1_df.merge(s2_df, on = 'id', suffixes = ['_sess1', '_sess2']) 
 
-    # variable names 
-    spearmanr(df['total_std_ave_sess1'], df['auc_ave_sess1'])
+	# variable names 
+	spearmanr(df['total_std_ave_sess1'], df['auc_ave_sess1'])
 
-    vars = [x + "_HP" for x in colvars] + [x + "_LP" for x in colvars] + ['auc_delta'] + ['auc_ave'] + [x + "_ave" for x in std_vars] + ['init_wtw_ave', "wb_adapt_np_ave", "wb_adapt_ave"]
-    rows = ['spearman_rho', 'pearson_rho', 'abs_icc', 'con_icc', "ssbs", "ssbm", "sse", "msbs", "msbm", "mse"]
-    reliable_df = np.zeros([len(rows), len(vars)])
-    for i, var in enumerate(vars):
-        reliable_df[:,i] = analysisFxs.calc_reliability(df.loc[:, var + '_sess1'], df.loc[:, var + '_sess2'])
+	vars = [x + "_HP" for x in colvars] + [x + "_LP" for x in colvars] + ['auc_delta'] + ['auc_ave'] + [x + "_ave" for x in std_vars] + ['init_wtw_ave', "wb_adapt_np_ave", "wb_adapt_ave"]
+	rows = ['spearman_rho', 'pearson_rho', 'abs_icc', 'con_icc', "ssbs", "ssbm", "sse", "msbs", "msbm", "mse"]
+	reliable_df = np.zeros([len(rows), len(vars)])
+	for i, var in enumerate(vars):
+	    reliable_df[:,i] = analysisFxs.calc_reliability(df.loc[:, var + '_sess1'], df.loc[:, var + '_sess2'])
 
-    reliable_df = pd.DataFrame(reliable_df, columns = vars, index = rows)
-    reliable_df.to_csv(os.path.join("..", "analysis_results", expname, "mf_reliability.csv"))
+reliable_df = pd.DataFrame(reliable_df, columns = vars, index = rows)
+reliable_df.to_csv(os.path.join("..", "analysis_results", expname, "mf_reliability.csv"))
 
 
     ######################
@@ -868,8 +868,8 @@ if __name__ == "__main__":
     stats.spearmanr(df['PAS_change'], df['std_wtw_ave_change'])
 
     #################### correlations between model parameters and self-reports##########
-    paradf  = loadFxs.load_parameter_estimates(expname, 1, hdrdata_sess2, 'QL2', 'QL2')
-    selfdf = loadFxs.parse_group_selfreport(expname, 1, isplot = False)
+    paradf  = loadFxs.load_parameter_estimates(expname, 2, hdrdata_sess2, 'QL2', 'QL2')
+    selfdf = loadFxs.parse_group_selfreport(expname, 2, isplot = False)
     tmp = paradf.merge(selfdf , on = "id")
     row_vars = ['alpha', "nu", "tau", "gamma", "eta"]
     col_vars = ['NU', 'PU', 'PM', 'PS', 'SS', 'attention', 'cogstable', 'motor', 'perseverance', 'selfcontrol', 'cogcomplex', 'UPPS', 'BIS', 'GMK'] 
@@ -877,6 +877,7 @@ if __name__ == "__main__":
     r_.to_csv(os.path.join("..", "analysis_results", expname, "correlation", "r_para_selfreport_sess1.csv"))
     p_.to_csv(os.path.join("..", "analysis_results", expname, "correlation", "p_para_selfreport_sess1.csv"))
     
+    # the finding is consistent with earlier findings
     row_vars = ['GMK']
     col_vars = ['NU', 'PU', 'PM', 'PS', 'SS', 'attention', 'cogstable', 'motor', 'perseverance', 'selfcontrol', 'cogcomplex', 'UPPS', 'BIS']
     r_, p_ = analysisFxs.calc_prod_correlations(selfdf, row_vars, col_vars)
@@ -956,14 +957,16 @@ if __name__ == "__main__":
 
     # # not very informative
     # sns.pairplot(self_sess1[['attention', 'cogstable', 'motor', 'perseverance', 'selfcontrol', 'cogcomplex']], kind="reg", corner=True, plot_kws={'line_kws':{'color':'red'}})
+    
+    # this effect is so small... it doesn't really make sense to make judgements 
     for sess in [1, 2]:
         task_vars = ['auc_ave', "auc_delta", "std_wtw_ave", "std_wtw_mw_ave"]
         selfdf = loadFxs.parse_group_selfreport(expname, 1, isplot = False)
         if sess == 1:
-            tmp = s1_df.loc[:, task_vars + ["id"]].merge(selfdf, on = "id")
+            tmp = s1_df.loc[np.isin(s1_df.id, s2_df.id), task_vars + ["id"]].merge(selfdf, on = "id")
         else:
             tmp = s2_df.loc[:, task_vars + ["id"]].merge(selfdf, on = "id")
-        
+        print(tmp.shape)
         row_vars = task_vars
         col_vars = ['NU', 'PU', 'PM', 'PS', 'SS', "Attentional", "Motor", "Nonplanning",'attention', 'cogstable', 'motor', 'perseverance', 'selfcontrol', 'cogcomplex', 'UPPS', 'BIS', 'GMK'] 
         r_, p_ = analysisFxs.calc_prod_correlations(tmp, row_vars, col_vars)
@@ -971,12 +974,31 @@ if __name__ == "__main__":
         p_.to_csv(os.path.join("..", "analysis_results", expname, "correlation", "p_auc_selfreport_sess%d.csv"%sess))
 
 
+    # let me average data across sessions #
+    row_vars = task_vars
+    col_vars = ['NU', 'PU', 'PM', 'PS', 'SS', "Attentional", "Motor", "Nonplanning",'attention', 'cogstable', 'motor', 'perseverance', 'selfcontrol', 'cogcomplex', 'UPPS', 'BIS', 'GMK'] 
+    selfdf1 = loadFxs.parse_group_selfreport(expname, 1, isplot = False)
+    selfdf2 = loadFxs.parse_group_selfreport(expname, 2, isplot = False)
+    tmp = pd.concat([selfdf1, selfdf2], axis = 0 )
+    selfdf = tmp.groupby("id")[col_vars].mean().loc[selfdf2.id]
+    selfdf = selfdf.reset_index()
+
+    tmp = pd.concat([s1_df, s2_df], axis = 0)
+    taskdf = tmp.groupby("id")[row_vars].mean().loc[s2_df.id]
+    taskdf = taskdf.reset_index()
+    df = taskdf.merge(selfdf, on = "id")
+
+    r_, p_ = analysisFxs.calc_prod_correlations(df, row_vars, col_vars)
+    r_.to_csv(os.path.join("..", "analysis_results", expname, "correlation", "r_auc_selfreport_sess%d.csv"%sess))
+    p_.to_csv(os.path.join("..", "analysis_results", expname, "correlation", "p_auc_selfreport_sess%d.csv"%sess))
     ################### correlations between self-report measures and ###########
     ################### correlations between self-report measures and ###########
     # how to align 
     task_var = ['auc']
     row_vars = ['HP', "LP"]
     col_vars = ['NU', 'PU', 'PM', 'PS', 'SS', 'attention', 'cogstable', 'motor', 'perseverance', 'selfcontrol', 'cogcomplex', 'UPPS', 'BIS', 'GMK'] 
+
+    #### average across sessions ######
 
     for sess in [1, 2]:
         if sess == 1:
