@@ -452,7 +452,7 @@ if __name__ == "__main__":
     ##############################
     ###        load data       ###
     ##############################
-    expname = "active"
+    expname = "passive"
     hdrdata_sess1, trialdata_sess1_ = loadFxs.group_quality_check(expname, 1, plot_quality_check = True)
     hdrdata_sess2, trialdata_sess2_ = loadFxs.group_quality_check(expname, 2, plot_quality_check = True)
     s1_stats, s1_Psurv_b1_, s1_Psurv_b2_, s1_WTW_ = analysisFxs.group_MF(trialdata_sess1_, plot_each = False)   
@@ -520,12 +520,42 @@ if __name__ == "__main__":
     ############################
     ## group-level behavior  ##
     ############################
-    # calc sub-auc
-    tmp = s2_stats.melt(id_vars = ["id", "condition"], value_vars = ['auc1', 'auc2'])
-    plotdf = tmp.groupby(["condition", "variable"]).agg(mean = ("value", np.mean), se = ("value", analysisFxs.calc_se)).reset_index()
-    g = sns.FacetGrid(plotdf, col = "condition")
-    g.map(sns.barplot, "variable", "mean")
-    g.map(plt.errorbar, "variable", "mean", "se", color = "red")
+    fig, ax = plt.subplots()
+    figFxs.plot_group_KMSC_both(s1_Psurv_b1_, s1_Psurv_b2_, s2_Psurv_b1_, s2_Psurv_b2_, hdrdata_sess1, hdrdata_sess2, ax)
+    plt.savefig(os.path.join('..', 'figures', expname, 'KMSC.pdf'))
+
+
+    fig, ax = plt.subplots()
+    figFxs.plot_group_WTW_both(s1_WTW_, s2_WTW_, hdrdata_sess1, hdrdata_sess2, ax)
+    fig.savefig(os.path.join('..', 'figures', expname, 'WTW.pdf'))
+
+    # calc auc of subblocks to make sure there is a learning process
+    s1_stats, s1_Psurv_b1_, s1_Psurv_b2_, s1_WTW_ = analysisFxs.group_MF(trialdata_sess1_, plot_each = False, n_subblock = 4)   
+    s2_stats, s2_Psurv_b1_, s2_Psurv_b2_, s2_WTW_ = analysisFxs.group_MF(trialdata_sess2_, plot_each = False, n_subblock = 4)   
+    # plot for session 1
+    for sess in [1, 2]:
+        if sess == 1:
+            tmp = s1_stats.melt(id_vars = ["id", "condition"], value_vars = ['auc1', 'auc2', 'auc3', 'auc4'])
+        else:
+            tmp = s2_stats.melt(id_vars = ["id", "condition"], value_vars = ['auc1', 'auc2', 'auc3', 'auc4'])
+        plotdf = tmp.groupby(["condition", "variable"]).agg(mean = ("value", np.mean), se = ("value", analysisFxs.calc_se)).reset_index()
+        g = sns.FacetGrid(plotdf, col = "condition")
+        g.map(sns.barplot, "variable", "mean")
+        g.map(plt.errorbar, "variable", "mean", "se", color = "red")
+        plt.tight_layout()
+        g.savefig(os.path.join('..', 'figures', expname, 'sub_auc_sess%d.pdf'%sess))
+
+    s1_stats.groupby('condition').apply(lambda x: (x['auc4'] - x['auc1']).mean()).round(2)
+    s1_stats.groupby('condition').apply(lambda x: (stats.ttest_rel(x['auc4'], x['auc1'])))
+    s2_stats.groupby('condition').apply(lambda x: (x['auc4'] - x['auc1']).mean()).round(2)
+    s2_stats.groupby('condition').apply(lambda x: (stats.ttest_rel(x['auc4'], x['auc1'])))
+
+    for sub1 in range(1, 4):
+        print(sub1)
+        # s1_stats.groupby('condition').apply(lambda x: (x['auc'+str(sub1+1)] - x['auc'+str(sub1)]).mean()).round(2)
+        # s1_stats.groupby('condition').apply(lambda x: (stats.ttest_rel(x['auc'+str(sub1+1)], x['auc'+str(sub1)])))
+        s2_stats.groupby('condition').apply(lambda x: (x['auc'+str(sub1+1)] - x['auc'+str(sub1)]).mean()).round(2)
+        s2_stats.groupby('condition').apply(lambda x: (stats.ttest_rel(x['auc'+str(sub1+1)], x['auc'+str(sub1)])))
 
     ####################
     # calc reliability # 
@@ -590,23 +620,24 @@ if __name__ == "__main__":
     ####################
     # calc reliability # 
     ######################
+    n_sub = 4
+    # s1_stats, s1_Psurv_b1_, s1_Psurv_b2_, s1_WTW_ = analysisFxs.group_MF(trialdata_sess1_, plot_each = False, n_subblock = n_sub)   
+    # s2_stats, s2_Psurv_b1_, s2_Psurv_b2_, s2_WTW_ = analysisFxs.group_MF(trialdata_sess2_, plot_each = False, n_subblock = n_sub)   
     # calc within-block adaptation using the non-parametric method
     s1_stats['wb_adapt_np'] = s1_stats['end_wtw'] - s1_stats['init_wtw']
     s2_stats['wb_adapt_np'] = s2_stats['end_wtw'] - s2_stats['init_wtw']
 
     # calc within-block adaptation using AUC values
-    n_subblock = 2
-    s1_stats['wb_adapt'] = s1_stats['auc'+str(n_subblock)] - s1_stats['auc1']
-    s2_stats['wb_adapt'] = s2_stats['auc'+str(n_subblock)] - s2_stats['auc1']
+    s1_stats['wb_adapt'] = s1_stats['auc'+str(n_sub)] - s1_stats['auc1']
+    s2_stats['wb_adapt'] = s2_stats['auc'+str(n_sub)] - s2_stats['auc1']
 
     # calc std_wtw using the moving window method
-    s1_stats['std_wtw_mw'] = np.mean(s1_stats[['std_wtw' + str(i+1) for i in np.arange(n_subblock)]]**2,axis = 1)**0.5
-    s2_stats['std_wtw_mw'] = np.mean(s2_stats[['std_wtw' + str(i+1) for i in np.arange(n_subblock)]]**2,axis = 1)**0.5
-
+    s1_stats['std_wtw_mw'] = np.mean(s1_stats[['std_wtw' + str(i+1) for i in np.arange(n_sub)]]**2,axis = 1)**0.5
+    s2_stats['std_wtw_mw'] = np.mean(s2_stats[['std_wtw' + str(i+1) for i in np.arange(n_sub)]]**2,axis = 1)**0.5
 
     # colvars = ['auc_end_start', 'auc', 'auc1', 'auc2', "auc_rh", 'std_wtw', 'std_wtw1', 'std_wtw2', "std_wtw_rh"]
     # colvars = ['auc', "std_wtw", "std_wtw_mw", "init_wtw", "wb_adapt_np", 'wb_adapt']
-    colvars = ['auc', "std_wtw", "std_wtw_mw", "wb_adapt_np", "wb_adapt", "init_wtw"]
+    colvars = ['auc', "auc1", "auc4", "std_wtw", "std_wtw_mw", "wb_adapt_np", "wb_adapt", "init_wtw"]
     s1_HP = s1_stats.loc[s1_stats['condition'] == 'HP', colvars + ['id']]
     s1_LP = s1_stats.loc[s1_stats['condition'] == 'LP', colvars + ['id']]
     s1_df = s1_HP.merge(s1_LP, left_on = 'id', right_on = 'id', suffixes = ['_HP', "_LP"])
@@ -615,15 +646,15 @@ if __name__ == "__main__":
     s2_LP = s2_stats.loc[s2_stats['condition'] == 'LP', colvars + ['id']]
     s2_df = s2_HP.merge(s2_LP, left_on = 'id', right_on = 'id', suffixes = ['_HP', "_LP"])
 
-        # add auc_delta and auc_ave
-    auc_vars = ['auc']
+    # add auc_delta and auc_ave
+    auc_vars = ['auc', "auc1", "auc4"]
     s1_df = pd.concat([s1_df, s1_df.filter(like = "auc", axis = 1).filter(like='HP', axis=1).set_axis([x+'_delta' for x in auc_vars], axis = 1) - s1_df.filter(like = "auc", axis = 1).filter(like='LP', axis=1).set_axis([x+'_delta' for x in auc_vars], axis = 1)], axis = 1)
     s2_df = pd.concat([s2_df, s2_df.filter(like = "auc", axis = 1).filter(like='HP', axis=1).set_axis([x+'_delta' for x in auc_vars], axis = 1) - s2_df.filter(like = "auc", axis = 1).filter(like='LP', axis=1).set_axis([x+'_delta' for x in auc_vars], axis = 1)], axis = 1)
     s1_df = pd.concat([s1_df, (s1_df.filter(like = "auc", axis = 1).filter(like='HP', axis=1).set_axis([x+'_ave' for x in auc_vars], axis = 1) + s1_df.filter(like = "auc", axis = 1).filter(like='LP', axis=1).set_axis([x+'_ave' for x in auc_vars], axis = 1)) / 2], axis = 1) 
     s2_df = pd.concat([s2_df, (s2_df.filter(like = "auc", axis = 1).filter(like='HP', axis=1).set_axis([x+'_ave' for x in auc_vars], axis = 1) + s2_df.filter(like = "auc", axis = 1).filter(like='LP', axis=1).set_axis([x+'_ave' for x in auc_vars], axis = 1)) / 2], axis = 1)
 
     # add std_wtw_ave
-    std_vars = ['std_wtw_mv', "std_wtw"]
+    std_vars = ['std_wtw_mw', "std_wtw"]
     s1_df = pd.concat([s1_df, (s1_df.filter(like = "std", axis = 1).filter(like='HP', axis=1).set_axis([x+'_ave' for x in std_vars], axis = 1) **2 / 2 + s1_df.filter(like = "std", axis = 1).filter(like='LP', axis=1).set_axis([x+'_ave' for x in std_vars], axis = 1)**2 / 2) ** 0.5], axis = 1) 
     s2_df = pd.concat([s2_df, (s2_df.filter(like = "std", axis = 1).filter(like='HP', axis=1).set_axis([x+'_ave' for x in std_vars], axis = 1) **2 / 2 + s2_df.filter(like = "std", axis = 1).filter(like='LP', axis=1).set_axis([x+'_ave' for x in std_vars], axis = 1)**2 / 2) ** 0.5], axis = 1)
 
@@ -637,11 +668,9 @@ if __name__ == "__main__":
     s1_df['wb_adapt_np_ave'] = (s1_df['wb_adapt_np_HP'] - s1_df['wb_adapt_np_LP']) / 2
     s2_df['wb_adapt_np_ave'] = (s2_df['wb_adapt_np_HP'] - s2_df['wb_adapt_np_LP']) / 2
 
+
     # merge
     df = s1_df.merge(s2_df, on = 'id', suffixes = ['_sess1', '_sess2']) 
-
-    # variable names 
-    spearmanr(df['total_std_ave_sess1'], df['auc_ave_sess1'])
 
     vars = [x + "_HP" for x in colvars] + [x + "_LP" for x in colvars] + ['auc_delta'] + ['auc_ave'] + [x + "_ave" for x in std_vars] + ['init_wtw_ave', "wb_adapt_np_ave", "wb_adapt_ave"]
     rows = ['spearman_rho', 'pearson_rho', 'abs_icc', 'con_icc', "ssbs", "ssbm", "sse", "msbs", "msbm", "mse"]
@@ -650,8 +679,21 @@ if __name__ == "__main__":
         reliable_df[:,i] = analysisFxs.calc_reliability(df.loc[:, var + '_sess1'], df.loc[:, var + '_sess2'])
 
     reliable_df = pd.DataFrame(reliable_df, columns = vars, index = rows)
+    reliable_df[['auc_HP', 'auc_LP', 'auc_ave']]
+    reliable_df[['std_wtw_HP', 'std_wtw_LP', 'std_wtw_ave']]
+    reliable_df[['auc_HP', 'auc_rh_HP', 'auc_LP', 'auc_rh_LP']]
+    reliable_df[['std_wtw_mw_HP', 'std_wtw_HP', 'std_wtw_mw_LP', 'std_wtw_LP']]
+    reliable_df[['auc_ave', 'std_wtw_mw_ave', 'wb_adapt_ave', 'wb_adapt_np_ave']]
     reliable_df.to_csv(os.path.join("..", "analysis_results", expname, "mf_reliability.csv"))
 
+    # correlations among variables
+    s1_df[['auc_ave', 'std_wtw_mw_ave', 'auc_delta', 'wb_adapt_ave']].corr()
+    s2_df[['auc_ave', 'std_wtw_mw_ave', 'auc_delta', 'wb_adapt_ave']].corr()
+
+
+    s1_df[['auc_LP', 'auc_HP']].corr()
+    s1_df[['std_wtw_mw_LP', 'std_wtw_mw_HP']].corr()
+    s1_df[['wb_adapt_LP', 'wb_adapt_HP']].corr()
 
     ######################
     ## plot reliability ##
@@ -671,6 +713,226 @@ if __name__ == "__main__":
     plt.tight_layout()
     plt.savefig(os.path.join("..", "figures", expname, "delta_auc_reliability.pdf"))
 
+
+    ######################## reliability of selfreport measures ##############
+    s1_selfdf = loadFxs.parse_group_selfreport(expname, 1, isplot = False)
+    s1_selfdf.to_csv(os.path.join("..", "analysis_results", expname, "selfreport", "selfreport_sess1.csv"), index = None)
+
+    s2_selfdf = loadFxs.parse_group_selfreport(expname, 2, isplot = False)
+    s2_selfdf.to_csv(os.path.join("..", "analysis_results", expname, "selfreport", "selfreport_sess2.csv"), index = None)
+
+    selfdf = s1_selfdf.merge(s2_selfdf, on = "id", suffixes = ["_sess1", "_sess2"])
+        # selfreport_vars = ['NU', 'PU', 'PM', 'PS', 'SS', 'attention', 'cogstable', 'motor', 'perseverance', 'selfcontrol', 'cogcomplex', 'UPPS', 'BIS', 'GMK'] 
+    to_be_tested_vars = list(zip([x + "_sess1" for x in expParas.selfreport_vars], [x + "_sess2" for x in expParas.selfreport_vars]))
+    spearman_rho_, pearson_rho_, abs_icc_, con_icc_, n_, report = analysisFxs.calc_zip_reliability(selfdf, to_be_tested_vars)
+    report.sort_values(by = "spearman_rho")
+
+    ################################ effect of temporary mood, no effects at all ##################
+    selfdf['NAS_change'] = selfdf['NAS_sess2'] - selfdf['NAS_sess1']
+    selfdf['PAS_change'] = selfdf['PAS_sess2'] - selfdf['PAS_sess1']
+    stats_df = s1_df.merge(s2_df, on = "id", suffixes = ["_sess1", "_sess2"])
+    taskvars = ['auc_ave', 'std_wtw_mw_ave', 'auc_delta', 'wb_adapt_ave', 'wb_adapt_np_ave'] + ['auc_HP', 'auc_LP', "wb_adapt_HP", "wb_adapt_LP"]
+    taskvars = ['auc1_ave', 'auc4_ave', 'auc1_HP', 'auc4_HP', 'auc1_LP', 'auc4_LP']
+    selfvars = expParas.selfreport_vars
+
+    for var in taskvars:
+        stats_df[var + '_change'] = stats_df[var + "_sess2"] -  stats_df[var + "_sess1"]
+
+    for var in selfvars:
+        selfdf[var + '_change'] = selfdf[var + "_sess2"] -  selfdf[var + "_sess1"]
+
+    df = selfdf.merge(stats_df, on = "id")
+
+    for var in selfvars:
+        # print(var)
+        tmp1 = stats.spearmanr(df['NAS_change'], df[var + '_change'], nan_policy = "omit")
+        tmp2 = stats.spearmanr(df['PAS_change'], df[var + '_change'], nan_policy = "omit")
+        if tmp1[1] < 0.05 or tmp2[1] < 0.05:
+            print(var + " , NAS_change " + "Spearman's rho = %.3f, p = %.3f"%tmp1)
+            print(var + " , PAS_change " + "Spearman's rho = %.3f, p = %.3f"%tmp2)
+
+    for var in taskvars:
+        # print(var)
+        tmp1 = stats.spearmanr(df['NAS_change'], df[var + '_change'], nan_policy = "omit")
+        tmp2 = stats.spearmanr(df['PAS_change'], df[var + '_change'], nan_policy = "omit")
+        #if tmp1[1] < 0.05 or tmp2[1] < 0.05:
+        print(var + " , NAS_change " + "Spearman's rho = %.3f, p = %.3f"%tmp1)
+        print(var + " , PAS_change " + "Spearman's rho = %.3f, p = %.3f"%tmp2)
+   
+    ################################ effects of changes in self-report ##################
+    for var1 in ['GMK']:
+        for var2 in taskvars:
+        # 'auc_HP', 'auc_LP', "wb_adapt_HP", 
+        # for var2 in ["wb_adapt_HP", "wb_adapt_LP"]:
+            tmp = stats.spearmanr(df[var1 + '_change'], df[var2 + '_change'], nan_policy = "omit")
+            # if tmp[1] < 0.05:
+            print(var1 + " " + var2)
+            print(tmp)
+
+    for var1 in selfvars:
+        for var2 in taskvars:
+            tmp = stats.spearmanr(df[var1 + '_change'], df[var2 + '_change'], nan_policy = "omit")
+            if tmp[1] < 0.05:
+                print(var1 + " " + var2)
+                print(tmp)
+
+    #################### across-participant correlations between task measures and self-report measures ##########
+    # for var1 in selfvars:
+    for var1 in ['GMK']:
+        for var2 in taskvars:
+        # for var2 in ["wb_adapt_HP", "wb_adapt_LP"]:
+            tmp = stats.spearmanr(df[var1 + '_sess1'], df[var2 + '_sess1'], nan_policy = "omit")
+            print(var1 + " " + var2)
+            print(tmp)
+
+
+    for var1 in selfvars:
+        for var2 in taskvars:
+            tmp = stats.spearmanr(df[var1 + '_sess2'], df[var2 + '_sess2'], nan_policy = "omit")
+            if tmp[1] < 0.1:
+                print(var1 + " " + var2)
+                print(tmp)
+
+    #################### correlations between GMK measures and self-report measures ##########
+    for var2 in selfvars:
+        tmp = stats.spearmanr(df['GMK' + '_sess1'], df[var2 + '_sess1'], nan_policy = "omit")
+        if tmp[1] < 0.1:
+            print(var2)
+            print(tmp)
+
+    for var2 in selfvars:
+        tmp = stats.spearmanr(df['GMK' + '_sess2'], df[var2 + '_sess2'], nan_policy = "omit")
+        if tmp[1] < 0.1:
+            print(var2)
+            print(tmp)
+
+
+    #################### correlations between model parameters and self-reports##########
+    #################### maybe I should control changes in the mood ################
+    paradf  = loadFxs.load_parameter_estimates(expname, 1, hdrdata_sess2, 'QL2', 'QL2')
+    selfdf = loadFxs.parse_group_selfreport(expname, 1, isplot = False)
+    tmp = paradf.merge(selfdf , on = "id")
+    row_vars = ['alpha', "nu", "tau", "gamma", "eta"]
+    col_vars = ['NU', 'PU', 'PM', 'PS', 'SS', 'attention', 'cogstable', 'motor', 'perseverance', 'selfcontrol', 'cogcomplex', 'UPPS', 'BIS', 'GMK'] 
+    r_, p_ = analysisFxs.calc_prod_correlations(tmp, row_vars, col_vars)
+    r_.to_csv(os.path.join("..", "analysis_results", expname, "correlation", "r_para_selfreport_sess1.csv"))
+    p_.to_csv(os.path.join("..", "analysis_results", expname, "correlation", "p_para_selfreport_sess1.csv"))
+    
+    row_vars = ['GMK']
+    col_vars = ['NU', 'PU', 'PM', 'PS', 'SS', 'attention', 'cogstable', 'motor', 'perseverance', 'selfcontrol', 'cogcomplex', 'UPPS', 'BIS']
+    r_, p_ = analysisFxs.calc_prod_correlations(selfdf, row_vars, col_vars)
+
+    row_vars = ['NU', 'PU', 'PM', 'PS', 'SS']
+    col_vars = ['NU', 'PU', 'PM', 'PS', 'SS']
+    r_, p_ = analysisFxs.calc_prod_correlations(selfdf, row_vars, col_vars)
+
+
+    row_vars = ['attention', 'cogstable', 'motor', 'perseverance', 'selfcontrol', 'cogcomplex']
+    col_vars = ['attention', 'cogstable', 'motor', 'perseverance', 'selfcontrol', 'cogcomplex']
+    r_, p_ = analysisFxs.calc_prod_correlations(selfdf, row_vars, col_vars)
+
+    #################### correlations between task measures and self-report measures ###########
+    # self_sess1 = loadFxs.parse_group_selfreport(expname, 1, isplot = False)
+
+    # sns.pairplot(self_sess1[['NU', 'PU', 'PM', 'PS', 'SS']], kind="reg", corner=True, plot_kws={'line_kws':{'color':'red'}})
+    # plt.savefig(os.path.join("..", "figures", "UPPS_corr.png"))
+
+    # sns.pairplot(self_sess1[['Attentional', 'Motor', 'Nonplanning']], kind="reg", corner=True, plot_kws={'line_kws':{'color':'red'}})
+    # plt.savefig(os.path.join("..", "figures", "BIS_corr.png"))
+
+    # # not very informative
+    # sns.pairplot(self_sess1[['attention', 'cogstable', 'motor', 'perseverance', 'selfcontrol', 'cogcomplex']], kind="reg", corner=True, plot_kws={'line_kws':{'color':'red'}})
+    for sess in [1, 2]:
+        task_vars = ['auc_ave', "auc_delta", "std_wtw_mw_ave", "auc_HP", "auc_LP", "std_wtw_mw_HP", "std_wtw_mw_LP"]
+        selfdf = loadFxs.parse_group_selfreport(expname, sess, isplot = False)
+        if sess == 1:
+            tmp = s1_df.loc[np.isin(s1_df.id, s2_df.id), task_vars + ["id"]].merge(selfdf, on = "id")
+        else:
+            tmp = s2_df.loc[:, task_vars + ["id"]].merge(selfdf, on = "id")
+        
+    row_vars = task_vars
+    col_vars = ['NU', 'PU', 'PM', 'PS', 'SS', "Attentional", "Motor", "Nonplanning",'attention', 'cogstable', 'motor', 'perseverance', 'selfcontrol', 'cogcomplex', 'UPPS', 'BIS', 'GMK'] 
+    r_, p_ = analysisFxs.calc_prod_correlations(tmp, row_vars, col_vars)
+    r_.to_csv(os.path.join("..", "analysis_results", expname, "correlation", "r_auc_selfreport_sess%d.csv"%sess))
+    p_.to_csv(os.path.join("..", "analysis_results", expname, "correlation", "p_auc_selfreport_sess%d.csv"%sess))
+
+    r_list = []
+    for sess in [1, 2]:
+        task_vars = ["GMK"]
+        selfdf = loadFxs.parse_group_selfreport(expname, sess, isplot = False)
+        row_vars = task_vars
+        col_vars = ['NU', 'PU', 'PM', 'PS', 'SS', "Attentional", "Motor", "Nonplanning",'attention', 'cogstable', 'motor', 'perseverance', 'selfcontrol', 'cogcomplex', 'UPPS', 'BIS', 'GMK'] 
+        r_, p_ = analysisFxs.calc_prod_correlations(selfdf, row_vars, col_vars)
+        r_.to_csv(os.path.join("..", "analysis_results", expname, "correlation", "r_auc_GMK_sess%d.csv"%sess))
+        p_.to_csv(os.path.join("..", "analysis_results", expname, "correlation", "p_auc_GMK_sess%d.csv"%sess))
+        r_list.append(r_)
+    ################### correlations between self-report measures and ###########
+    ################### correlations between self-report measures and ###########
+    # how to align 
+    task_var = ['auc']
+    row_vars = ['HP', "LP"]
+    col_vars = ['NU', 'PU', 'PM', 'PS', 'SS', 'attention', 'cogstable', 'motor', 'perseverance', 'selfcontrol', 'cogcomplex', 'UPPS', 'BIS', 'GMK'] 
+
+    for sess in [1, 2]:
+        if sess == 1:
+            stats_df = s1_stats
+        else:
+            stats_df = s2_stats
+        aucdf = stats_df.pivot(index = 'id', columns = 'condition', values = task_var)
+        aucdf = aucdf.rename_axis(columns = [None] * 2)
+        aucdf = aucdf.droplevel(0, axis=1) 
+        aucdf = aucdf.reset_index()
+        if sess == 1:
+            tmp = aucdf.merge(s1_selfdf, on = "id")
+        else:
+            tmp = aucdf.merge(s2_selfdf, on = "id")
+        # update them later?
+        r_table, p_table, perm_r_, perm_p_table = figFxs.corr_analysis(tmp[row_vars], tmp[col_vars], 1000)
+        p_table.to_csv(os.path.join("..", "analysis_results", expname, "correlation", "p_selfreport_simple_" + "auc" + "_sess%d.csv"%sess))
+        r_table.to_csv(os.path.join("..", "analysis_results", expname, "correlation", "r_selfreport_simple_" + "auc" + "_sess%d.csv"%sess))
+        perm_p_table.to_csv(os.path.join("..", "analysis_results", expname, "correlation", "perm_p_selfreport_simple_" + "auc" + "_sess%d.csv"%sess))
+        r_table.columns = ['NU', 'PU', 'PM', 'PS', 'SS', 'attention', 'cogstable', 'motor', 'perseverance', 'selfcontrol', 'cogcomplex', 'UPPS', 'BIS', 'Discount'] 
+
+        # plot all 
+        # col_vars = ['NU', 'PU', 'PM', 'PS', 'SS', 'attention', 'cogstable', 'motor', 'perseverance', 'selfcontrol', 'cogcomplex', 'UPPS', 'BIS', 'Discounting'] 
+        # plotdf = pd.DataFrame()
+        # for i, row_var in enumerate(row_vars):
+        #     for j, col_var in enumerate(col_vars):
+        #         # this_row = pd.DataFrame({
+        #         #     "mean": perm_r_[i, j,:].mean(),
+        #         #     "q2.5": np.quantile(perm_r_[i, j,:], 0.025),
+        #         #     "q97.5": np.quantile(perm_r_[i, j,:], 0.975),
+        #         #     "row_var": row_var,
+        #         #     "col_var": col_var,
+        #         #     "observed": r_table.loc[row_var, col_var],
+        #         #     }, index = [i * len(col_vars) + j])
+        #         this_df = pd.DataFrame({
+        #             "null": perm_r_[i, j,:],
+        #             "observed": np.repeat(r_table.loc[row_var, col_var],len(perm_r_[i, j,:])),
+        #             "col_var": np.repeat(col_var, len(perm_r_[i, j,:])),
+        #             "row_var": np.repeat(row_var, len(perm_r_[i, j,:]))
+        #             })
+        #         plotdf = pd.concat([plotdf, this_df]) 
+
+        #     g = sns.FacetGrid(plotdf.loc[np.isin(plotdf['col_var'], ['UPPS', 'BIS', 'Discounting'])], col = "row_var")
+        #     g.map(sns.violinplot, "col_var", "null", color = "grey", vertical = True, label = "H0")
+        #     g.map(sns.pointplot, "col_var", "observed", join=False, color = "red", label = "Observed")
+        #     g.set(xlabel = "", ylabel = "Spearman's rho")
+
+        #     plotdf = pd.DataFrame({
+        #         "col_var":np.tile(['NU', 'PU', 'PM', 'PS', 'SS', 'attention', 'cogstable', 'motor', 'perseverance', 'selfcontrol', 'cogcomplex', 'UPPS', 'BIS', 'Discounting'], 2),
+        #         "row_var": np.repeat(["HP_AUC", "LP_AUC"], len(r_table.columns)),
+        #         "correlation": np.concatenate([r_table.loc['HP',:].values, r_table.loc['LP',:].values])})
+        #     g = sns.FacetGrid(plotdf.loc[np.isin(plotdf['col_var'], ['UPPS', 'BIS', 'Discounting k'])], col = 'row_var')
+        #     g.map(sns.barplot, "col_var", "correlation")
+        #     g.set(xlabel = "", ylabel = "Spearman's rho with AUC")
+
+
+        # s1_stats.loc[s1_stats.condition == "LP",'init_wtw']
+        # tmp = s1_selfdf.merge(s1_stats.loc[s1_stats.condition == "LP",['init_wtw', "id", "auc"]], on = "id")
+        # r_table, p_table, perm_r_ = figFxs.corr_analysis(tmp.loc[:,['init_wtw', 'auc']],tmp[col_vars], 10)
+        # p_table.to_csv(os.path.join("..", "analysis_results", expname, "correlation", "p_selfreport_" + "init_wtw" + "_sess1.csv"))
+        # r_table.to_csv(os.path.join("..", "analysis_results", expname, "correlation", "r_selfreport_" + "init_wtw" + "_sess1.csv"))
     ##############
     ## modelrep ##
     ##############
@@ -786,258 +1048,6 @@ if __name__ == "__main__":
         plt.gcf().set_size_inches(4 * len(paranames), 5)
         plt.savefig(os.path.join("..", 'figures', expname, "%s_para_reliability.pdf"%modelname))
 
-
-
-    ##########
-    fig, ax = plt.subplots()
-    figFxs.plot_group_KMSC_both(s1_Psurv_b1_, s1_Psurv_b2_, s2_Psurv_b1_, s2_Psurv_b2_, hdrdata_sess1, hdrdata_sess2, ax)
-    plt.savefig(os.path.join('..', 'figures', expname, 'KMSC.pdf'))
-
-
-    fig, ax = plt.subplots()
-    figFxs.plot_group_WTW_both(s1_WTW_, s2_WTW_, hdrdata_sess1, hdrdata_sess2, ax)
-    fig.savefig(os.path.join('..', 'figures', expname, 'WTW.pdf'))
-
-    fig, ax = plt.subplots()
-    analysisFxs.plot_group_KMSC(s1_Psurv_b1_, s1_Psurv_b2_, expParas.Time, ax)
-    plt.savefig(os.path.join('..', 'figures', expname, 'sess1_KMSC.pdf'))
-
-    fig, ax = plt.subplots()
-    analysisFxs.plot_group_KMSC(s2_Psurv_b1_, s2_Psurv_b2_, expParas.Time, ax)
-    plt.savefig(os.path.join('..', 'figures', expname, 'sess2_KMSC.pdf'))
-
-    fig, ax = plt.subplots()
-    analysisFxs.plot_group_WTW(s1_WTW_, expParas.TaskTime, ax)
-    plt.savefig(os.path.join('..', 'figures', expname, 'sess1_WTW.pdf'))
-
-
-    fig, ax = plt.subplots()
-    analysisFxs.plot_group_WTW(s2_WTW_, expParas.TaskTime, ax)
-    plt.savefig(os.path.join('..', 'figures', expname, 'sess2_WTW.pdf'))
-
-    ######################## reliability of AUC measures ##############
-    fig, ax = plt.subplots()
-    figFxs.AUC_reliability(s1_stats, s2_stats) # maybe I don't need it yet 
-    plt.gcf().set_size_inches(8, 6)
-    plt.savefig(os.path.join("..", "figures", expname, "AUC_reliability.pdf"))
-
-    ######################## reliability of AUc 
-    # maybe later I want to write a function to automatically pivot this table
-    colvars = ['auc', 'auc1', 'auc2']
-    s1_HP = s1_stats.loc[s1_stats['condition'] == 'HP', colvars + ['id']]
-    s1_LP = s1_stats.loc[s1_stats['condition'] == 'LP', colvars + ['id']]
-    s1_aucdf = s1_HP.merge(s1_LP, left_on = 'id', right_on = 'id', suffixes = ['_HP', "_LP"])
-    s1_aucdf = pd.concat([s1_aucdf, s1_aucdf.filter(like='HP', axis=1).set_axis([x+'_delta' for x in colvars], axis = 1) - s1_aucdf.filter(like='LP', axis=1).set_axis([x+'_delta' for x in colvars], axis = 1)], axis = 1)
-
-    s2_HP = s2_stats.loc[s2_stats['condition'] == 'HP', colvars + ['id']]
-    s2_LP = s2_stats.loc[s2_stats['condition'] == 'LP', colvars + ['id']]
-    s2_aucdf = s2_HP.merge(s2_LP, left_on = 'id', right_on = 'id', suffixes = ['_HP', "_LP"])
-    s2_aucdf = pd.concat([s2_aucdf, s2_aucdf.filter(like='HP', axis=1).set_axis([x+'_delta' for x in colvars], axis = 1) - s2_aucdf.filter(like='LP', axis=1).set_axis([x+'_delta' for x in colvars], axis = 1)], axis = 1)
-
-    # plot auc reliability 
-    df = s1_aucdf.merge(s2_aucdf, on = 'id', suffixes = ['_sess1', '_sess2']) 
-    fig, ax = plt.subplots()
-    # figFxs.my_regplot(df['auc_LP_sess1'], df['auc_LP_sess2'], axs[0], color = condition_palette[0])
-    # figFxs.my_regplot(df['auc1_LP_sess1'], df['auc1_LP_sess2'], axs[0], color = condition_palette[0], line_kws={"linestyle": ":"})
-    # figFxs.my_regplot(df['auc_HP_sess1'], df['auc_HP_sess2'], axs[1], color = condition_palette[1])
-    figFxs.my_regplot(df['auc_delta_sess1'], df['auc_delta_sess2'], ax, color = 'grey')
-    plt.tight_layout()
-    plt.savefig(os.path.join("..", "figures",expname, "delta_auc_reliability.pdf"))
-
-    ######################## reliability of selfreport measures ##############
-    s1_selfdf = loadFxs.parse_group_selfreport(expname, 1, isplot = False)
-    s1_selfdf.to_csv(os.path.join("..", "analysis_results", expname, "selfreport", "selfreport_sess1.csv"), index = None)
-
-    s2_selfdf = loadFxs.parse_group_selfreport(expname, 2, isplot = False)
-    s2_selfdf.to_csv(os.path.join("..", "analysis_results", expname, "selfreport", "selfreport_sess2.csv"), index = None)
-
-    selfdf = s2_selfdf.merge(s1_selfdf, on = "id", suffixes = ["_sess1", "_sess2"])
-        # selfreport_vars = ['NU', 'PU', 'PM', 'PS', 'SS', 'attention', 'cogstable', 'motor', 'perseverance', 'selfcontrol', 'cogcomplex', 'UPPS', 'BIS', 'GMK'] 
-    to_be_tested_vars = list(zip([x + "_sess1" for x in expParas.selfreport_vars], [x + "_sess2" for x in expParas.selfreport_vars]))
-    spearman_rho_, pearson_rho_, abs_icc_, con_icc_, n_, report = analysisFxs.calc_zip_reliability(selfdf, to_be_tested_vars)
-    report.sort_values(by = "spearman_rho")
-
-    ################################ effect of temporary mood, no effects at all ##################
-    selfdf['NAS_change'] = selfdf['NAS_sess2'] - selfdf['NAS_sess1']
-    selfdf['PAS_change'] = selfdf['PAS_sess2'] - selfdf['PAS_sess1']
-    stats_df = s1_df.merge(s2_df, on = "id", suffixes = ["_sess1", "_sess2"])
-    stats_df['auc_ave_change'] = stats_df['auc_ave_sess2'] -  stats_df['auc_ave_sess1']
-    stats_df['std_wtw_ave_change'] = stats_df['std_wtw_ave_sess2'] -  stats_df['std_wtw_ave_sess1']
-    df = selfdf.merge(stats_df, on = "id")
-    stats.spearmanr(df['NAS_change'], df['std_wtw_ave_change'])
-    stats.spearmanr(df['PAS_change'], df['std_wtw_ave_change'])
-
-    #################### correlations between model parameters and self-reports##########
-    paradf  = loadFxs.load_parameter_estimates(expname, 1, hdrdata_sess2, 'QL2', 'QL2')
-    selfdf = loadFxs.parse_group_selfreport(expname, 1, isplot = False)
-    tmp = paradf.merge(selfdf , on = "id")
-    row_vars = ['alpha', "nu", "tau", "gamma", "eta"]
-    col_vars = ['NU', 'PU', 'PM', 'PS', 'SS', 'attention', 'cogstable', 'motor', 'perseverance', 'selfcontrol', 'cogcomplex', 'UPPS', 'BIS', 'GMK'] 
-    r_, p_ = analysisFxs.calc_prod_correlations(tmp, row_vars, col_vars)
-    r_.to_csv(os.path.join("..", "analysis_results", expname, "correlation", "r_para_selfreport_sess1.csv"))
-    p_.to_csv(os.path.join("..", "analysis_results", expname, "correlation", "p_para_selfreport_sess1.csv"))
-    
-    row_vars = ['GMK']
-    col_vars = ['NU', 'PU', 'PM', 'PS', 'SS', 'attention', 'cogstable', 'motor', 'perseverance', 'selfcontrol', 'cogcomplex', 'UPPS', 'BIS']
-    r_, p_ = analysisFxs.calc_prod_correlations(selfdf, row_vars, col_vars)
-
-    row_vars = ['NU', 'PU', 'PM', 'PS', 'SS']
-    col_vars = ['NU', 'PU', 'PM', 'PS', 'SS']
-    r_, p_ = analysisFxs.calc_prod_correlations(selfdf, row_vars, col_vars)
-
-
-    row_vars = ['attention', 'cogstable', 'motor', 'perseverance', 'selfcontrol', 'cogcomplex']
-    col_vars = ['attention', 'cogstable', 'motor', 'perseverance', 'selfcontrol', 'cogcomplex']
-    r_, p_ = analysisFxs.calc_prod_correlations(selfdf, row_vars, col_vars)
-
-    #################### correlations between task measures and self-report measures ###########
-
-    n_subblocks = [3, 4, 5, 6, 7, 8]
-    k = 2
-
-    s1_stats = s1_stats_[k]
-    s2_stats = s2_stats_[k]
-
-    # 
-    s1_stats['wb_adapt_np'] = s1_stats['end_wtw'] - s1_stats['init_wtw']
-    s2_stats['wb_adapt_np'] = s2_stats['end_wtw'] - s2_stats['init_wtw']
-
-    # calc within-block adaptation using AUC values
-    # n_subblock = n_subblocks[k]
-    # s1_stats['wb_adapt'] = s1_stats['auc'+str(n_subblock)] - s1_stats['auc1']
-    # s2_stats['wb_adapt'] = s2_stats['auc'+str(n_subblock)] - s2_stats['auc1']
-
-    # # calc std_wtw using the moving window method
-    # s1_stats['std_wtw_mw'] = np.mean(s1_stats[['std_wtw' + str(i+1) for i in np.arange(n_subblock)]]**2,axis = 1)**0.5
-    # s2_stats['std_wtw_mw'] = np.mean(s2_stats[['std_wtw' + str(i+1) for i in np.arange(n_subblock)]]**2,axis = 1)**0.5
-
-
-    # colvars = ['auc_end_start', 'auc', 'auc1', 'auc2', "auc_rh", 'std_wtw', 'std_wtw1', 'std_wtw2', "std_wtw_rh"]
-    # colvars = ['auc', "std_wtw", "std_wtw_mw", "init_wtw", "wb_adapt_np", 'wb_adapt']
-    colvars = ['auc', "std_wtw",  "std_wtw_mw"]
-    s1_HP = s1_stats.loc[s1_stats['condition'] == 'HP', colvars + ['id']]
-    s1_LP = s1_stats.loc[s1_stats['condition'] == 'LP', colvars + ['id']]
-    s1_df = s1_HP.merge(s1_LP, left_on = 'id', right_on = 'id', suffixes = ['_HP', "_LP"])
-
-    s2_HP = s2_stats.loc[s2_stats['condition'] == 'HP', colvars + ['id']]
-    s2_LP = s2_stats.loc[s2_stats['condition'] == 'LP', colvars + ['id']]
-    s2_df = s2_HP.merge(s2_LP, left_on = 'id', right_on = 'id', suffixes = ['_HP', "_LP"])
-
-    # add auc_delta and auc_ave
-    auc_vars = ['auc']
-    s1_df = pd.concat([s1_df, s1_df.filter(like = "auc", axis = 1).filter(like='HP', axis=1).set_axis([x+'_delta' for x in auc_vars], axis = 1) - s1_df.filter(like = "auc", axis = 1).filter(like='LP', axis=1).set_axis([x+'_delta' for x in auc_vars], axis = 1)], axis = 1)
-    s2_df = pd.concat([s2_df, s2_df.filter(like = "auc", axis = 1).filter(like='HP', axis=1).set_axis([x+'_delta' for x in auc_vars], axis = 1) - s2_df.filter(like = "auc", axis = 1).filter(like='LP', axis=1).set_axis([x+'_delta' for x in auc_vars], axis = 1)], axis = 1)
-    s1_df = pd.concat([s1_df, (s1_df.filter(like = "auc", axis = 1).filter(like='HP', axis=1).set_axis([x+'_ave' for x in auc_vars], axis = 1) + s1_df.filter(like = "auc", axis = 1).filter(like='LP', axis=1).set_axis([x+'_ave' for x in auc_vars], axis = 1)) / 2], axis = 1) 
-    s2_df = pd.concat([s2_df, (s2_df.filter(like = "auc", axis = 1).filter(like='HP', axis=1).set_axis([x+'_ave' for x in auc_vars], axis = 1) + s2_df.filter(like = "auc", axis = 1).filter(like='LP', axis=1).set_axis([x+'_ave' for x in auc_vars], axis = 1)) / 2], axis = 1)
-
-    # add std_wtw_ave
-    std_vars = ["std_wtw", "std_wtw_mw"]
-    s1_df = pd.concat([s1_df, (s1_df.filter(like = "std", axis = 1).filter(like='HP', axis=1).set_axis([x+'_ave' for x in std_vars], axis = 1)**2 / 2+ s1_df.filter(like = "std", axis = 1).filter(like='LP', axis=1).set_axis([x+'_ave' for x in std_vars], axis = 1)**2 / 2) ** 0.5], axis = 1) 
-    s2_df = pd.concat([s2_df, (s2_df.filter(like = "std", axis = 1).filter(like='HP', axis=1).set_axis([x+'_ave' for x in std_vars], axis = 1)**2 / 2+ s2_df.filter(like = "std", axis = 1).filter(like='LP', axis=1).set_axis([x+'_ave' for x in std_vars], axis = 1)**2 / 2) ** 0.5], axis = 1)
-
-    # add init_wtw_ave
-    # s1_df['init_wtw_ave'] = (s1_df['init_wtw_HP'] + s1_df['init_wtw_LP']) / 2
-    # s2_df['init_wtw_ave'] = (s2_df['init_wtw_HP'] + s2_df['init_wtw_LP']) / 2
-
-    # add wb_adapt_ave and wb_adapt_np_ave
-    # s1_df['wb_adapt_ave'] = (s1_df['wb_adapt_HP'] - s1_df['wb_adapt_LP']) / 2
-    # s2_df['wb_adapt_ave'] = (s2_df['wb_adapt_HP'] - s2_df['wb_adapt_LP']) / 2
-    # s1_df['wb_adapt_np_ave'] = (s1_df['wb_adapt_np_HP'] - s1_df['wb_adapt_np_LP']) / 2
-    # s2_df['wb_adapt_np_ave'] = (s2_df['wb_adapt_np_HP'] - s2_df['wb_adapt_np_LP']) / 2
-
-
-    # self_sess1 = loadFxs.parse_group_selfreport(expname, 1, isplot = False)
-
-    # sns.pairplot(self_sess1[['NU', 'PU', 'PM', 'PS', 'SS']], kind="reg", corner=True, plot_kws={'line_kws':{'color':'red'}})
-    # plt.savefig(os.path.join("..", "figures", "UPPS_corr.png"))
-
-    # sns.pairplot(self_sess1[['Attentional', 'Motor', 'Nonplanning']], kind="reg", corner=True, plot_kws={'line_kws':{'color':'red'}})
-    # plt.savefig(os.path.join("..", "figures", "BIS_corr.png"))
-
-    # # not very informative
-    # sns.pairplot(self_sess1[['attention', 'cogstable', 'motor', 'perseverance', 'selfcontrol', 'cogcomplex']], kind="reg", corner=True, plot_kws={'line_kws':{'color':'red'}})
-    for sess in [1, 2]:
-        task_vars = ['auc_ave', "auc_delta", "std_wtw_ave", "std_wtw_mw_ave"]
-        selfdf = loadFxs.parse_group_selfreport(expname, 1, isplot = False)
-        if sess == 1:
-            tmp = s1_df.loc[:, task_vars + ["id"]].merge(selfdf, on = "id")
-        else:
-            tmp = s2_df.loc[:, task_vars + ["id"]].merge(selfdf, on = "id")
-        
-        row_vars = task_vars
-        col_vars = ['NU', 'PU', 'PM', 'PS', 'SS', "Attentional", "Motor", "Nonplanning",'attention', 'cogstable', 'motor', 'perseverance', 'selfcontrol', 'cogcomplex', 'UPPS', 'BIS', 'GMK'] 
-        r_, p_ = analysisFxs.calc_prod_correlations(tmp, row_vars, col_vars)
-        r_.to_csv(os.path.join("..", "analysis_results", expname, "correlation", "r_auc_selfreport_sess%d.csv"%sess))
-        p_.to_csv(os.path.join("..", "analysis_results", expname, "correlation", "p_auc_selfreport_sess%d.csv"%sess))
-
-
-    ################### correlations between self-report measures and ###########
-    ################### correlations between self-report measures and ###########
-    # how to align 
-    task_var = ['auc']
-    row_vars = ['HP', "LP"]
-    col_vars = ['NU', 'PU', 'PM', 'PS', 'SS', 'attention', 'cogstable', 'motor', 'perseverance', 'selfcontrol', 'cogcomplex', 'UPPS', 'BIS', 'GMK'] 
-
-    for sess in [1, 2]:
-        if sess == 1:
-            stats_df = s1_stats
-        else:
-            stats_df = s2_stats
-        aucdf = stats_df.pivot(index = 'id', columns = 'condition', values = task_var)
-        aucdf = aucdf.rename_axis(columns = [None] * 2)
-        aucdf = aucdf.droplevel(0, axis=1) 
-        aucdf = aucdf.reset_index()
-        if sess == 1:
-            tmp = aucdf.merge(s1_selfdf, on = "id")
-        else:
-            tmp = aucdf.merge(s2_selfdf, on = "id")
-        # update them later?
-        r_table, p_table, perm_r_, perm_p_table = figFxs.corr_analysis(tmp[row_vars], tmp[col_vars], 1000)
-        p_table.to_csv(os.path.join("..", "analysis_results", expname, "correlation", "p_selfreport_simple_" + "auc" + "_sess%d.csv"%sess))
-        r_table.to_csv(os.path.join("..", "analysis_results", expname, "correlation", "r_selfreport_simple_" + "auc" + "_sess%d.csv"%sess))
-        perm_p_table.to_csv(os.path.join("..", "analysis_results", expname, "correlation", "perm_p_selfreport_simple_" + "auc" + "_sess%d.csv"%sess))
-        r_table.columns = ['NU', 'PU', 'PM', 'PS', 'SS', 'attention', 'cogstable', 'motor', 'perseverance', 'selfcontrol', 'cogcomplex', 'UPPS', 'BIS', 'Discount'] 
-
-        # plot all 
-        # col_vars = ['NU', 'PU', 'PM', 'PS', 'SS', 'attention', 'cogstable', 'motor', 'perseverance', 'selfcontrol', 'cogcomplex', 'UPPS', 'BIS', 'Discounting'] 
-        # plotdf = pd.DataFrame()
-        # for i, row_var in enumerate(row_vars):
-        #     for j, col_var in enumerate(col_vars):
-        #         # this_row = pd.DataFrame({
-        #         #     "mean": perm_r_[i, j,:].mean(),
-        #         #     "q2.5": np.quantile(perm_r_[i, j,:], 0.025),
-        #         #     "q97.5": np.quantile(perm_r_[i, j,:], 0.975),
-        #         #     "row_var": row_var,
-        #         #     "col_var": col_var,
-        #         #     "observed": r_table.loc[row_var, col_var],
-        #         #     }, index = [i * len(col_vars) + j])
-        #         this_df = pd.DataFrame({
-        #             "null": perm_r_[i, j,:],
-        #             "observed": np.repeat(r_table.loc[row_var, col_var],len(perm_r_[i, j,:])),
-        #             "col_var": np.repeat(col_var, len(perm_r_[i, j,:])),
-        #             "row_var": np.repeat(row_var, len(perm_r_[i, j,:]))
-        #             })
-        #         plotdf = pd.concat([plotdf, this_df]) 
-
-        #     g = sns.FacetGrid(plotdf.loc[np.isin(plotdf['col_var'], ['UPPS', 'BIS', 'Discounting'])], col = "row_var")
-        #     g.map(sns.violinplot, "col_var", "null", color = "grey", vertical = True, label = "H0")
-        #     g.map(sns.pointplot, "col_var", "observed", join=False, color = "red", label = "Observed")
-        #     g.set(xlabel = "", ylabel = "Spearman's rho")
-
-        #     plotdf = pd.DataFrame({
-        #         "col_var":np.tile(['NU', 'PU', 'PM', 'PS', 'SS', 'attention', 'cogstable', 'motor', 'perseverance', 'selfcontrol', 'cogcomplex', 'UPPS', 'BIS', 'Discounting'], 2),
-        #         "row_var": np.repeat(["HP_AUC", "LP_AUC"], len(r_table.columns)),
-        #         "correlation": np.concatenate([r_table.loc['HP',:].values, r_table.loc['LP',:].values])})
-        #     g = sns.FacetGrid(plotdf.loc[np.isin(plotdf['col_var'], ['UPPS', 'BIS', 'Discounting k'])], col = 'row_var')
-        #     g.map(sns.barplot, "col_var", "correlation")
-        #     g.set(xlabel = "", ylabel = "Spearman's rho with AUC")
-
-
-        # s1_stats.loc[s1_stats.condition == "LP",'init_wtw']
-        # tmp = s1_selfdf.merge(s1_stats.loc[s1_stats.condition == "LP",['init_wtw', "id", "auc"]], on = "id")
-        # r_table, p_table, perm_r_ = figFxs.corr_analysis(tmp.loc[:,['init_wtw', 'auc']],tmp[col_vars], 10)
-        # p_table.to_csv(os.path.join("..", "analysis_results", expname, "correlation", "p_selfreport_" + "init_wtw" + "_sess1.csv"))
-        # r_table.to_csv(os.path.join("..", "analysis_results", expname, "correlation", "r_selfreport_" + "init_wtw" + "_sess1.csv"))
 
     ###############################################################################################
     ########### load data #############

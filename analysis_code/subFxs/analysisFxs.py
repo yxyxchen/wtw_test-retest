@@ -722,7 +722,7 @@ def desc_RT(trialdata):
     sell_RT_se  = calc_se(trialdata.loc[trialdata.trialEarnings != 0, :].RT)
     return sell_RT_median, sell_RT_mean, sell_RT_se
 ############################ individual level analysis functions ###############
-def ind_MF(trialdata, key, isTrct = True, plot_RT = False, plot_trial = False, plot_KMSC = False, plot_WTW = False, n_subblock = 2):
+def ind_MF(trialdata, key, isTrct = True, plot_RT = False, plot_trial = False, plot_KMSC = False, plot_WTW = False, n_subblock = 4):
     """Conduct model-free (MF) analysis for a single participant 
     Inputs:
         trialdata: a pd dataframe that contains task data
@@ -809,13 +809,8 @@ def ind_MF(trialdata, key, isTrct = True, plot_RT = False, plot_trial = False, p
         init_wtw = junk[0]
         end_wtw = junk[-1]
 
-        # tmp = pd.DataFrame({"id": key[0], "sess": key[1], "key": str(key), "block": i + 1, "auc": block_auc, "std_wtw": block_std_wtw, "init_wtw": init_wtw, \
-        #     "auc1": sub_aucs[0], "auc2": sub_aucs[1], "auc3": sub_aucs[2], "auc4": sub_aucs[3], \
-        #     "std_wtw1": sub_std_wtws[0], "std_wtw2": sub_aucs[1], "std_wtw3": sub_std_wtws[2], "std_wtw4": sub_std_wtws[3],\
-        #     "sell_RT_median": sell_RT_median,\
-        #     "sell_RT_mean": sell_RT_mean, "sell_RT_se": sell_RT_se,\
-        #     "condition": condition}, index = [i])
         tmp = {"id": key[0], "sess": key[1], "key": str(key), "block": i + 1, "auc": block_auc,  "std_wtw": block_std_wtw, \
+        "auc_rh": block_auc_rh, "std_wtw_rh": block_std_wtw_rh,\
         "init_wtw": init_wtw, "end_wtw": end_wtw, "sell_RT_median": sell_RT_median, "sell_RT_mean": sell_RT_mean, "sell_RT_se": sell_RT_se, "condition": condition}
         tmp.update(dict(zip(['auc' + str((i + 1)) for i in range(n_subblock)], sub_aucs)))
         tmp.update(dict(zip(['std_wtw' + str((i + 1)) for i in range(n_subblock)], sub_std_wtws)))
@@ -907,7 +902,7 @@ def ind_sim_MF(simdata, empdata, key, plot_trial = False, plot_KMSC = False, plo
     return stats, objs
 
 ########################## group-level analysis functions ##############
-def group_MF(trialdata_, plot_each = False, n_subblock = 2):
+def group_MF(trialdata_, plot_each = False, n_subblock = 4):
     # check sample sizes 
     nsub = len(trialdata_)
     print("Analyze %d valid participants"%nsub)
