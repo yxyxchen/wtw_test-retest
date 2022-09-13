@@ -50,7 +50,7 @@ modelFitSingle = function(id, thisTrialData, modelName, paraNames, model, config
       Ts = Ts, # time spent on waiting 
       nMadeActions = nMadeActions
     )
-    if(modelName %in% c("QL1", "QL2", "QL1reset", "QL2reset")){
+    if(substr(modelName, 1, 2) == 'QL'){
       V0_ini = 0.27782194519542547  / (1 - 0.85) # unit: cents
       inputs$V0_ini = V0_ini
     }else{

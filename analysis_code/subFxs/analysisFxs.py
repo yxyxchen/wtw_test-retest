@@ -390,7 +390,7 @@ def score_BIS(choices, isplot = True):
 
     def items2score(items):
         score = np.sum([choices.loc['BIS-'+str(item)] for item in items[0]]) +\
-        np.sum([4 - choices.loc['BIS-'+str(item)] for item in items[1]])
+        np.sum([5 - choices.loc['BIS-'+str(item)] for item in items[1]])
         return score
 
     # calculate scores 
@@ -438,7 +438,7 @@ def score_upps(choices, isplot = True):
     
     def items2score(items):
         score = np.sum([choices.loc['UP-'+str(item)] for item in items[0]]) +\
-        np.sum([4 - choices.loc['UP-'+str(item)] for item in items[1]])
+        np.sum([5 - choices.loc['UP-'+str(item)] for item in items[1]])
         return score
 
     # calculate scores 
