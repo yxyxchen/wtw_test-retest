@@ -31,11 +31,11 @@ def getModelParas(modelname):
     """
     if modelname == 'QL1':
         return ['alpha', 'tau', 'gamma', 'eta']
-    elif modelname == 'QL2':
+    elif modelname in ('QL2', 'QL2reset_FL1', 'QL2reset_FL2'):
         return ['alpha', 'nu', 'tau', 'gamma', 'eta']
-    elif modelname == 'QL1reset':
+    elif modelname == 'QL1reset_FL3':
         return ['alpha', 'tau', 'gamma', 'eta1', 'eta2']
-    elif modelname == 'QL2reset':
+    elif modelname == 'QL2reset_FL3':
         return ['alpha', 'nu', 'tau', 'gamma', 'eta1', 'eta2'] 
     elif modelname == 'RL1':
         return ['alpha', 'tau', 'eta', 'beta']

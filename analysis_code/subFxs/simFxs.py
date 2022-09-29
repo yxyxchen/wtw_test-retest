@@ -3,6 +3,7 @@ import numpy.random as rd
 from subFxs import expParas
 import code
 import pandas as pd
+import re
 ###################### Helper Functions ###################
 def RL_initialize(ts, paras):
 	""" A helper function to initialize action values and reward rate estimate for R-Learning models
@@ -24,22 +25,27 @@ def QL_initialize(ts, paras):
 		paras: a dictionary of parameters
 	"""
 	Qquit = np.mean(expParas.optimRewardRates) / 0.15
-
-	Qwaits = -0.1 * ts + paras['eta'] + Qquit
+	# code.interact(local = dict(locals(), **globals()))
+	if 'eta1' in paras.keys():
+		Qwaits = -0.1 * ts + paras['eta1'] + Qquit
+	else:
+		Qwaits = -0.1 * ts + paras['eta'] + Qquit
 
 	return Qwaits, Qquit
 
-def QLreset_initialize(ts, paras, reset = False):
+def QLreset_initialize(ts, paras, Qquit, FL):
 	""" A helper function to initialize action values for Q-Learning models
 	
 	inputs:
 		ts: a vector of time steps
 		paras: a dictionary of parameters
+		FL: freedom level. FL = 1, only reset Qwaits. FL = 2, reset both Qwaits and Quit. FL = 3, reset both with separate parameters
 	"""
-	Qquit = np.mean(expParas.optimRewardRates) / 0.15
-	if not reset:
-		Qwaits = -0.1 * ts + paras['eta1'] + Qquit
-	else:
+	if FL > 1:
+		Qquit = np.mean(expParas.optimRewardRates) / 0.15
+	if FL < 3:
+		Qwaits = -0.1 * ts + paras['eta'] + Qquit
+	if FL == 3:
 		Qwaits = -0.1 * ts + paras['eta2'] + Qquit
 	return Qwaits, Qquit
 
@@ -173,11 +179,9 @@ def ind_sim(modelname, paras, condition_, blockIdx_, scheduledDelay_, scheduledR
 
 	# initialize value functions
 	ts = np.arange(0, max(expParas.tMaxs), expParas.stepsize) 
-	if modelname == 'QL1' or modelname == 'QL2':
+	if modelname[:2] == 'QL':
 		Qwaits, Qquit = QL_initialize(ts, paras)
-	elif modelname == 'QL1reset' or modelname == 'QL2reset':
-		Qwaits, Qquit = QLreset_initialize(ts, paras)
-	elif modelname == 'RL1' or modelname == 'RL2':
+	elif modelname[:2] == 'RL':
 		Qwaits, Qquit, reward_rate = RL_initialize(ts, paras)
 
 	# initialize outputs 
@@ -191,11 +195,10 @@ def ind_sim(modelname, paras, condition_, blockIdx_, scheduledDelay_, scheduledR
 		if tIdx == 0 or blockIdx_[tIdx - 1] != blockIdx_[tIdx]:
 			elapsedTime = 0
 
-		if modelname == 'QL1reset' or modelname == 'QL2reset':
-			if blockIdx_[tIdx - 1] != blockIdx_[tIdx]:
-				Qwaits, Qquit = QLreset_initialize(ts, paras, reset = True)
+		if blockIdx_[tIdx - 1] != blockIdx_[tIdx]:
+			if re.search( 'reset', modelname):
+				Qwaits, Qquit = QLreset_initialize(ts, paras, Qquit, FL = int(modelname[-1]))
 
-		# start to track time and exist_status within a trial
 		t = 0
 		exit_status = False
 
@@ -233,14 +236,14 @@ def ind_sim(modelname, paras, condition_, blockIdx_, scheduledDelay_, scheduledR
 		elapsedTime = elapsedTime + timeWaited + empirical_iti
 
 		# update value functions
-		if modelname == "QL1" or modelname == "QL1reset":
+		if modelname[:3] == 'QL1':
 			# code.interact(local = dict(locals(), **globals()))
 			Qwaits, Qquit = QL1_learn(Qwaits, Qquit, ts, timeWaited, trialEarnings, paras, empirical_iti = expParas.iti)
-		elif modelname == "QL2" or modelname == "QL2reset":
+		elif modelname[:3] == "QL2":
 			Qwaits, Qquit = QL2_learn(Qwaits, Qquit, ts, timeWaited, trialEarnings, paras, empirical_iti = expParas.iti)
-		elif modelname == 'RL1':
+		elif modelname[:3] == 'RL1':
 			Qwaits, Qquit, reward_rate = RL1_learn(Qwaits, Qquit, reward_rate, ts, timeWaited, trialEarnings, paras, empirical_iti = expParas.iti)
-		elif modelname == 'RL2':
+		elif modelname[:3] == 'RL2':
 			Qwaits, Qquit, reward_rate = RL2_learn(Qwaits, Qquit, reward_rate, ts, timeWaited, trialEarnings, paras, empirical_iti = expParas.iti)
 		
 	# # find the duration of each block

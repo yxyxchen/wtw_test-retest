@@ -54,18 +54,17 @@ def plot_group_emp_rep_wtw(modelname, s1_WTW_rep, s2_WTW_rep, s1_WTW_emp, s2_WTW
     plotdf = pd.DataFrame({
         "wtw": np.concatenate([s1_ave_emp, s1_ave_rep, s2_ave_emp, s2_ave_rep]),
         "type": np.tile(np.repeat(["emp", "rep"], len(expParas.TaskTime)), 2),
-        "time": np.tile(expParas.TaskTime, 4),
+        "time": np.tile((expParas.TaskTime / 60), 4),
         "sess": np.repeat(["SESS1", "SESS2"], len(expParas.TaskTime) * 2)
         })
 
     g = sns.FacetGrid(plotdf, col= "sess", hue = 'type', sharex = True, sharey = True, palette = ["black", "red"])
     g.map(sns.lineplot, "time", "wtw")
-    g.set(ylim=(3, 10), ylabel = "WTW (s)", xlabel = "Task time (s)")
-    g.set(ylabel = "WTW (s)", xlabel = "Task time (s)")
+    g.set(ylim=(3, 10), ylabel = "WTW (s)", xlabel = "Task time (min)")
     axs = g.axes_dict.values()
     for i, ax in enumerate(axs):
         ax.set_title("SESS%d"%(i+1))
-        ax.axvline(expParas.blocksec, color = "grey", linestyle = "dashed")
+        ax.axvline(expParas.blocksec/60, color = "grey", linestyle = "dashed")
     return g
 
 def plot_group_emp_rep_wtw_multi(modelname, s1_WTW_rep_, s2_WTW_rep_, s1_WTW_emp, s2_WTW_emp, hdrdata_sess1, hdrdata_sess2, s1_paradf_, s2_paradf_, methods, estimation = "mean"):
@@ -106,20 +105,23 @@ def plot_group_emp_rep_wtw_multi(modelname, s1_WTW_rep_, s2_WTW_rep_, s1_WTW_emp
 
     plotdf = pd.DataFrame({
         "wtw": np.concatenate([s1_ave_emp, s2_ave_emp, np.concatenate(s1_ave_rep_), np.concatenate(s2_ave_rep_)]),
-        "type": ['emp'] * len(expParas.TaskTime) * 2 + list(np.repeat(methods, len(expParas.TaskTime))) + list(np.repeat(methods, len(expParas.TaskTime))),
-        "time": np.tile(expParas.TaskTime, 2 + 2 * nmethod),
+        "type": ['Observed'] * len(expParas.TaskTime) * 2 + list(np.repeat(methods, len(expParas.TaskTime))) + list(np.repeat(methods, len(expParas.TaskTime))),
+        "time": np.tile((expParas.TaskTime / 60).astype('int'), 2 + 2 * nmethod),
         "sess": np.concatenate([np.repeat(["SESS1", "SESS2"], len(expParas.TaskTime)), np.repeat(["SESS1", "SESS2"], len(expParas.TaskTime) * nmethod)])
         })
 
+    palette = {"Observed":"tab:black",
+           "QL2":"tab:pink", 
+           "QL2_reset":"tab:red"}
+
     g = sns.FacetGrid(plotdf, col= "sess", hue = 'type', sharex = True, sharey = True)
-    g.map(sns.lineplot, "time", "wtw")
-    g.set(ylim=(3, 10), ylabel = "WTW (s)", xlabel = "Task time (s)")
-    g.set(ylabel = "WTW (s)", xlabel = "Task time (s)")
-    plt.legend(labels=["emp"] + methods)
+    g.map(sns.lineplot, "time", "wtw", palette  = palette)
+    g.set(ylim=(3, 10), ylabel = "WTW (s)", xlabel = "Task time (min)")
+    plt.legend(labels=["Observed"] + methods)
     axs = g.axes_dict.values()
     for i, ax in enumerate(axs):
         ax.set_title("SESS%d"%(i+1))
-        ax.axvline(expParas.blocksec, color = "grey", linestyle = "dashed")
+        ax.axvline(expParas.blocksec/60, color = "grey", linestyle = "dashed")
     return g
 
 def plot_group_emp_rep(modelname, rep_sess1, rep_sess2, emp_sess1, emp_sess2):

@@ -116,7 +116,7 @@ if (sys.nframe() == 0){
 }
 expname = "active"
 sess = 2
-modelName = "QL2reset_simple"
+modelName = "QL2reset_FL1"
 isFirstFit = TRUE
 fit_method = "whole"
 batchIdx = NULL

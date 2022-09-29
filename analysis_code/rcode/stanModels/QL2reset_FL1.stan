@@ -97,8 +97,7 @@ transformed parameters{
     V0_[tIdx+1] = V0;
   }
 
-  // reset
-  V0 = V0_ini; 
+  // reset Qwaits based on the current estimate of V0
   for(i in 1 : nWaitOrQuit){
     Qwaits[i] = - tWaits[i] * 0.1 + eta + V0;
   }
@@ -197,3 +196,4 @@ generated quantities {
   // calculate total log likelihood
   totalLL =sum(log_lik);
 }
+
