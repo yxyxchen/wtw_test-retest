@@ -7,7 +7,7 @@
   # config: a list containing the Rstab configuration 
   # outputFile: filename to save the data
 
-modelFitSingle = function(id, thisTrialData, modelName, paraNames, model, config, outputFile){
+modelFitSingle = function(id, thisTrialData, modelName, paraNames, model, config, outputFile, stepSec = 0.5){
     # load experiment constants 
     load('expParas.RData')
     
@@ -20,7 +20,7 @@ modelFitSingle = function(id, thisTrialData, modelName, paraNames, model, config
     warningFile = config[['warningFile']] # output file for stan warnings and errors
     
     # analysis constants 
-    stepSec = 0.5  # duration of one time step 
+    # stepSec = 0.5  # duration of one time step
     iti = 1.5  # duration of iti # I need to change the ITI 
     
     # prepare inputs for fitting the model

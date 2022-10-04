@@ -39,7 +39,7 @@ transformed parameters{
   real alpha = (raw_alpha + 0.5) * 0.3; // alpha ~ unif(0, 0.3)
   real alphaU = min([alpha * (raw_nu + 0.5) * 5, 1]');// alphaU
   real nu = alphaU / alpha;
-  real tau = (raw_tau + 0.5) * 21.9 + 0.1; // tau ~ unif(0.1, 22)
+  real tau = (raw_tau + 0.5) * 41.9 + 0.1; // tau ~ unif(0.1, 22)
   real gamma = (raw_gamma + 0.5) * 0.5 + 0.5; // gamma ~ unif(0.5, 1)
   real eta = (raw_eta + 0.5) * 15; // eta ~ unif(0, 15)
   

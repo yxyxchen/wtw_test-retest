@@ -41,7 +41,7 @@ transformed parameters{
   real alpha = (raw_alpha + 0.5) * 0.3; // alpha ~ unif(0, 0.3)
   real alphaU = min([alpha * (raw_nu + 0.5) * 5, 1]');// alphaU
   real nu = alphaU / alpha;
-  real tau = (raw_tau + 0.5) * 21.9 + 0.1; // tau ~ unif(0.1, 22)
+  real tau = (raw_tau + 0.5) * 41.9 + 0.1; // tau ~ unif(0.1, 22)
   real gamma = (raw_gamma + 0.5) * 0.5 + 0.5; // gamma ~ unif(0.5, 1)
   real eta1 = (raw_eta1 + 0.5) * 15; // eta ~ unif(0, 15)
   real eta2 = (raw_eta2 + 0.5) * 15; // eta ~ unif(0, 15)
@@ -70,69 +70,73 @@ transformed parameters{
   V0_[1] = V0;
  
   //loop over trials
-  for(tIdx in 1 : (N_block1 - 1)){
-    real T = Ts[tIdx]; // this trial ends on t = T
-    int R = Rs[tIdx]; // payoff in this trial
-    int lastDecPoint = nMadeActions[tIdx]; // last decision point in this trial
-    real LR; 
-  
-    // determine the learning rate 
-    if(R > 0){
-      LR = alpha;
-    }else{
-      LR = alphaU;
-    }
-    // update Qwaits towards the discounted returns
-    for(i in 1 : lastDecPoint){
-      real t = tWaits[i]; // time for this decision points 
-      real Gt = exp(log(gamma) * (T - t)) * (R + V0);
-      Qwaits[i] = Qwaits[i] + LR * (Gt - Qwaits[i]);
-    }
+  if(N_block1 > 0){
+    for(tIdx in 1 : (N_block1 - 1)){
+      real T = Ts[tIdx]; // this trial ends on t = T
+      int R = Rs[tIdx]; // payoff in this trial
+      int lastDecPoint = nMadeActions[tIdx]; // last decision point in this trial
+      real LR; 
     
-    // update V0 towards the discounted returns 
-    G0 = exp(log(gamma) * (T - (-iti))) * (R + V0);
-    V0 = V0 + LR * (G0 - V0);
-    
-    // save action values
-    Qwaits_[,tIdx+1] = Qwaits;
-    V0_[tIdx+1] = V0;
+      // determine the learning rate 
+      if(R > 0){
+        LR = alpha;
+      }else{
+        LR = alphaU;
+      }
+      // update Qwaits towards the discounted returns
+      for(i in 1 : lastDecPoint){
+        real t = tWaits[i]; // time for this decision points 
+        real Gt = exp(log(gamma) * (T - t)) * (R + V0);
+        Qwaits[i] = Qwaits[i] + LR * (Gt - Qwaits[i]);
+      }
+      
+      // update V0 towards the discounted returns 
+      G0 = exp(log(gamma) * (T - (-iti))) * (R + V0);
+      V0 = V0 + LR * (G0 - V0);
+      
+      // save action values
+      Qwaits_[,tIdx+1] = Qwaits;
+      V0_[tIdx+1] = V0;
+    }
   }
 
-  // reset
-  V0 = V0_ini; 
-  for(i in 1 : nWaitOrQuit){
-    Qwaits[i] = - tWaits[i] * 0.1 + eta2 + V0;
-  }
-  Qwaits_[,N_block1 + 1] = Qwaits;
-  V0_[N_block1 + 1] = V0; 
-  
-  for(tIdx in (1 + N_block1): (N - 1)){
-    real T = Ts[tIdx]; // this trial ends on t = T
-    int R = Rs[tIdx]; // payoff in this trial
-    int lastDecPoint = nMadeActions[tIdx]; // last decision point in this trial
-    real LR; 
-  
-    // determine the learning rate 
-    if(R > 0){
-      LR = alpha;
-    }else{
-      LR = alphaU;
+  if (N > N_block1){
+    // reset
+    V0 = V0_ini; 
+    for(i in 1 : nWaitOrQuit){
+      Qwaits[i] = - tWaits[i] * 0.1 + eta2 + V0;
     }
-    // update Qwaits towards the discounted returns
-    for(i in 1 : lastDecPoint){
-      real t = tWaits[i]; // time for this decision points 
-      real Gt = exp(log(gamma) * (T - t)) * (R + V0);
-      Qwaits[i] = Qwaits[i] + LR * (Gt - Qwaits[i]);
+    Qwaits_[,N_block1 + 1] = Qwaits;
+    V0_[N_block1 + 1] = V0; 
+    for(tIdx in (1 + N_block1): (N - 1)){
+      real T = Ts[tIdx]; // this trial ends on t = T
+      int R = Rs[tIdx]; // payoff in this trial
+      int lastDecPoint = nMadeActions[tIdx]; // last decision point in this trial
+      real LR; 
+      
+      // determine the learning rate 
+      if(R > 0){
+        LR = alpha;
+      }else{
+        LR = alphaU;
+      }
+      // update Qwaits towards the discounted returns
+      for(i in 1 : lastDecPoint){
+        real t = tWaits[i]; // time for this decision points 
+        real Gt = exp(log(gamma) * (T - t)) * (R + V0);
+        Qwaits[i] = Qwaits[i] + LR * (Gt - Qwaits[i]);
+      }
+      
+      // update V0 towards the discounted returns 
+      G0 = exp(log(gamma) * (T - (-iti))) * (R + V0);
+      V0 = V0 + LR * (G0 - V0);
+      
+      // save action values
+      Qwaits_[,tIdx+1] = Qwaits;
+      V0_[tIdx+1] = V0;
     }
-    
-    // update V0 towards the discounted returns 
-    G0 = exp(log(gamma) * (T - (-iti))) * (R + V0);
-    V0 = V0 + LR * (G0 - V0);
-    
-    // save action values
-    Qwaits_[,tIdx+1] = Qwaits;
-    V0_[tIdx+1] = V0;
   }
+
 }
 model {
   // delcare variables 

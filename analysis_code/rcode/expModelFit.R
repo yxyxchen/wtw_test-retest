@@ -1,13 +1,13 @@
-expModelFit = function(expname, sess, modelName, isFirstFit, fit_method, batchIdx = NULL, parallel = F){
+expModelFit = function(expname, sess, modelName, isFirstFit, fit_method, stepSec = 0.5, batchIdx = NULL, parallel = F){
   # load experiment parameters
   load("expParas.RData")
-  
+
   # load sub-functions and packages
   library("dplyr"); library("tidyr")
   source("subFxs/loadFxs.R")
   source("subFxs/helpFxs.R")
   source('subFxs/modelFitGroup.R')
-  
+
   # load taskdata 
   allData = loadAllData(expname, sess)
   hdrData = allData$hdrData
@@ -15,20 +15,29 @@ expModelFit = function(expname, sess, modelName, isFirstFit, fit_method, batchId
   
   # set output directory 
   if(fit_method == "whole"){
-    outputDir = sprintf("../../analysis_results/%s/modelfit/%s", expname, modelName)
+    outputDir = sprintf("../../analysis_results/%s/modelfit/whole/stepsize%.2f/%s", expname, stepSec, modelName)
+    dir.create(sprintf("../../analysis_results/%s/modelfit/whole", expname))
+    dir.create(sprintf("../../analysis_results/%s/modelfit/whole/stepsize%.2f", expname, stepSec))
+    dir.create(outputDir)
   }else if(fit_method == 'trct'){
-    outputDir = sprintf("../../analysis_results/%s/modelfit/%s_trct", expname, modelName)
+    outputDir = sprintf("../../analysis_results/%s/modelfit/trct/stepsize%.2f/%s", expname,  stepSec, modelName)
+    dir.create(sprintf("../../analysis_results/%s/modelfit/trct", expname))
+    dir.create(sprintf("../../analysis_results/%s/modelfit/trct/stepsize%.2f", expname, stepSec))
+    dir.create(outputDir)
     # truncate the first half block
     ids = names(trialData)
     nSub = length(ids)
     for(i in 1 : length(ids)){
       id = ids[i]
       thisTrialData = trialData[[id]]
-      thisTrialData = thisTrialData[thisTrialData$trialStartTime >= 300 | thisTrialData$blockNum > 1,]
+      thisTrialData = thisTrialData[thisTrialData$trialStartTime > 30,]
       trialData[[id]] = thisTrialData
     }
   }else if(fit_method == 'onlyLP'){
-    outputDir = sprintf("../../analysis_results/%s/modelfit/%s_%s", expname, modelName, fit_method)
+    outputDir = sprintf("../../analysis_results/%s/modelfit/onlyLP/stepsize%.2f/%s", expname,  stepSec, modelName)
+    dir.create(sprintf("../../analysis_results/%s/modelfit/onlyLP", expname))
+    dir.create(sprintf("../../analysis_results/%s/modelfit/onlyLP/stepsize%.2f", expname, stepSec))
+    dir.create(outputDir)
     # only include the first block 
     ids = names(trialData)
     nSub = length(ids)
@@ -38,17 +47,22 @@ expModelFit = function(expname, sess, modelName, isFirstFit, fit_method, batchId
       thisTrialData = thisTrialData[thisTrialData$condition == "LP",]
       trialData[[id]] = thisTrialData
     }
-  }else if(fit_method == 'onlyHalfLP'){
-    outputDir = sprintf("../../analysis_results/%s/modelfit/%s_%s", expname, modelName, fit_method)
+  }else if(fit_method == 'onlyHP'){
+    outputDir = sprintf("../../analysis_results/%s/modelfit/onlyHP/stepsize%.2f/%s", expname,  stepSec, modelName)
+    dir.create(sprintf("../../analysis_results/%s/modelfit/onlyHP", expname))
+    dir.create(sprintf("../../analysis_results/%s/modelfit/onlyHP/stepsize%.2f", expname, stepSec))
+    dir.create(outputDir)
+    # only include the first block 
     ids = names(trialData)
     nSub = length(ids)
     for(i in 1 : length(ids)){
       id = ids[i]
       thisTrialData = trialData[[id]]
-      thisTrialData = thisTrialData[thisTrialData$condition == "LP" & thisTrialData$trialStartTime <300,]
+      thisTrialData = thisTrialData[thisTrialData$condition == "HP",]
       trialData[[id]] = thisTrialData
     }
   }
+  
   dir.create(sprintf("../../analysis_results/%s/modelfit", expname), showWarnings = FALSE)
   dir.create(outputDir, showWarnings = FALSE)
   
@@ -101,7 +115,7 @@ expModelFit = function(expname, sess, modelName, isFirstFit, fit_method, batchId
   }
 
   # fit the model for all participants
-  modelFitGroup(sess, modelName, trialData, config, outputDir, parallel = parallel, isTrct = T)
+  modelFitGroup(sess, modelName, trialData, stepSec, config, outputDir, parallel = parallel, isTrct = T)
 }
 
 ############## main script ##############
@@ -110,15 +124,16 @@ if (sys.nframe() == 0){
   print(args)
   # print(length(args))
   # print(args[1])
-  if(length(args) == 6){
-    expModelFit(args[1], as.numeric(args[2]), args[3], as.logical(args[4]), args[5], as.numeric(args[6]))
+  if(length(args) == 7){
+    expModelFit(args[1], as.numeric(args[2]), args[3], as.logical(args[4]), args[5], as.numeric(args[6]), as.numeric(args[7]))
   }
 }
-expname = "active"
+expname = "passive"
 sess = 2
 modelName = "QL2reset_FL1"
 isFirstFit = TRUE
-fit_method = "whole"
+fit_method = "trct"
 batchIdx = NULL
-parallel = F
+parallel = FALSE
+stepSec = 0.50
 

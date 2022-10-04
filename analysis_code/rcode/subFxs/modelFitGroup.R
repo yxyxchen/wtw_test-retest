@@ -13,7 +13,7 @@
 # max_treedepth: maximal depth of the trees that stan evaluates during each iteration
 # warningFile : file for saving warnings generated Rstan
 
-modelFitGroup = function(sess, modelName, trialData, config, outputDir, parallel, isTrct = T){
+modelFitGroup = function(sess, modelName, trialData, stepSec, config, outputDir, parallel, isTrct = T){
   # create the output directory 
   dir.create(outputDir)
  
@@ -28,8 +28,8 @@ modelFitGroup = function(sess, modelName, trialData, config, outputDir, parallel
   
   # compile the Rstan model 
   options(warn= 1) 
-  #Sys.setenv(USE_CXX14=1) # settings for the local PC
-  rstan_options(auto_write = TRUE) 
+  Sys.setenv(USE_CXX14=1) 
+  # rstan_options(auto_write = TRUE) 
   model = stan_model(file = sprintf("stanModels/%s.stan", modelName))
 
   # determine parameters 
@@ -40,8 +40,8 @@ modelFitGroup = function(sess, modelName, trialData, config, outputDir, parallel
   nSub = length(ids)                    
   
   # parallel compuation settings
-  nCore = as.numeric(Sys.getenv("NSLOTS")) # settings for SCC
-  if(is.na(nCore)) nCore = 1 # settings for SCC
+  nCore = as.numeric(Sys.getenv("NSLOTS")) 
+  if(is.na(nCore)) nCore = 1 # NA for local computers and scc cluster
   if(parallel){
     nCore = parallel::detectCores() -1 # settings for the local PC
     registerDoMC(nCore) # settings for the local PC
@@ -58,6 +58,6 @@ modelFitGroup = function(sess, modelName, trialData, config, outputDir, parallel
         thisTrialData = thisTrialData[!(1 : nrow(thisTrialData)) %in% excludedTrials,]
       }
       outputFile = sprintf("%s/%s_sess%d", outputDir, id, sess)
-      modelFitSingle(id, thisTrialData, modelName, paraNames, model, config, outputFile)
+      modelFitSingle(id, thisTrialData, modelName, paraNames, model, config, outputFile, stepSec)
   }
 }
