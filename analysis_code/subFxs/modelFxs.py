@@ -161,7 +161,7 @@ def ind_model_rep(modelname, paras, trialdata, key, nsim, plot_each):
 
 #############
 # hmm I kinda want to rewrite it later, ... but whatever
-def group_model_rep(trialdata_, paradf, modelname, isTrct = True, plot_each = False):
+def group_model_rep(trialdata_, paradf, modelname, fitMethod, stepsize, isTrct = True, plot_each = False):
     # set random seed
     random.seed(10)
 
@@ -173,6 +173,7 @@ def group_model_rep(trialdata_, paradf, modelname, isTrct = True, plot_each = Fa
     WTW_ = []
     # loop over participants
     for key, trialdata in trialdata_.items():
+        print(key)
         # code.interact(local = dict(locals(), **globals()))
         # try:
         #     fit_summary = pd.read_csv(os.path.join('..', 'analysis_results', expname, 'modelfit', modelname, '%s_sess%s_summary.txt'%key), header = None)
@@ -198,6 +199,8 @@ def group_model_rep(trialdata_, paradf, modelname, isTrct = True, plot_each = Fa
         if isTrct:        
             trialdata = trialdata[trialdata.sellTime <= expParas.blocksec - np.max(expParas.tMaxs)]
 
+        if fitMethod == 'trct':
+            trialdata = trialdata[trialdata.trialStartTime > 30]
         # replicate original behaviors
         paras = dict(zip(paranames, paravals))
         if plot_each:

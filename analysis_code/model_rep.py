@@ -71,7 +71,7 @@ def generate_output_dirs(expname):
 # generate output directories
 # I probably want to make this part easier 
 expname = 'passive'
-generate_output_dirs(expname)
+# generate_output_dirs(expname)
 
 # load data 
 s1_selfdf = loadFxs.parse_group_selfreport(expname, 1, isplot = False)
@@ -80,34 +80,37 @@ hdrdata_sess2, trialdata_sess2_ = loadFxs.group_quality_check(expname, 2, plot_q
 s1_stats, s1_Psurv_b1_, s1_Psurv_b2_, s1_WTW_emp = analysisFxs.group_MF(trialdata_sess1_, plot_each = False)   
 s2_stats, s2_Psurv_b1_, s2_Psurv_b2_, s2_WTW_emp = analysisFxs.group_MF(trialdata_sess2_, plot_each = False)   
 
-modelnames = ['QL2', 'QL2reset_FL2']
+modelnames = ['QL2reset_FL2']
+modelname = 'QL2reset_FL3'
+fitMethod = "whole"
+stepsize = 0.5
 s1_WTW_rep_ = []
 s2_WTW_rep_ = []
 s1_paradf_ = []
 s2_paradf_ = []
 for modelname in modelnames:
-    s1_paradf = loadFxs.load_parameter_estimates(expname, 1, hdrdata_sess1, modelname, modelname)
-    s2_paradf = loadFxs.load_parameter_estimates(expname, 2, hdrdata_sess2, modelname, modelname)
-    s1_paradf_.append(s1_paradf)
-    s2_paradf_.append(s2_paradf)
-    s1_stats_rep, s1_WTW_rep = modelFxs.group_model_rep(trialdata_sess1_, s1_paradf, modelname, isTrct = True, plot_each = False)
-    s2_stats_rep, s2_WTW_rep = modelFxs.group_model_rep(trialdata_sess2_, s2_paradf, modelname, isTrct = True, plot_each = False)
-    s1_WTW_rep_.append(s1_WTW_rep)
-    s2_WTW_rep_.append(s2_WTW_rep)
-    s1_stats_rep.to_csv(os.path.join('..', 'analysis_results', expname, 'taskstats', 'rep_%s_sess1.csv'%modelname), index = None)
-    s2_stats_rep.to_csv(os.path.join('..', 'analysis_results', expname, 'taskstats', 'rep_%s_sess2.csv'%modelname), index = None)
-    #s1_stats_rep = pd.read_csv(os.path.join('..', 'analysis_results', expname, 'taskstats', 'rep_%s_sess1.csv'%modelname))
-    #s2_stats_rep = pd.read_csv(os.path.join('..', 'analysis_results', expname, 'taskstats', 'rep_%s_sess2.csv'%modelname))
-    # plot replication 
+s1_paradf = loadFxs.load_parameter_estimates(expname, 1, hdrdata_sess1, modelname, fitMethod, stepsize)
+s2_paradf = loadFxs.load_parameter_estimates(expname, 2, hdrdata_sess2, modelname, fitMethod, stepsize)
+s1_paradf_.append(s1_paradf)
+s2_paradf_.append(s2_paradf)
+s1_stats_rep, s1_WTW_rep = modelFxs.group_model_rep(trialdata_sess1_, s1_paradf, modelname, 'whole', 0.5, isTrct = True, plot_each = False)
+s2_stats_rep, s2_WTW_rep = modelFxs.group_model_rep(trialdata_sess2_, s2_paradf, modelname, 'whole', 0.5, isTrct = True, plot_each = False)
+s1_WTW_rep_.append(s1_WTW_rep)
+s2_WTW_rep_.append(s2_WTW_rep)
+s1_stats_rep.to_csv(os.path.join('..', 'analysis_results', expname, 'taskstats', 'rep_%s_sess1_%s_stepsize%.2f.csv'%(modelname, fitMethod, stepsize)), index = None)
+s2_stats_rep.to_csv(os.path.join('..', 'analysis_results', expname, 'taskstats', 'rep_%s_sess2_%s_stepsize%.2f.csv'%(modelname, fitMethod, stepsize)), index = None)
+#s1_stats_rep = pd.read_csv(os.path.join('..', 'analysis_results', expname, 'taskstats', 'rep_%s_sess1.csv'%modelname))
+#s2_stats_rep = pd.read_csv(os.path.join('..', 'analysis_results', expname, 'taskstats', 'rep_%s_sess2.csv'%modelname))
+# plot replication 
 sns.set(font_scale = 2)
 sns.set_style("white")
-figFxs.plot_group_emp_rep_wtw(modelname, s1_WTW_rep_[1], s2_WTW_rep_[1], s1_WTW_emp, s2_WTW_emp, hdrdata_sess1, hdrdata_sess2, s1_paradf, s2_paradf)
+figFxs.plot_group_emp_rep_wtw(modelname, s1_WTW_rep, s2_WTW_rep, s1_WTW_emp, s2_WTW_emp, hdrdata_sess1, hdrdata_sess2, s1_paradf, s2_paradf)
 plt.tight_layout()
 plt.gcf().set_size_inches(12, 6)
-plt.savefig(os.path.join("..", "figures", expname, "emp_rep_%s_wtw.pdf"%modelname))
-    figFxs.plot_group_emp_rep(modelname, s1_stats_rep, s2_stats_rep, s1_stats, s2_stats)
-    plt.gcf().set_size_inches(10, 6)
-    plt.savefig(os.path.join("..", "figures", expname, "emp_rep_%s.pdf"%modelname))
+plt.savefig(os.path.join("..", "figures", expname, "emp_rep_%s_wtw_%s_stepsize%.2f.pdf"%(modelname, fitMethod, stepsize)))
+figFxs.plot_group_emp_rep(modelname, s1_stats_rep, s2_stats_rep, s1_stats, s2_stats)
+plt.gcf().set_size_inches(10, 6)
+plt.savefig(os.path.join("..", "figures", expname, "emp_rep_%s_%s_stepsize%.2f.pdf"%(modelname, fitMethod, stepsize)))
 
 
 methods = ['QL2', 'QL2_reset']

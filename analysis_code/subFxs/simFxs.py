@@ -41,9 +41,8 @@ def QLreset_initialize(ts, paras, Qquit, FL):
 		paras: a dictionary of parameters
 		FL: freedom level. FL = 1, only reset Qwaits. FL = 2, reset both Qwaits and Quit. FL = 3, reset both with separate parameters
 	"""
-	if FL > 1:
-		Qquit = np.mean(expParas.optimRewardRates) / 0.15
-	if FL < 3:
+	Qquit = np.mean(expParas.optimRewardRates) / 0.15
+	if FL == 2:
 		Qwaits = -0.1 * ts + paras['eta'] + Qquit
 	if FL == 3:
 		Qwaits = -0.1 * ts + paras['eta2'] + Qquit
@@ -65,7 +64,9 @@ def QL2_learn(Qwaits, Qquit, ts, timeWaited, trialEarnings, paras, empirical_iti
 	"""
 	# update Qwaits
 	Gts = np.exp(np.log(paras['gamma']) * (timeWaited - ts)) * (trialEarnings + Qquit)
-	update_filter = ts <= timeWaited
+	# here is the problem maybe?
+	# let me check later...
+	update_filter = ts < timeWaited
 	if trialEarnings > 0:
 		Qwaits[update_filter] = Qwaits[update_filter] + paras['alpha'] * (Gts[update_filter] - Qwaits[update_filter])
 	else:
@@ -93,7 +94,7 @@ def QL1_learn(Qwaits, Qquit, ts, timeWaited, trialEarnings, paras, empirical_iti
 	"""
 	# update Qwaits
 	Gts = np.exp(np.log(paras['gamma']) * (timeWaited - ts)) * (trialEarnings + Qquit)
-	update_filter = ts <= timeWaited
+	update_filter = ts < timeWaited
 	Qwaits[update_filter] = Qwaits[update_filter] + paras['alpha'] * (Gts[update_filter] - Qwaits[update_filter])
 
 	# update Qquit
@@ -116,7 +117,7 @@ def RL1_learn(Qwaits, Qquit, reward_rate, ts, timeWaited, trialEarnings, paras, 
 	"""
 	# update Qwaits
 	Gts = - reward_rate * (timeWaited - ts) + (trialEarnings + Qquit)
-	update_filter = ts <= timeWaited
+	update_filter = ts < timeWaited
 	Qwaits[update_filter] = Qwaits[update_filter] + paras['alpha'] * (Gts[update_filter] - Qwaits[update_filter])
 
 
@@ -145,7 +146,7 @@ def RL2_learn(Qwaits, Qquit, reward_rate, ts, timeWaited, trialEarnings, paras, 
 	"""
 	# update Qwaits
 	Gts = - reward_rate * (timeWaited - ts) + (trialEarnings + Qquit)
-	update_filter = ts <= timeWaited
+	update_filter = ts < timeWaited
 	if trialEarnings > 0:
 		Qwaits[update_filter] = Qwaits[update_filter] + paras['alpha'] * (Gts[update_filter] - Qwaits[update_filter])
 	else:
@@ -196,7 +197,7 @@ def ind_sim(modelname, paras, condition_, blockIdx_, scheduledDelay_, scheduledR
 			elapsedTime = 0
 
 		if blockIdx_[tIdx - 1] != blockIdx_[tIdx]:
-			if re.search( 'reset', modelname):
+			if re.search('reset', modelname):
 				Qwaits, Qquit = QLreset_initialize(ts, paras, Qquit, FL = int(modelname[-1]))
 
 		t = 0
@@ -219,7 +220,7 @@ def ind_sim(modelname, paras, condition_, blockIdx_, scheduledDelay_, scheduledR
 
 			if action == 'quit':
 				trialEarnings = 0
-				timeWaited = t
+				timeWaited = t + 0.5 * expParas.stepsize
 				exit_status = True
 
 			# save trial-wise outputs if exists

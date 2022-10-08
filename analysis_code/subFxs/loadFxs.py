@@ -246,14 +246,14 @@ def parse_group_selfreport(expname, sess, isplot):
 
 # Maybe I need a function to load MCQ
 ############################## load model parameter estimates######################
-def load_parameter_estimates(expname, sess, hdrdata, modelname, foldername):
+def load_parameter_estimates(expname, sess, hdrdata, modelname, fitMethod, stepSec):
     paranames = modelFxs.getModelParas(modelname)
-
+    print(os.path.join("..", "analysis_results", expname, "modelfit", fitMethod, 'stepsize%.2f'%stepSec, modelname))
     paradf = []
     for i, subj_id in enumerate(hdrdata['id']):
         # load parameter estimates
         try:
-            fit_summary = pd.read_csv(os.path.join("..", "analysis_results", expname, "modelfit", foldername, '%s_sess%d_summary.txt'%(subj_id, sess)), header = None)
+            fit_summary = pd.read_csv(os.path.join("..", "analysis_results", expname, "modelfit", fitMethod, 'stepsize%.2f'%stepSec, modelname, '%s_sess%d_summary.txt'%(subj_id, sess)), header = None)
         except:
             print("can't find the file for %s, sess%d"%(subj_id, sess))
             continue
@@ -269,7 +269,7 @@ def load_parameter_estimates(expname, sess, hdrdata, modelname, foldername):
 
         # load waic 
         try:
-            robjects.r['load'](os.path.join("..", "analysis_results", expname, "modelfit", foldername, '%s_sess%d_waic.RData'%(subj_id, sess)))
+            robjects.r['load'](os.path.join("..", "analysis_results", expname, "modelfit", fitMethod, 'stepsize%.2f'%stepSec, modelname, '%s_sess%d_waic.RData'%(subj_id, sess)))
             waic = robjects.r['WAIC'][4][0]
         except:
             print("can't find the WAIC file for %s, sess%d"%(subj_id, sess))

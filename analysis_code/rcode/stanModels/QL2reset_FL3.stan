@@ -41,10 +41,10 @@ transformed parameters{
   real alpha = (raw_alpha + 0.5) * 0.3; // alpha ~ unif(0, 0.3)
   real alphaU = min([alpha * (raw_nu + 0.5) * 5, 1]');// alphaU
   real nu = alphaU / alpha;
-  real tau = (raw_tau + 0.5) * 41.9 + 0.1; // tau ~ unif(0.1, 22)
+  real tau = (raw_tau + 0.5) * 41.9 + 0.1; // tau ~ unif(0.1, 42)
   real gamma = (raw_gamma + 0.5) * 0.5 + 0.5; // gamma ~ unif(0.5, 1)
   real eta1 = (raw_eta1 + 0.5) * 15; // eta ~ unif(0, 15)
-  real eta2 = (raw_eta2 + 0.5) * 15; // eta ~ unif(0, 15)
+  real eta2 = (raw_eta2 + 0.5) * 15; // eta ~ unif(0, 15
   // declare variables 
   // // state value of t = 0
   real V0; 
@@ -99,8 +99,8 @@ transformed parameters{
       V0_[tIdx+1] = V0;
     }
   }
-
-  if (N > N_block1){
+  
+  if(N > N_block1){
     // reset
     V0 = V0_ini; 
     for(i in 1 : nWaitOrQuit){
@@ -108,12 +108,13 @@ transformed parameters{
     }
     Qwaits_[,N_block1 + 1] = Qwaits;
     V0_[N_block1 + 1] = V0; 
+    
     for(tIdx in (1 + N_block1): (N - 1)){
       real T = Ts[tIdx]; // this trial ends on t = T
       int R = Rs[tIdx]; // payoff in this trial
       int lastDecPoint = nMadeActions[tIdx]; // last decision point in this trial
       real LR; 
-      
+    
       // determine the learning rate 
       if(R > 0){
         LR = alpha;
@@ -136,7 +137,6 @@ transformed parameters{
       V0_[tIdx+1] = V0;
     }
   }
-
 }
 model {
   // delcare variables 
@@ -148,7 +148,7 @@ model {
   raw_tau ~ uniform(-0.5, 0.5);
   raw_gamma ~ uniform(-0.5, 0.5);
   raw_eta1 ~ uniform(-0.5, 0.5);
-  raw_eta2 ~ uniform(-0.5, 0.5); 
+  raw_eta2 ~ uniform(-0.5, 0.5);
   // loop over trials
   for(tIdx in 1 : N){
     real T = Ts[tIdx]; // this trial ends on t = T
@@ -202,3 +202,4 @@ generated quantities {
   // calculate total log likelihood
   totalLL =sum(log_lik);
 }
+
