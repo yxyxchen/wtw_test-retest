@@ -22,17 +22,27 @@ import importlib
 import random
 
 
-def pivot_by_condition(df, columns, index):
+def agg_across_sessions(s1_df, s2_df):
+    """ average data across sessions
+    """
+    df = pd.concat([s1_df[np.isin(s1_df.id, s2_df)], s2_df], axis = 0)
+    # make it better later
+    outdf = df.groupby("id").mean().reset_index()
+    return outdf
+
+
+def pivot_by_condition(df):
     """ pivot a table of summary statistics based on condition 
     """
-    if "id" not in index:
-        print("Please always include 'id' in index!")
-        return 
     # code.interact(local = dict(locals(), **globals()))
+    columns = ['auc', 'std_wtw']
+    index = ['id']
     HP_df = df.loc[df['condition'] == 'HP', columns + index]
-    LP_df = df.loc[df['condition'] == 'LP', columns+ index]
+    LP_df = df.loc[df['condition'] == 'LP', columns + index]
     out_df = HP_df.merge(LP_df, left_on = index, right_on = index, suffixes = ['_HP', "_LP"])
-    out_df = pd.concat([out_df, out_df.filter(like='HP', axis=1).set_axis([x+'_delta' for x in columns], axis = 1) - out_df.filter(like='LP', axis=1).set_axis([x+'_delta' for x in columns], axis = 1)], axis = 1)
+    out_df['auc_delta'] = out_df['auc_HP'] - out_df['auc_LP']
+    out_df['auc'] = (out_df['auc_HP'] + out_df['auc_LP']) / 2
+    out_df['std_wtw'] = (out_df['std_wtw_HP']**2 / 2 + out_df['std_wtw_LP']**2 / 2)**0.5
     return out_df
 
 def calc_se(x):
@@ -964,12 +974,12 @@ def group_sim_MF(simdata_, empdata, plot_each = False):
     # loop over participants 
     for i, simdata in enumerate(simdata_):
         if plot_each:
-            stats, objs  = stats, objs  = ind_sim_MF(simdata, empdata, 'sim_%d'%i, plot_trial = True, plot_KMSC = False, plot_WTW = True)
+            stats, objs  = ind_sim_MF(simdata, empdata, 'sim_%d'%i, plot_trial = True, plot_KMSC = False, plot_WTW = True)
             plt.show()
             input("Press Enter to continue...")
             plt.clf()
         else:
-            stats, objs  = stats, objs  = ind_sim_MF(simdata, empdata, 'sim_%d'%i)
+            stats, objs  = ind_sim_MF(simdata, empdata, 'sim_%d'%i)
         
         # append data
         stats_.append(stats)

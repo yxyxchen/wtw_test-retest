@@ -78,6 +78,10 @@ expModelFit = function(expname, sess, modelName, isFirstFit, fit_method, stepSec
       max_treedepth = 11,
       warningFile = sprintf("stanWarnings/exp_%s.txt", modelName)
     )
+    # load
+    existing_files = list.files(sprintf("../../analysis_results/%s/modelfit/%s/stepsize%.2f/%s", expname, fit_method, stepSec, modelName),
+                        pattern = sprintf("sess%d_summary.txt", sess))
+    existing_ids = substr(existing_files, 1, 5)
     # divide data into small batches if batchIdx exists 
     if(!is.null(batchIdx)){
       nSub = length(trialData)
@@ -89,7 +93,9 @@ expModelFit = function(expname, sess, modelName, isFirstFit, fit_method, stepSec
       }else if(batchIdx == 3){
         trialData = trialData[(batchsize * 2 + 1) : nSub]
       }
+      trialData = trialData[!(names(trialData) %in%  existing_ids)]
     }
+    
   }
   # if it is the first time to fit the model, fit all participants
   # otherwise, check model fitting results and refit those that fail any of the following criteria
@@ -130,9 +136,9 @@ if (sys.nframe() == 0){
 }
 expname = "passive"
 sess = 2
-modelName = "QL2reset_FL1"
+modelName = "QL2reset_FL2"
 isFirstFit = TRUE
-fit_method = "trct"
+fit_method = "whole"
 batchIdx = NULL
 parallel = FALSE
 stepSec = 0.50

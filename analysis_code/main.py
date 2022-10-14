@@ -601,7 +601,7 @@ if __name__ == "__main__":
         s2_df[var + '_ave'] = (s2_df.apply(func = lambda x: x[var + '_HP'] + x[var + '_LP'], axis = 1)) / 2
 
     # add std_wtw_ave
-    std_vars = ['std_wtw_mw', "std_wtw"]
+    std_vars = ["std_wtw"]
     for var in std_vars:
         s1_df[var + '_ave'] = s1_df.apply(func = lambda x: (x[var + '_HP']**2 / 2 + x[var + '_LP']**2 / 2) ** 0.5, axis = 1)
         s2_df[var + '_ave'] = s2_df.apply(func = lambda x: (x[var + '_HP']**2 / 2 + x[var + '_LP']**2 / 2) ** 0.5, axis = 1)

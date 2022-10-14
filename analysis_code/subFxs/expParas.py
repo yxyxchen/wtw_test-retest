@@ -42,8 +42,5 @@ optimWaitThresholds = [12, delayPossVals[1][3]]
 optimRewardRates = [2 / (np.mean(expParas.delayPossVals[0]) + expParas.iti),\
 					1 / (0.5 * delayPossVals[1][3] + 0.5 * np.mean(delayPossVals[1][:4]) + 1.5)]
 
-# modeling parameters 
-stepsize = 0.5
-
 # 
 selfreport_vars = ['NU', 'PU', 'PM', 'PS', 'SS', 'attention', 'cogstable', 'motor', 'perseverance', 'selfcontrol', 'cogcomplex', 'UPPS', 'BIS', 'GMK'] 

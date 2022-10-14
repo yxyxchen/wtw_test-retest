@@ -74,13 +74,12 @@ expname = 'passive'
 # generate_output_dirs(expname)
 
 # load data 
-s1_selfdf = loadFxs.parse_group_selfreport(expname, 1, isplot = False)
-hdrdata_sess1, trialdata_sess1_ = loadFxs.group_quality_check(expname, 1, plot_quality_check = True)
-hdrdata_sess2, trialdata_sess2_ = loadFxs.group_quality_check(expname, 2, plot_quality_check = True)
+hdrdata_sess1, trialdata_sess1_ = loadFxs.group_quality_check(expname, 1, plot_quality_check = False)
+hdrdata_sess2, trialdata_sess2_ = loadFxs.group_quality_check(expname, 2, plot_quality_check = False)
 s1_stats, s1_Psurv_b1_, s1_Psurv_b2_, s1_WTW_emp = analysisFxs.group_MF(trialdata_sess1_, plot_each = False)   
 s2_stats, s2_Psurv_b1_, s2_Psurv_b2_, s2_WTW_emp = analysisFxs.group_MF(trialdata_sess2_, plot_each = False)   
 
-modelnames = ['QL2reset_FL2']
+modelnames = ['QL2reset_FL3']
 modelname = 'QL2reset_FL3'
 fitMethod = "whole"
 stepsize = 0.5
@@ -93,8 +92,8 @@ s1_paradf = loadFxs.load_parameter_estimates(expname, 1, hdrdata_sess1, modelnam
 s2_paradf = loadFxs.load_parameter_estimates(expname, 2, hdrdata_sess2, modelname, fitMethod, stepsize)
 s1_paradf_.append(s1_paradf)
 s2_paradf_.append(s2_paradf)
-s1_stats_rep, s1_WTW_rep = modelFxs.group_model_rep(trialdata_sess1_, s1_paradf, modelname, 'whole', 0.5, isTrct = True, plot_each = False)
-s2_stats_rep, s2_WTW_rep = modelFxs.group_model_rep(trialdata_sess2_, s2_paradf, modelname, 'whole', 0.5, isTrct = True, plot_each = False)
+s1_stats_rep, s1_WTW_rep = modelFxs.group_model_rep(trialdata_sess1_, s1_paradf, modelname, 'whole', stepsize, isTrct = True, plot_each = False)
+s2_stats_rep, s2_WTW_rep = modelFxs.group_model_rep(trialdata_sess2_, s2_paradf, modelname, 'whole', stepsize, isTrct = True, plot_each = False)
 s1_WTW_rep_.append(s1_WTW_rep)
 s2_WTW_rep_.append(s2_WTW_rep)
 s1_stats_rep.to_csv(os.path.join('..', 'analysis_results', expname, 'taskstats', 'rep_%s_sess1_%s_stepsize%.2f.csv'%(modelname, fitMethod, stepsize)), index = None)
@@ -120,20 +119,29 @@ plt.savefig(os.path.join("..", "figures", expname, "emp_rep_multi.pdf"))
 
 # compare parameter reliabiliy
 subtitles = [r'$\mathbf{log(\alpha)}$', r'$\mathbf{\nu}$', r'$\mathbf{\tau}$', r'$\mathbf{\gamma}$', r'$\mathbf{log(\eta)}$']
-for modelname in modelnames:
-    sns.set(font_scale = 1)
-    sns.set_style('white')
-s1_paradf = loadFxs.load_parameter_estimates(expname, 1, hdrdata_sess1, modelname, modelname)
-s2_paradf = loadFxs.load_parameter_estimates(expname, 2, hdrdata_sess2, modelname, modelname)
 paranames = modelFxs.getModelParas(modelname)
 npara = len(paranames)
 # plot parameter distributions
 figFxs.plot_parameter_distribution(modelname, s1_paradf.iloc[:,:-1], s2_paradf.iloc[:,:-1])
 plt.gcf().set_size_inches(5 * npara, 5 * 2)
-plt.savefig(os.path.join("..", 'figures', expname, "%s_para_dist.pdf"%modelname))
+plt.savefig(os.path.join("..", 'figures', expname, "%s_%s_stepsize%.2f_para_dist.pdf"%(modelname, fitMethod, stepsize)))
 # plot parameter correlations
 figFxs.plot_parameter_reliability(modelname, s1_paradf.iloc[:,:-1], s2_paradf.iloc[:,:-1], subtitles)
 plt.gcf().set_size_inches(5 * npara, 5)
-plt.savefig(os.path.join("..", 'figures', expname, "%s_para_reliability.pdf"%modelname))
+plt.savefig(os.path.join("..", 'figures', expname, "%s_%s_stepsize%.2f_para_reliability.pdf"%(modelname, fitMethod, stepsize)))
 
-    # pd.merge(s1_paradf, s2_paradf, how = 'inner', on = 'id')
+
+# is the reliability superficial? 
+a = pd.merge(s1_paradf, s1_stats, how = 'inner', on = 'id')
+spearmanr(a.loc[a.block == 1, 'tau'], a.loc[a.block == 1, 'auc'])
+spearmanr(a.loc[a.block == 2, 'tau'], a.loc[a.block == 2, 'auc'])
+# .... hmmm
+spearmanr(a.loc[a.block == 1, 'std_wtw'], a.loc[a.block == 1, 'tau'])
+spearmanr(a.loc[a.block == 2, 'std_wtw'], a.loc[a.block == 2, 'tau'])
+
+# prior has high correlation with AUC
+
+
+
+
+
