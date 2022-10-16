@@ -79,23 +79,23 @@ hdrdata_sess2, trialdata_sess2_ = loadFxs.group_quality_check(expname, 2, plot_q
 s1_stats, s1_Psurv_b1_, s1_Psurv_b2_, s1_WTW_emp = analysisFxs.group_MF(trialdata_sess1_, plot_each = False)   
 s2_stats, s2_Psurv_b1_, s2_Psurv_b2_, s2_WTW_emp = analysisFxs.group_MF(trialdata_sess2_, plot_each = False)   
 
-modelnames = ['QL2reset_FL3']
-modelname = 'QL2reset_FL3'
+# modelnames = ['QL2reset_FL3']
+modelname = 'QL2reset_FL2'
 fitMethod = "whole"
 stepsize = 0.5
-s1_WTW_rep_ = []
-s2_WTW_rep_ = []
-s1_paradf_ = []
-s2_paradf_ = []
-for modelname in modelnames:
+# s1_WTW_rep_ = []
+# s2_WTW_rep_ = []
+# s1_paradf_ = []
+# s2_paradf_ = []
+# for modelname in modelnames:
 s1_paradf = loadFxs.load_parameter_estimates(expname, 1, hdrdata_sess1, modelname, fitMethod, stepsize)
 s2_paradf = loadFxs.load_parameter_estimates(expname, 2, hdrdata_sess2, modelname, fitMethod, stepsize)
-s1_paradf_.append(s1_paradf)
-s2_paradf_.append(s2_paradf)
-s1_stats_rep, s1_WTW_rep = modelFxs.group_model_rep(trialdata_sess1_, s1_paradf, modelname, 'whole', stepsize, isTrct = True, plot_each = False)
-s2_stats_rep, s2_WTW_rep = modelFxs.group_model_rep(trialdata_sess2_, s2_paradf, modelname, 'whole', stepsize, isTrct = True, plot_each = False)
-s1_WTW_rep_.append(s1_WTW_rep)
-s2_WTW_rep_.append(s2_WTW_rep)
+# s1_paradf_.append(s1_paradf)
+# s2_paradf_.append(s2_paradf)
+s1_stats_rep, s1_WTW_rep, s1_dist_vals_ = modelFxs.group_model_rep(trialdata_sess1_, s1_paradf, modelname, 'whole', stepsize, isTrct = True, plot_each = False)
+s2_stats_rep, s2_WTW_rep, s2_dist_vals_ = modelFxs.group_model_rep(trialdata_sess2_, s2_paradf, modelname, 'whole', stepsize, isTrct = True, plot_each = False)
+# s1_WTW_rep_.append(s1_WTW_rep)
+# s2_WTW_rep_.append(s2_WTW_rep)
 s1_stats_rep.to_csv(os.path.join('..', 'analysis_results', expname, 'taskstats', 'rep_%s_sess1_%s_stepsize%.2f.csv'%(modelname, fitMethod, stepsize)), index = None)
 s2_stats_rep.to_csv(os.path.join('..', 'analysis_results', expname, 'taskstats', 'rep_%s_sess2_%s_stepsize%.2f.csv'%(modelname, fitMethod, stepsize)), index = None)
 #s1_stats_rep = pd.read_csv(os.path.join('..', 'analysis_results', expname, 'taskstats', 'rep_%s_sess1.csv'%modelname))
@@ -110,13 +110,82 @@ plt.savefig(os.path.join("..", "figures", expname, "emp_rep_%s_wtw_%s_stepsize%.
 figFxs.plot_group_emp_rep(modelname, s1_stats_rep, s2_stats_rep, s1_stats, s2_stats)
 plt.gcf().set_size_inches(10, 6)
 plt.savefig(os.path.join("..", "figures", expname, "emp_rep_%s_%s_stepsize%.2f.pdf"%(modelname, fitMethod, stepsize)))
+# plot dist distributions 
+s1_dist_vals = s1_dist_vals_.mean(axis = 1)
+s1_dist_grand_median = np.median(s1_dist_vals_)
+# median of median; 805.9735405000001
+# mean of median: 810.8283439999999
+s1_dist_grand_median_ = np.median(s1_dist_vals_, axis = 0)
+# 
+s1_ntrial_vals = [y.shape[0] for x, y in zip(hdrdata_sess1.id, trialdata_sess1_.values()) if np.isin(x, s1_paradf['id'])]
+plt.scatter(s1_ntrial_vals, s1_dist_vals) ... # hmmm I am not sure ... let's use this temperally 
 
 
-methods = ['QL2', 'QL2_reset']
-figFxs.plot_group_emp_rep_wtw_multi(modelname, s1_WTW_rep_, s2_WTW_rep_, s1_WTW_emp, s2_WTW_emp, hdrdata_sess1, hdrdata_sess2, s1_paradf_, s2_paradf_, methods, estimation = "mean")
-plt.gcf().set_size_inches(10, 6)
-plt.savefig(os.path.join("..", "figures", expname, "emp_rep_multi.pdf"))
+s2_dist_vals = s2_dist_vals_.mean(axis = 1)
+s2_dist_grand_median = np.median(s2_dist_vals_)
+s2_dist_grand_median_ = np.median(s2_dist_vals_, axis = 0)
 
+
+
+# methods = ['QL2', 'QL2_reset']
+# figFxs.plot_group_emp_rep_wtw_multi(modelname, s1_WTW_rep_, s2_WTW_rep_, s1_WTW_emp, s2_WTW_emp, hdrdata_sess1, hdrdata_sess2, s1_paradf_, s2_paradf_, methods, estimation = "mean")
+# plt.gcf().set_size_inches(10, 6)
+# plt.savefig(os.path.join("..", "figures", expname, "emp_rep_multi.pdf"))
+
+
+############### replicate with group-average paras
+s1_median_paradf = copy.copy(s1_paradf)
+s1_median_paradf.iloc[:, :5] = np.tile(np.median(s1_paradf.iloc[:,:5], axis = 0), s1_paradf.shape[0]).reshape(s1_paradf.shape[0],5)
+s1_stats_rep_median, s1_WTW_rep_median, s1_dist_vals_median = modelFxs.group_model_rep(trialdata_sess1_, s1_median_paradf, modelname, 'whole', stepsize, isTrct = True, plot_each = False)
+np.median(s1_dist_vals_median)
+# 1371.892139
+
+################ replicate without tau
+s1_median_paradf = copy.copy(s1_paradf)
+s1_median_paradf['tau'] = np.median(s1_paradf.iloc[:,2], axis = 0)
+s1_stats_rep_median, s1_WTW_rep_median, s1_dist_vals_median = modelFxs.group_model_rep(trialdata_sess1_, s1_median_paradf, modelname, 'whole', stepsize, isTrct = True, plot_each = False)
+np.median(s1_dist_vals_median)
+# 935.7524564999999, 925.9020255 median of median
+# np.median(s1_dist_vals_median, axis = 0).mean(), 925.4333684999999
+
+################ replicate without gamma
+s1_median_paradf = copy.copy(s1_paradf)
+s1_median_paradf['gamma'] = np.median(s1_paradf.iloc[:,3], axis = 0)
+s1_stats_rep_median, s1_WTW_rep_median, s1_dist_vals_median = modelFxs.group_model_rep(trialdata_sess1_, s1_median_paradf, modelname, 'whole', stepsize, isTrct = True, plot_each = False)
+np.median(s1_dist_vals_median)
+# 846.9297135, median of median
+# mean of median 847.4307992000001
+
+################ replicate without priors
+s1_median_paradf = copy.copy(s1_paradf)
+s1_median_paradf['prior'] = np.median(s1_paradf.iloc[:,4], axis = 0)
+s1_stats_rep_median, s1_WTW_rep_median, s1_dist_vals_median = modelFxs.group_model_rep(trialdata_sess1_, s1_median_paradf, modelname, 'whole', stepsize, isTrct = True, plot_each = False)
+np.median(s1_dist_vals_median)
+# median of median: 812.7610375
+# mean of median 819.5614511
+# this makes sense, especially in the first case
+
+
+################ replicate without alphas
+s1_median_paradf = copy.copy(s1_paradf)
+s1_median_paradf['alpha'] = np.median(s1_paradf.iloc[:,0], axis = 0)
+s1_stats_rep_median, s1_WTW_rep_median, s1_dist_vals_median = modelFxs.group_model_rep(trialdata_sess1_, s1_median_paradf, modelname, 'whole', stepsize, isTrct = True, plot_each = False)
+np.median(s1_dist_vals_median)
+# 869.8801535000001... hmmm also little impacts 
+
+
+################ replicate without nus
+s1_median_paradf = copy.copy(s1_paradf)
+s1_median_paradf['nu'] = np.median(s1_paradf.iloc[:,1], axis = 0)
+s1_stats_rep_median, s1_WTW_rep_median, s1_dist_vals_median = modelFxs.group_model_rep(trialdata_sess1_, s1_median_paradf, modelname, 'whole', stepsize, isTrct = True, plot_each = False)
+np.median(s1_dist_vals_median)
+# np.median(s1_dist_vals_median) 910.9085140000001
+# np.median(s1_dist_vals_median, axis = 0).mean() 912.0039198000001
+
+
+######### using different distance calculations 
+######### using with methods not the without method
+################
 # compare parameter reliabiliy
 subtitles = [r'$\mathbf{log(\alpha)}$', r'$\mathbf{\nu}$', r'$\mathbf{\tau}$', r'$\mathbf{\gamma}$', r'$\mathbf{log(\eta)}$']
 paranames = modelFxs.getModelParas(modelname)

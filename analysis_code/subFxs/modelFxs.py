@@ -65,7 +65,7 @@ def ind_model_rep(modelname, paras, trialdata, key, nsim, stepsize, plot_each):
     # loop over simulations 
     simdata_ = []
     for i in range(nsim):
-        simdata =  simFxs.ind_fit_sim(modelname, paras, conditions, blockIdxs, scheduledDelays, scheduledRewards, trialEarnings_, timeWaited_, stepsize)
+        simdata =  simFxs.ind_sim(modelname, paras, conditions, blockIdxs, scheduledDelays, scheduledRewards, stepsize)
         simdata_.append(simdata)
 
     # analyze simulated datasets
@@ -79,13 +79,16 @@ def ind_model_rep(modelname, paras, trialdata, key, nsim, stepsize, plot_each):
 
     # code.interact(local = dict(globals(), **locals()))
 
+    # return distance 
+    dist_vals = analysisFxs.group_sim_dist(simdata_, trialdata)
+
     # I can plot comparison here honestly
     if plot_each:
         emp_stats, emp_objs = analysisFxs.ind_MF(trialdata, key, isTrct = True, plot_RT = False, plot_trial = False, plot_KMSC = False, plot_WTW = False)
         fig, ax = plt.subplots()
         ax.plot(expParas.TaskTime, emp_objs['WTW'], label = 'Observed')
         ax.plot(expParas.TaskTime, WTW, label = 'Simulated')
-    return stats, Psurv_block1, Psurv_block2, WTW
+    return stats, Psurv_block1, Psurv_block2, WTW, dist_vals
 
 
 
@@ -101,6 +104,7 @@ def group_model_rep(trialdata_, paradf, modelname, fitMethod, stepsize, isTrct =
     # initialize outputs
     stats_ = []
     WTW_ = []
+    dist_vals_ = []
     # loop over participants
     for key, trialdata in trialdata_.items():
         print(key)
@@ -134,26 +138,28 @@ def group_model_rep(trialdata_, paradf, modelname, fitMethod, stepsize, isTrct =
         # replicate original behaviors
         paras = dict(zip(paranames, paravals))
         if plot_each:
-            stats, _, _, WTW = ind_model_rep(modelname, paras, trialdata, key, 10, stepsize, plot_each = True)
+            stats, _, _, WTW, dist_vals = ind_model_rep(modelname, paras, trialdata, key, 10, stepsize, plot_each = True)
             plt.show()
             input("Press Enter to continue or ESC to exit...")
             plt.clf()
         else:
-            stats, _, _, WTW = ind_model_rep(modelname, paras, trialdata, key, 10, stepsize, plot_each = False)
+            stats, _, _, WTW, dist_vals = ind_model_rep(modelname, paras, trialdata, key, 10, stepsize, plot_each = False)
         stats['id'] = np.full(2, key[0])
         stats['sess'] = np.full(2, key[1])
         stats['key'] = np.full(2, str(key))
         stats_.append(stats)
+        dist_vals_.append(dist_vals)
         WTW_.append(WTW)
         # add more code tomorrow.
         # emp_stats, emp_obj = analysisFxs.ind_MF(trialdata, key, plot_trial = True, plot_KMSC = True, plot_WTW = True)
     stats_ = pd.concat(stats_)
     stats_ = stats_.reset_index()
     WTW_ = np.array([e for e in WTW_])
+    dist_vals_ = np.array(dist_vals_)
     # code.interact(local = dict(locals(), **globals()))
     # temporarily let's save it to save time
     # stats_.to_csv(os.path.join('..', 'analysis_results', 'taskstats', 'rep_%s_sess%d.csv'%(modelname, key[1])), index = None)
-    return stats_, WTW_
+    return stats_, WTW_, dist_vals_
        
 
 

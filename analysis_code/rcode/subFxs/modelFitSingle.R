@@ -30,11 +30,11 @@ modelFitSingle = function(id, thisTrialData, modelName, paraNames, model, config
     thisTrialData$timeWaited = pmin(thisTrialData$timeWaited, max(delayMaxs)) 
     ## number of possible decision points in a trial
     delayMax = max(delayMaxs)
-    tWaits = seq(0, delayMax - stepSec, by = stepSec)
+    tWaits = seq(0, delayMax, by = stepSec)
     ## number of wait-or-quit decision time points in a trial
     nWaitOrQuit = length(tWaits) 
     ## number of made actions in each trial 
-    nMadeActions = ceiling(thisTrialData$timeWaited / stepSec)
+    nMadeActions = floor(thisTrialData$timeWaited / stepSec) + 1
     ## when a trial ends 
     Ts = thisTrialData$timeWaited 
     

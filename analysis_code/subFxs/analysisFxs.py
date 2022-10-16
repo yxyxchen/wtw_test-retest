@@ -844,12 +844,14 @@ def ind_MF(trialdata, key, isTrct = True, plot_RT = False, plot_trial = False, p
     return stats, objs
 
 
+def ind_sim_dist(simdata, empdata):
+    distance = np.sum((simdata['timeWaited'].values - empdata['timeWaited'].values) ** 2)
+    return distance
+
+
+
 def ind_sim_MF(simdata, empdata, key, plot_trial = False, plot_KMSC = False, plot_WTW = False):
     """ 
-        # this is for replication simulation though
-        using wtw analysis here will be risky because balabala time longer will be truncated
-        AUC for a block will not change 
-        AUC analysis for subblocks will be affected
     """
     # initialize the output
     stats = [] # for scalar outputs
@@ -957,7 +959,7 @@ def group_MF(trialdata_, plot_each = False, n_subblock = 4):
 
 def group_sim_MF(simdata_, empdata, plot_each = False):
     """
-        conduct MF analysis for multiple participants/simulated datasets
+        conduct MF analysis for repeated simulated datasets
     """
     # tGrid constants
     Time = expParas.Time
@@ -995,6 +997,18 @@ def group_sim_MF(simdata_, empdata, plot_each = False):
 
     return stats_, Psurv_block1_, Psurv_block2_, WTW_
 
+
+def group_sim_dist(simdata_, empdata):
+    """
+        conduct MF analysis for repeated simulated datasets
+    """
+
+    # loop over participants 
+    dist_vals = []
+    for i, simdata in enumerate(simdata_):
+        dist  = ind_sim_dist(simdata, empdata)
+        dist_vals.append(dist)
+    return dist_vals
 
 def plot_group_WTW(WTW_, TaskTime, ax, **kwargs):
     """Plot group-level WTW timecourse 
