@@ -186,6 +186,8 @@ np.median(s1_dist_vals_median)
 ######### using different distance calculations 
 ######### using with methods not the without method
 ################
+s1_paradf = loadFxs.load_parameter_estimates_hp(expname, 1, hdrdata_sess1, modelname, fitMethod, stepsize)
+s2_paradf = loadFxs.load_parameter_estimates_hp(expname, 2, hdrdata_sess2, modelname, fitMethod, stepsize)
 # compare parameter reliabiliy
 subtitles = [r'$\mathbf{log(\alpha)}$', r'$\mathbf{\nu}$', r'$\mathbf{\tau}$', r'$\mathbf{\gamma}$', r'$\mathbf{log(\eta)}$']
 paranames = modelFxs.getModelParas(modelname)

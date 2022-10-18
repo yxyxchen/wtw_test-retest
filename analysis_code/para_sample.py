@@ -49,7 +49,7 @@ s2_paradf = loadFxs.load_parameter_estimates(expname, 2, hdrdata_sess2, modelnam
 for id in s1_paradf['id']:
 sample_file = os.path.join(("../analysis_results/%s/modelfit/%s/stepsize%.2f/%s/%s_sess1_sample.txt")%(expname, fitMethod, stepsize, modelname, id))
 para_samples = pd.read_csv(sample_file, header = None)
-para_samples.columns = paranames + ['waic']
+para_samples.columns = paranames + ['totalLL']
 g = sns.FacetGrid(data = para_samples.iloc[2000:,:-1].melt(var_name = "para"), col = "para", sharex = False)
 g.map(plt.hist, "value", bins = 20)
 plt.show()

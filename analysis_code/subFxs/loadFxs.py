@@ -284,3 +284,50 @@ def load_parameter_estimates(expname, sess, hdrdata, modelname, fitMethod, stepS
 
     return paradf
 
+
+def load_parameter_estimates_hp(expname, sess, hdrdata, modelname, fitMethod, stepSec):
+    paranames = modelFxs.getModelParas(modelname)
+    print(os.path.join("..", "analysis_results", expname, "modelfit", fitMethod, 'stepsize%.2f'%stepSec, modelname))
+    paradf = []
+    for i, subj_id in enumerate(hdrdata['id']):
+        # load parameter estimates
+        try:
+            fit_summary = pd.read_csv(os.path.join("..", "analysis_results", expname, "modelfit", fitMethod, 'stepsize%.2f'%stepSec, modelname, '%s_sess%d_summary.txt'%(subj_id, sess)), header = None)
+        except:
+            print("can't find the file for %s, sess%d"%(subj_id, sess))
+            continue
+            # code.interact(local = dict(locals(), **globals()))
+        # currently I didn't save index and columns 
+        fit_summary.index = paranames + ['totalLL']
+        fit_summary.columns = ['mean', 'se_mean', 'sd', '2.5%', '25%', '50%', '75%', '97.5%', 'n_effe', 'Rhat', 'n_divergent']
+
+        # check quality
+        if not modelFxs.check_stan_diagnosis(fit_summary):
+            print(subj_id, 'not valid')
+            continue
+
+        # load waic 
+        try:
+            robjects.r['load'](os.path.join("..", "analysis_results", expname, "modelfit", fitMethod, 'stepsize%.2f'%stepSec, modelname, '%s_sess%d_waic.RData'%(subj_id, sess)))
+            waic = robjects.r['WAIC'][4][0]
+        except:
+            print("can't find the WAIC file for %s, sess%d"%(subj_id, sess))
+            continue
+        # load parasamples
+        fit_samples = pd.read_csv(os.path.join("..", "analysis_results", expname, "modelfit", fitMethod, 'stepsize%.2f'%stepSec, modelname, '%s_sess%d_sample.txt'%(subj_id, sess)), header = None)
+        fit_samples.columns = paranames + ['totalLL']
+        this_row = dict()
+        for para in paranames:
+            tmp = fit_samples[para].round(3).value_counts()
+            this_row[para] = np.median(tmp[tmp == tmp.max()].index)
+            if this_row[para] == 0:
+                this_row[para] = 0.0000001
+
+        this_row['id'] = subj_id
+        this_row['sess'] = sess
+        this_row['waic'] = waic
+        paradf.append(pd.DataFrame(this_row,  index = [0]))
+    paradf = pd.concat(paradf)
+
+    return paradf
+
