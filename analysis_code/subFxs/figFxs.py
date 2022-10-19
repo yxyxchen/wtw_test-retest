@@ -40,16 +40,16 @@ condition_palette = ["#762a83", "#1b7837"]
 def plot_group_emp_rep_wtw(modelname, s1_WTW_rep, s2_WTW_rep, s1_WTW_emp, s2_WTW_emp, hdrdata_sess1, hdrdata_sess2, s1_paradf, s2_paradf):
     # how do I truncate the ending part of data?
     s1_WTW_emp = s1_WTW_emp[np.isin(hdrdata_sess1.id, s1_paradf.id), ]
-    # s1_ave_emp = s1_WTW_emp.mean(axis = 0)
-    # s1_ave_rep = s1_WTW_rep.mean(axis = 0)
-    s1_ave_emp = np.median(s1_WTW_emp, axis = 0)
-    s1_ave_rep = np.median(s1_WTW_rep, axis = 0)
+    s1_ave_emp = s1_WTW_emp.mean(axis = 0)
+    s1_ave_rep = s1_WTW_rep.mean(axis = 0)
+    # s1_ave_emp = np.median(s1_WTW_emp, axis = 0)
+    # s1_ave_rep = np.median(s1_WTW_rep, axis = 0)
 
     s2_WTW_emp = s2_WTW_emp[np.isin(hdrdata_sess2.id, s2_paradf.id), ]
-    # s2_ave_emp = s2_WTW_emp.mean(axis = 0)
-    # s2_ave_rep = s2_WTW_rep.mean(axis = 0)
-    s2_ave_emp = np.median(s1_WTW_emp, axis = 0)
-    s2_ave_rep = np.median(s1_WTW_rep, axis = 0)
+    s2_ave_emp = s2_WTW_emp.mean(axis = 0)
+    s2_ave_rep = s2_WTW_rep.mean(axis = 0)
+    # s2_ave_emp = np.median(s1_WTW_emp, axis = 0)
+    # s2_ave_rep = np.median(s1_WTW_rep, axis = 0)
 
     plotdf = pd.DataFrame({
         "wtw": np.concatenate([s1_ave_emp, s1_ave_rep, s2_ave_emp, s2_ave_rep]),

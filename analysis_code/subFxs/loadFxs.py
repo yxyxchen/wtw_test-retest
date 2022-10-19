@@ -289,6 +289,7 @@ def load_parameter_estimates_hp(expname, sess, hdrdata, modelname, fitMethod, st
     paranames = modelFxs.getModelParas(modelname)
     print(os.path.join("..", "analysis_results", expname, "modelfit", fitMethod, 'stepsize%.2f'%stepSec, modelname))
     paradf = []
+    parasd_df = []
     for i, subj_id in enumerate(hdrdata['id']):
         # load parameter estimates
         try:
@@ -317,17 +318,26 @@ def load_parameter_estimates_hp(expname, sess, hdrdata, modelname, fitMethod, st
         fit_samples = pd.read_csv(os.path.join("..", "analysis_results", expname, "modelfit", fitMethod, 'stepsize%.2f'%stepSec, modelname, '%s_sess%d_sample.txt'%(subj_id, sess)), header = None)
         fit_samples.columns = paranames + ['totalLL']
         this_row = dict()
+        this_row_sd = dict()
         for para in paranames:
             tmp = fit_samples[para].round(3).value_counts()
             this_row[para] = np.median(tmp[tmp == tmp.max()].index)
+            if para in ['alpha', 'nu']:
+                this_row_sd[para] = np.std(np.log(fit_samples[para]))
+            else: 
+                this_row_sd[para] = np.std(fit_samples[para])
             if this_row[para] == 0:
                 this_row[para] = 0.0000001
 
         this_row['id'] = subj_id
         this_row['sess'] = sess
         this_row['waic'] = waic
+        this_row_sd['id'] = subj_id
+        this_row_sd['id'] = sess
         paradf.append(pd.DataFrame(this_row,  index = [0]))
+        parasd_df.append(pd.DataFrame(this_row_sd,  index = [0]))
     paradf = pd.concat(paradf)
+    parasd_df = pd.concat(parasd_df)
 
-    return paradf
+    return paradf, parasd_df
 
