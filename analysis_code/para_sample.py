@@ -56,12 +56,11 @@ for id in s1_paradf['id']:
 	input("Press Enter to continue...")
 	plt.clf()
 
-
-
 ########### let me calculate similiarity between 
 for id in set(s1_paradf['id']) & set(s2_paradf['id']):
 	s1_para_samples = pd.read_csv(os.path.join(("../analysis_results/%s/modelfit/%s/stepsize%.2f/%s/%s_sess1_sample.txt")%(expname, fitMethod, stepsize, modelname, id)), header = None)
 	s1_para_samples = pd.read_csv(os.path.join(("../analysis_results/%s/modelfit/%s/stepsize%.2f/%s/%s_sess1_sample.txt")%(expname, fitMethod, stepsize, modelname, id)), header = None)
 	# para_samples.columns = paranames + ['totalLL']
+
 
 

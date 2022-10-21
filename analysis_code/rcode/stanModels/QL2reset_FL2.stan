@@ -38,12 +38,12 @@ parameters {
 }
 transformed parameters{
   // scale raw parameters into real parameters
-  real alpha = (exp(raw_alpha) / (1 + exp(raw_alpha)) + 1) * 0.15; // alpha ~ unif(0, 0.3)
-  real alphaU = min([alpha * (exp(raw_nu) / (1 + exp(raw_nu)) + 1) * 2.5, 1]');// alphaU
+  real alpha = Phi_approx(raw_alpha) * 0.3; // alpha ~ unif(0, 0.3)
+  real alphaU = min([alpha * Phi_approx(raw_nu) * 5, 1]'); // 
   real nu = alphaU / alpha;
-  real tau = (exp(raw_tau) / (1 + exp(raw_tau)) + 1) * 20.95 + 0.1; // tau ~ unif(0.1, 42)
-  real gamma = (exp(raw_gamma) / (1 + exp(raw_gamma)) + 1) * 0.25 + 0.5; // gamma ~ unif(0.5, 1)
-  real eta = (exp(raw_eta) / (1 + exp(raw_eta)) + 1) * 7.5; // eta ~ unif(0, 15)
+  real tau = Phi_approx(raw_tau) * 42; // tau ~ unif(0.1, 42)
+  real gamma = Phi_approx(raw_gamma)* 0.5 + 0.5; // gamma ~ unif(0.5, 1)
+  real eta = Phi_approx(raw_eta) * 15; // eta ~ unif(0, 15)
 
   // declare variables 
   // // state value of t = 0
@@ -143,11 +143,11 @@ model {
   int action; 
   vector[2] actionValues; 
   // distributions for raw parameters
-  raw_alpha ~ normal(0, 1.5);
-  raw_nu ~ normal(0, 1.5);
-  raw_tau ~ normal(0, 1.5);
-  raw_gamma ~ normal(0, 1.5);
-  raw_eta ~ normal(0, 1.5);
+  raw_alpha ~ normal(0, 1);
+  raw_nu ~ normal(0, 1);
+  raw_tau ~ normal(0, 1);
+  raw_gamma ~ normal(0, 1);
+  raw_eta ~ normal(0, 1);
   
   // loop over trials
   for(tIdx in 1 : N){

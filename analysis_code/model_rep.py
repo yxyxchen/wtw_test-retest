@@ -79,6 +79,23 @@ hdrdata_sess2, trialdata_sess2_ = loadFxs.group_quality_check(expname, 2, plot_q
 s1_stats, s1_Psurv_b1_, s1_Psurv_b2_, s1_WTW_emp = analysisFxs.group_MF(trialdata_sess1_, plot_each = False)   
 s2_stats, s2_Psurv_b1_, s2_Psurv_b2_, s2_WTW_emp = analysisFxs.group_MF(trialdata_sess2_, plot_each = False)   
 
+
+tmp = s1_paradf.merge(s1_stats, on = "id")
+fig, ax = plt.subplots(nrows=1, ncols=1)
+ax.scatter(tmp['auc1'], tmp['eta'] * 10)
+ax.set_xlabel("auc1")
+ax.set_ylabel("eta")
+ax.set_aspect(1)
+
+# AUC values
+# maybe I should get empirical Qwaits
+ts = np.arange(0, 12, 0.5)
+eta = 0.5
+Qquit = 0
+Qwaits = eta - 0.1 * ts + Qquit
+tau = 5
+one_step_pwaits = 1 / (1 + np.exp(-Qwaits * tau))
+
 # modelnames = ['QL2reset_FL3']
 modelname = 'QL2reset_FL2'
 fitMethod = "whole"
