@@ -63,8 +63,6 @@ pearsonr(a, b) # std_LP is a worse ... don't know why
 s1_stats, s1_Psurv_b1_, s1_Psurv_b2_, s1_WTW_ = analysisFxs.group_MF(trialdata_sess1_, plot_each = False)  
 
 
-
-
 fig, ax = plt.subplots()
 figFxs.plot_group_KMSC_both(s1_Psurv_b1_, s1_Psurv_b2_, s2_Psurv_b1_, s2_Psurv_b2_, hdrdata_sess1, hdrdata_sess2, ax)
 plt.savefig(os.path.join('..', 'figures', expname, 'KMSC.pdf'))
