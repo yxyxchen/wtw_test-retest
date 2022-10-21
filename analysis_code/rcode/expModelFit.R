@@ -62,10 +62,6 @@ expModelFit = function(expname, sess, modelName, isFirstFit, fit_method, stepSec
       trialData[[id]] = thisTrialData
     }
   }
-  
-  dir.create(sprintf("../../analysis_results/%s/modelfit", expname), showWarnings = FALSE)
-  dir.create(outputDir, showWarnings = FALSE)
-  
   # set model fit configurations
   if(isFirstFit){
     config = list(
