@@ -1,4 +1,4 @@
-expModelFit = function(expname, sess, modelName, isFirstFit, fit_method, stepSec = 0.5, batchIdx = NULL, parallel = F){
+expModelFitHM = function(expname, sess, modelName, isFirstFit, fit_method, stepSec = 0.5, batchIdx = NULL, parallel = F){
   # load experiment parameters
   load("expParas.RData")
 
@@ -6,8 +6,7 @@ expModelFit = function(expname, sess, modelName, isFirstFit, fit_method, stepSec
   library("dplyr"); library("tidyr")
   source("subFxs/loadFxs.R")
   source("subFxs/helpFxs.R")
-  source('subFxs/modelFitGroup.R')
-
+  source('subFxs/modelFitHM.R')
   # load taskdata 
   allData = loadAllData(expname, sess)
   hdrData = allData$hdrData
@@ -94,8 +93,8 @@ expModelFit = function(expname, sess, modelName, isFirstFit, fit_method, stepSec
   if(isFirstFit){
     config = list(
       nChain = 4,
-      nIter = 1000 + 1000,
-      warmup = 1000,
+      # nIter = 1000 + 1000,
+      # warmup = 1000,
       # nIter = 200 + 200,
       # warmup = 200,
       adapt_delta = 0.99,
@@ -144,7 +143,7 @@ expModelFit = function(expname, sess, modelName, isFirstFit, fit_method, stepSec
   }
 
   # fit the model for all participants
-  modelFitGroup(sess, modelName, trialData, stepSec, config, outputDir, parallel = parallel, isTrct = T)
+  modelFitHM(sess, modelName, trialData, stepSec, config, outputDir, parallel = parallel, isTrct = T)
 }
 
 ############## main script ##############

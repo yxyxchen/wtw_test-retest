@@ -98,7 +98,7 @@ one_step_pwaits = 1 / (1 + np.exp(-Qwaits * tau))
 
 # modelnames = ['QL2reset_FL3']
 modelname = 'QL2reset_FL2'
-fitMethod = "whole"
+fitMethod = "even"
 stepsize = 0.5
 # s1_WTW_rep_ = []
 # s2_WTW_rep_ = []
@@ -137,7 +137,7 @@ s1_dist_grand_median_ = np.median(s1_dist_vals_, axis = 0)
 s1_ntrial_vals = [y.shape[0] for x, y in zip(hdrdata_sess1.id, trialdata_sess1_.values()) if np.isin(x, s1_paradf['id'])]
 plt.scatter(s1_ntrial_vals, s1_dist_vals) ... # hmmm I am not sure ... let's use this temperally 
 
-
+# 
 s2_dist_vals = s2_dist_vals_.mean(axis = 1)
 s2_dist_grand_median = np.median(s2_dist_vals_)
 s2_dist_grand_median_ = np.median(s2_dist_vals_, axis = 0)
