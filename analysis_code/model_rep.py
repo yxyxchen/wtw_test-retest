@@ -200,9 +200,56 @@ np.median(s1_dist_vals_median)
 # np.median(s1_dist_vals_median, axis = 0).mean() 912.0039198000001
 
 
+################ replicate with only tau
+s1_median_paradf = copy.copy(s1_paradf)
+for para in paranames:
+    if para != 'tau':
+        s1_median_paradf[para] = np.median(s1_paradf[para], axis = 0)
+s1_stats_rep_median, s1_WTW_rep_median, s1_dist_vals_median = modelFxs.group_model_rep(trialdata_sess1_, s1_median_paradf, modelname, 'whole', stepsize, isTrct = True, plot_each = False)
+# np.median(s1_dist_vals_median), 1705.9849769999998, 1714.100638
+# np.median(s1_dist_vals_median, axis = 0).mean(), 1710.1806980000001
+
+
+
+################ replicate with only alpha
+s1_median_paradf = copy.copy(s1_paradf)
+for para in paranames:
+    if para != 'alpha':
+        s1_median_paradf[para] = np.median(s1_paradf[para], axis = 0)
+s1_stats_rep_median, s1_WTW_rep_median, s1_dist_vals_median = modelFxs.group_model_rep(trialdata_sess1_, s1_median_paradf, modelname, 'whole', stepsize, isTrct = True, plot_each = False)
+# np.median(s1_dist_vals_median), 1354.3742914999998
+# np.median(s1_dist_vals_median, axis = 0).mean(), 1356.4666567
+
+
+
+################ replicate with only nu
+s1_median_paradf = copy.copy(s1_paradf)
+for para in paranames:
+    if para != 'nu':
+        s1_median_paradf[para] = np.median(s1_paradf[para], axis = 0)
+s1_stats_rep_median, s1_WTW_rep_median, s1_dist_vals_median = modelFxs.group_model_rep(trialdata_sess1_, s1_median_paradf, modelname, 'whole', stepsize, isTrct = True, plot_each = False)
+# np.median(s1_dist_vals_median), 1395.475888
+# np.median(s1_dist_vals_median, axis = 0).mean(), 1397.1704942000001
+
+
+################ replicate with only gamma
+s1_median_paradf = copy.copy(s1_paradf)
+for para in paranames:
+    if para != 'gamma':
+        s1_median_paradf[para] = np.median(s1_paradf[para], axis = 0)
+s1_stats_rep_median, s1_WTW_rep_median, s1_dist_vals_median = modelFxs.group_model_rep(trialdata_sess1_, s1_median_paradf, modelname, 'whole', stepsize, isTrct = True, plot_each = False)
+# np.median(s1_dist_vals_median), 1294.1244175
+# np.median(s1_dist_vals_median, axis = 0).mean(), 1294.4569675000002
+
+
+
+
 ######### using different distance calculations 
 ######### using with methods not the without method
-################
+
+################ ok this dosen't seem to work 
+################ let me try the distance calculation 
+
 s1_paradf_hp, s1_parasd_df = loadFxs.load_parameter_estimates_hp(expname, 1, hdrdata_sess1, modelname, fitMethod, stepsize)
 s2_paradf_hp, s2_parasd_df = loadFxs.load_parameter_estimates_hp(expname, 2, hdrdata_sess2, modelname, fitMethod, stepsize)
 # compare parameter reliabiliy

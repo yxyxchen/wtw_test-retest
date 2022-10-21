@@ -61,6 +61,34 @@ expModelFit = function(expname, sess, modelName, isFirstFit, fit_method, stepSec
       thisTrialData = thisTrialData[thisTrialData$condition == "HP",]
       trialData[[id]] = thisTrialData
     }
+  }else if(fit_method == "even"){
+      outputDir = sprintf("../../analysis_results/%s/modelfit/even/stepsize%.2f/%s", expname,  stepSec, modelName)
+      dir.create(sprintf("../../analysis_results/%s/modelfit/even", expname))
+      dir.create(sprintf("../../analysis_results/%s/modelfit/even/stepsize%.2f", expname, stepSec))
+      dir.create(outputDir)
+      # only include even trials
+      ids = names(trialData)
+      nSub = length(ids)
+      for(i in 1 : length(ids)){
+        id = ids[i]
+        thisTrialData = trialData[[id]]
+        thisTrialData = thisTrialData[thisTrialData$trialNum %% 2 == 0,]
+        trialData[[id]] = thisTrialData
+      }
+  }else if(fit_method == "odd"){
+    outputDir = sprintf("../../analysis_results/%s/modelfit/even/stepsize%.2f/%s", expname,  stepSec, modelName)
+    dir.create(sprintf("../../analysis_results/%s/modelfit/even", expname))
+    dir.create(sprintf("../../analysis_results/%s/modelfit/even/stepsize%.2f", expname, stepSec))
+    dir.create(outputDir)
+    # only include even trials
+    ids = names(trialData)
+    nSub = length(ids)
+    for(i in 1 : length(ids)){
+      id = ids[i]
+      thisTrialData = trialData[[id]]
+      thisTrialData = thisTrialData[thisTrialData$trialNum %% 2 == 1,]
+      trialData[[id]] = thisTrialData
+    }
   }
   # set model fit configurations
   if(isFirstFit){
@@ -91,7 +119,6 @@ expModelFit = function(expname, sess, modelName, isFirstFit, fit_method, stepSec
       }
       trialData = trialData[!(names(trialData) %in%  existing_ids)]
     }
-    
   }
   # if it is the first time to fit the model, fit all participants
   # otherwise, check model fitting results and refit those that fail any of the following criteria
