@@ -110,10 +110,11 @@ modelFitHM = function(sess, modelName, trialData, stepSec, config, outputDir, pa
     })
   
   # extract posterior samples
-  samples = fit %>% rstan::extract(permuted = F, pars = c(paraNames, "totalLL")) %>%
+  samples = fit %>% rstan::extract(permuted = F, pars = c(paste0("mu_", paraNames), paraNames, "totalLL")) %>%
     adply(2, function(x) x) %>% dplyr::select(-chains) 
-  write.table(samples, file = sprintf("%s_sample.txt", outputFile), 
+  write.table(samples, file = sprintf("%s_para_sample.txt", outputFile), 
               sep = ",", col.names = F, row.names=FALSE)
+
 
   # calculate WAIC and Efficient approximate leave-one-out cross-validation (LOO)
   log_lik = extract_log_lik(fit) 
@@ -122,16 +123,16 @@ modelFitHM = function(sess, modelName, trialData, stepSec, config, outputDir, pa
   save("WAIC", "LOO", file = sprintf("%s_waic.RData", outputFile))
   
   # summarise posterior parameters and total log likelihood
-  fitSummary <- summary(fit, pars = c(paraNames, "totalLL"), use_cache = F)$summary
-
+  fitSummary <- summary(fit, pars = c(paste0("mu_", paraNames), paraNames, "totalLL"), use_cache = F)$summary
+  
   # detect participants with low ESSs and high Rhats 
-  ESSCols = which(str_detect(colnames(fitSummary), "Effe")) # columns recording ESSs
+  ESSCols = which(str_detect(colnames(fitSummary), "n_eff")) # columns recording ESSs
   if(any(fitSummary[,ESSCols] < nChain * 100)){
-    write(paste(modelName, subName, "Low ESS"), warningFile, append = T, sep = "\n")
+    write(paste(modelName, "Low ESS"), warningFile, append = T, sep = "\n")
   }
   RhatCols = which(str_detect(colnames(fitSummary), "Rhat")) # columns recording ESSs
   if(any(fitSummary[,RhatCols] > 1.01)){
-    write(paste(modelName, subName, "High Rhat"), warningFile, append = T, sep = "\n")
+    write(paste(modelName, "High Rhat"), warningFile, append = T, sep = "\n")
   } 
   
   # check divergent transitions

@@ -266,6 +266,15 @@ plt.gcf().set_size_inches(5 * npara, 5)
 plt.savefig(os.path.join("..", 'figures', expname, "%s_%s_stepsize%.2f_para_reliability.pdf"%(modelname, fitMethod, stepsize)))
 
 
+#####################
+##################### split half reliability ########
+modelname = 'QL2reset_FL2'
+stepsize = 0.5
+s1_even_paradf = loadFxs.load_parameter_estimates(expname, 1, hdrdata_sess1, modelname, 'even', stepsize)
+s1_odd_paradf = loadFxs.load_parameter_estimates(expname, 1, hdrdata_sess1, modelname, 'odd', stepsize)
+figFxs.plot_parameter_reliability(modelname, s1_even_paradf.iloc[:,:-1], s1_odd_paradf.iloc[:,:-1], subtitles)
+plt.savefig(os.path.join("..", 'figures', expname, "%s_stepsize%.2f_para_split_hald.pdf"%(modelname, stepsize)))
+
 # is the reliability superficial? 
 a = pd.merge(s1_paradf, s1_stats, how = 'inner', on = 'id')
 spearmanr(a.loc[a.block == 1, 'tau'], a.loc[a.block == 1, 'auc'])

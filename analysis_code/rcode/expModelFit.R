@@ -13,20 +13,19 @@ expModelFit = function(expname, sess, modelName, isFirstFit, fit_method, stepSec
   hdrData = allData$hdrData
   trialData = allData$trialData
   
+
+  # make directions 
+  outputDir = sprintf("../../analysis_results/%s/modelfit/%s/stepsize%.2f/%s", expname,  fit_method, stepSec, modelName)
+  dir.create(sprintf("../../analysis_results/%s/modelfit/%s", expname, fit_method))
+  dir.create(sprintf("../../analysis_results/%s/modelfit/%s/stepsize%.2f", expname, fit_method, stepSec))
+  dir.create(outputDir)
   # set output directory 
-  if(fit_method == "whole"){
-    outputDir = sprintf("../../analysis_results/%s/modelfit/whole/stepsize%.2f/%s", expname, stepSec, modelName)
-    dir.create(sprintf("../../analysis_results/%s/modelfit/whole", expname))
-    dir.create(sprintf("../../analysis_results/%s/modelfit/whole/stepsize%.2f", expname, stepSec))
-    dir.create(outputDir)
-  }else if(fit_method == 'trct'){
-    outputDir = sprintf("../../analysis_results/%s/modelfit/trct/stepsize%.2f/%s", expname,  stepSec, modelName)
-    dir.create(sprintf("../../analysis_results/%s/modelfit/trct", expname))
-    dir.create(sprintf("../../analysis_results/%s/modelfit/trct/stepsize%.2f", expname, stepSec))
-    dir.create(outputDir)
+
+  # prepare data
+  ids = names(trialData)
+  nSub = length(ids)
+  if(fit_method == 'trct'){
     # truncate the first half block
-    ids = names(trialData)
-    nSub = length(ids)
     for(i in 1 : length(ids)){
       id = ids[i]
       thisTrialData = trialData[[id]]
@@ -34,13 +33,6 @@ expModelFit = function(expname, sess, modelName, isFirstFit, fit_method, stepSec
       trialData[[id]] = thisTrialData
     }
   }else if(fit_method == 'onlyLP'){
-    outputDir = sprintf("../../analysis_results/%s/modelfit/onlyLP/stepsize%.2f/%s", expname,  stepSec, modelName)
-    dir.create(sprintf("../../analysis_results/%s/modelfit/onlyLP", expname))
-    dir.create(sprintf("../../analysis_results/%s/modelfit/onlyLP/stepsize%.2f", expname, stepSec))
-    dir.create(outputDir)
-    # only include the first block 
-    ids = names(trialData)
-    nSub = length(ids)
     for(i in 1 : length(ids)){
       id = ids[i]
       thisTrialData = trialData[[id]]
@@ -48,13 +40,6 @@ expModelFit = function(expname, sess, modelName, isFirstFit, fit_method, stepSec
       trialData[[id]] = thisTrialData
     }
   }else if(fit_method == 'onlyHP'){
-    outputDir = sprintf("../../analysis_results/%s/modelfit/onlyHP/stepsize%.2f/%s", expname,  stepSec, modelName)
-    dir.create(sprintf("../../analysis_results/%s/modelfit/onlyHP", expname))
-    dir.create(sprintf("../../analysis_results/%s/modelfit/onlyHP/stepsize%.2f", expname, stepSec))
-    dir.create(outputDir)
-    # only include the first block 
-    ids = names(trialData)
-    nSub = length(ids)
     for(i in 1 : length(ids)){
       id = ids[i]
       thisTrialData = trialData[[id]]
@@ -62,13 +47,6 @@ expModelFit = function(expname, sess, modelName, isFirstFit, fit_method, stepSec
       trialData[[id]] = thisTrialData
     }
   }else if(fit_method == "even"){
-      outputDir = sprintf("../../analysis_results/%s/modelfit/even/stepsize%.2f/%s", expname,  stepSec, modelName)
-      dir.create(sprintf("../../analysis_results/%s/modelfit/even", expname))
-      dir.create(sprintf("../../analysis_results/%s/modelfit/even/stepsize%.2f", expname, stepSec))
-      dir.create(outputDir)
-      # only include even trials
-      ids = names(trialData)
-      nSub = length(ids)
       for(i in 1 : length(ids)){
         id = ids[i]
         thisTrialData = trialData[[id]]
@@ -76,13 +54,6 @@ expModelFit = function(expname, sess, modelName, isFirstFit, fit_method, stepSec
         trialData[[id]] = thisTrialData
       }
   }else if(fit_method == "odd"){
-    outputDir = sprintf("../../analysis_results/%s/modelfit/even/stepsize%.2f/%s", expname,  stepSec, modelName)
-    dir.create(sprintf("../../analysis_results/%s/modelfit/even", expname))
-    dir.create(sprintf("../../analysis_results/%s/modelfit/even/stepsize%.2f", expname, stepSec))
-    dir.create(outputDir)
-    # only include even trials
-    ids = names(trialData)
-    nSub = length(ids)
     for(i in 1 : length(ids)){
       id = ids[i]
       thisTrialData = trialData[[id]]
@@ -90,6 +61,8 @@ expModelFit = function(expname, sess, modelName, isFirstFit, fit_method, stepSec
       trialData[[id]] = thisTrialData
     }
   }
+  
+  
   # set model fit configurations
   if(isFirstFit){
     config = list(
@@ -117,7 +90,7 @@ expModelFit = function(expname, sess, modelName, isFirstFit, fit_method, stepSec
       }else if(batchIdx == 3){
         trialData = trialData[(batchsize * 2 + 1) : nSub]
       }
-      trialData = trialData[!(names(trialData) %in%  existing_ids)]
+      # trialData = trialData[!(names(trialData) %in%  existing_ids)]
     }
   }
   # if it is the first time to fit the model, fit all participants
@@ -159,7 +132,7 @@ if (sys.nframe() == 0){
 }
 expname = "passive"
 sess = 2
-modelName = "QL2reset_FL2_HM"
+modelName = "QL2reset_FL2"
 isFirstFit = TRUE
 fit_method = "whole"
 batchIdx = NULL

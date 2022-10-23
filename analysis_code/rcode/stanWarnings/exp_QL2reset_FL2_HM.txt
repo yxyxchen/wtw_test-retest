@@ -1,1 +1,26 @@
 
+QL2reset_FL2_HM simpleWarning: There were 125 divergent transitions after warmup. Increasing adapt_delta above 0.99 may help. See
+http://mc-stan.org/misc/warnings.html#divergent-transitions-after-warmup
+
+QL2reset_FL2_HM simpleWarning: There were 66 transitions after warmup that exceeded the maximum treedepth. Increase max_treedepth above 11. See
+http://mc-stan.org/misc/warnings.html#maximum-treedepth-exceeded
+
+QL2reset_FL2_HM simpleWarning: There were 4 chains where the estimated Bayesian Fraction of Missing Information was low. See
+http://mc-stan.org/misc/warnings.html#bfmi-low
+
+QL2reset_FL2_HM simpleWarning: Examine the pairs() plot to diagnose sampling problems
+
+
+QL2reset_FL2_HM simpleWarning: The largest R-hat is 4.23, indicating chains have not mixed.
+Running the chains for more iterations may help. See
+http://mc-stan.org/misc/warnings.html#r-hat
+
+QL2reset_FL2_HM simpleWarning: Bulk Effective Samples Size (ESS) is too low, indicating posterior means and medians may be unreliable.
+Running the chains for more iterations may help. See
+http://mc-stan.org/misc/warnings.html#bulk-ess
+
+QL2reset_FL2_HM simpleWarning: Tail Effective Samples Size (ESS) is too low, indicating posterior variances and tail quantiles may be unreliable.
+Running the chains for more iterations may help. See
+http://mc-stan.org/misc/warnings.html#tail-ess
+
+Finish QL2reset_FL2_HM!
