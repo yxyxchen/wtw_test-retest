@@ -36,25 +36,7 @@ s1_selfdf = loadFxs.parse_group_selfreport(expname, 1, isplot = False)
 hdrdata_sess1, trialdata_sess1_ = loadFxs.group_quality_check(expname, 1, plot_quality_check = True)
 hdrdata_sess2, trialdata_sess2_ = loadFxs.group_quality_check(expname, 2, plot_quality_check = True)
 
-def split_odd_even(trialdata_):
-	even_trialdata_ = dict()
-	odd_trialdata_ = dict()
-	for key in trialdata_.keys():
-		trialdata = trialdata_[key]
-		even_trialdata = trialdata[trialdata.trialIdx % 2 == 0].reset_index()
-		odd_trialdata = trialdata[trialdata.trialIdx % 2 == 1].reset_index()
-		odd_trialdata_[key] = odd_trialdata
-		even_trialdata_[key] = even_trialdata
-	return odd_trialdata_, even_trialdata_
 
-
-odd_trialdata_sess1_, even_trialdata_sess1_ = split_odd_even(trialdata_sess1_)
-
-s1_stats_odd, _, _, _ = analysisFxs.group_MF(odd_trialdata_sess1_, plot_each = False)  
-s1_stats_even, _, _, _ = analysisFxs.group_MF(even_trialdata_sess1_, plot_each = False) 
-a = s1_stats_even.loc[s1_stats_even['condition'] == 'HP', 'auc'].values - s1_stats_even.loc[s1_stats_even['condition'] == 'LP', 'auc'].values
-b = s1_stats_odd.loc[s1_stats_odd['condition'] == 'HP', 'auc'].values - s1_stats_odd.loc[s1_stats_odd['condition'] == 'LP', 'auc'].values
-pearsonr(a, b) # std_LP is a worse ... don't know why
 
 
 

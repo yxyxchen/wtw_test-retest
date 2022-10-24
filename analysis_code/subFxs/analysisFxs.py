@@ -22,6 +22,31 @@ import importlib
 import random
 
 
+####### functions to manipulate data 
+
+def split_odd_even(trialdata_):
+    even_trialdata_ = dict()
+    odd_trialdata_ = dict()
+    for key in trialdata_.keys():
+        trialdata = trialdata_[key]
+        even_trialdata = trialdata[trialdata.trialIdx % 2 == 0].reset_index()
+        odd_trialdata = trialdata[trialdata.trialIdx % 2 == 1].reset_index()
+        odd_trialdata_[key] = odd_trialdata
+        even_trialdata_[key] = even_trialdata
+    return odd_trialdata_, even_trialdata_
+
+def vstack_sessions(s1_df, s2_df):
+    s1_df['sess'] = "Session 1"
+    s2_df['sess'] = "Session 2"
+    df = pd.concat([s1_df[np.isin(s1_df.id, s2_df.id)], s2_df], axis = 0)
+    return df
+
+
+def hstack_sessions(s1_df, s2_df, suffixes = ["_sess1", "_sess2"]):
+    df = s1_df.merge(s2_df, on = 'id', suffixes = suffixes)
+    return df
+
+
 def agg_across_sessions(s1_df, s2_df):
     """ average data across sessions
     """

@@ -42,14 +42,14 @@ transformed parameters{
   // scale raw parameters into real parameters
   vector<lower=0, upper=0.3>[S] alpha;
   vector<lower=0, upper=1>[S] alphaU; // auxiliary variable 
-  vector<lower=0, upper=5>[S] nu;
+  vector<lower=0, upper=10>[S] nu;
   vector<lower=0, upper=42>[S] tau;
   vector<lower=0.5, upper=1>[S] gamma;
   vector<lower=0, upper=15>[S] eta;
   
   for(sIdx in 1 : S){
     alpha[sIdx] = Phi_approx(mu[1] + sigma[1] * raw_alpha[sIdx]) * 0.3; // alpha ~ unif(0, 0.3)
-    alphaU[sIdx] = min([alpha[sIdx] * Phi_approx(mu[2] + sigma[2] * raw_nu[sIdx]) * 5, 1]'); // 
+    alphaU[sIdx] = min([alpha[sIdx] * Phi_approx(mu[2] + sigma[2] * raw_nu[sIdx]) * 10, 1]'); // 
     nu[sIdx] = alphaU[sIdx] / alpha[sIdx];
     tau[sIdx] = Phi_approx(mu[3] + sigma[3] * raw_tau[sIdx]) * 42; // tau ~ unif(0.1, 42)
     gamma[sIdx] = Phi_approx(mu[4] + sigma[4] * raw_gamma[sIdx])* 0.5 + 0.5; // gamma ~ unif(0.5, 1)
@@ -127,13 +127,13 @@ generated quantities {
   
   // For group level parameters
   real<lower=0, upper=0.3> mu_alpha;
-  real<lower=0, upper=5> mu_nu;
+  real<lower=0, upper=10> mu_nu;
   real<lower=0, upper=42> mu_tau;
   real<lower=0.5, upper=1> mu_gamma;
   real<lower=0, upper=15> mu_eta;
   
   mu_alpha = Phi_approx(mu[1]) * 0.3;
-  mu_nu = Phi_approx(mu[2]) * 5;
+  mu_nu = Phi_approx(mu[2]) * 10;
   mu_tau = Phi_approx(mu[3]) * 42;
   mu_gamma = Phi_approx(mu[4]) * 0.5 + 0.5;
   mu_eta = Phi_approx(mu[5]) * 15;

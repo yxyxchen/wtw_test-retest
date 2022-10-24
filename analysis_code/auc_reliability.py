@@ -44,6 +44,8 @@ s1_stats, s1_Psurv_b1_, s1_Psurv_b2_, s1_WTW_ = analysisFxs.group_MF(trialdata_s
 s2_stats, s2_Psurv_b1_, s2_Psurv_b2_, s2_WTW_ = analysisFxs.group_MF(trialdata_sess2_, plot_each = False)   
 
 
+
+########## additional measures ######
 n_sub = 4
 # calc within-block adaptation using the non-parametric method
 s1_stats['wb_adapt_np'] = s1_stats['end_wtw'] - s1_stats['init_wtw']
@@ -79,28 +81,78 @@ for var in ['auc']:
 
 
 ######################
-## plot reliability ##
+## plot reliability for variables I am interested in ##
 ######################
-# AUC reliability #
+s1_df = analysisFxs.pivot_by_condition(s1_stats)
+s2_df = analysisFxs.pivot_by_condition(s2_stats)
+df = analysisFxs.hstack_sessions(s1_df, s2_df)
 fig, ax = plt.subplots()
-figFxs.AUC_reliability(s1_stats, s2_stats) # maybe I don't need it yet 
-plt.gcf().set_size_inches(8, 6)
-plt.savefig(os.path.join("..", "figures", expname, "AUC_reliability.pdf"))
+ax.set_xlabel("Session 1")
+
+ax.set_ylabel("Session 2")
+figFxs.my_regplot(df['auc_sess1'], df['auc_sess2'], ax = ax)
+ax.set_title("AUC (s)")
 
 
-###
-
-
-
-
-
-#####
-df = s1_df.merge(s2_df, on = 'id', suffixes = ['_sess1', '_sess2']) 
-# delta AUC 
 fig, ax = plt.subplots()
-figFxs.my_regplot(df.loc[:, 'auc_delta_sess1'], df.loc[:, 'auc_delta_sess2'], color = "grey")
-fig.gca().set_ylabel(r'$\Delta$' + 'AUC SESS2 (s)')
-fig.gca().set_xlabel(r'$\Delta$' + 'AUC SESS1 (s)')
-plt.gcf().set_size_inches(4, 4)
-plt.tight_layout()
-plt.savefig(os.path.join("..", "figures", expname, "delta_auc_reliability.pdf"))
+figFxs.my_regplot(df['std_wtw_sess1'], df['std_wtw_sess2'], ax = ax)
+ax.set_xlabel("Session 1")
+ax.set_ylabel("Session 2")
+ax.set_title(r"$\sigma_{wtw}$ (s)")
+
+
+fig, ax = plt.subplots()
+figFxs.my_regplot(df['auc_delta_sess1'], df['auc_delta_sess2'], ax = ax)
+ax.set_xlabel("Session 1")
+ax.set_ylabel("Session 2")
+ax.set_title(r'$\Delta$AUC (s)')
+
+
+#########################
+# plot practice effects 
+########################
+df = analysisFxs.vstack_sessions(s1_df, s2_df)
+ax = sns.swarmplot(data = df, x = "sess", y = "auc", color = "grey", edgecolor = "black", alpha = 0.4, linewidth=1)
+sns.boxplot(x="sess", y="auc", data=df, boxprops={'facecolor':'None'}, medianprops={"linestyle":"--", "color": "red"}, ax=ax)
+ax.set_xlabel("")
+ax.set_ylabel("AUC (s)")
+
+
+##### 
+# plot the reliability distribution #
+
+##### also let me generate the table #####
+
+
+
+######################## spilt half reliability #############
+for sess in [1, 2]:
+if sess == 1:
+	trialdata_ = trialdata_sess1_
+else:
+	trialdata_ = trialdata_sess2_
+odd_trialdata_, even_trialdata_ = analysisFxs.split_odd_even(trialdata_)
+stats_odd, _, _, _ = analysisFxs.group_MF(odd_trialdata_, plot_each = False)  
+stats_even, _, _, _ = analysisFxs.group_MF(even_trialdata_, plot_each = False) 
+
+odd_df = analysisFxs.pivot_by_condition(stats_odd)
+even_df = analysisFxs.pivot_by_condition(stats_even)
+df = analysisFxs.hstack_sessions(odd_df, even_df, suffixes = ["_odd", "_even"])
+fig, ax = plt.subplots()
+figFxs.my_regplot(df['auc_odd'], df['auc_even'], ax = ax)
+ax.set_xlabel("Odd")
+ax.set_ylabel("Even")
+ax.set_title('AUC (s)')
+
+
+odd_df = analysisFxs.pivot_by_condition(stats_odd)
+even_df = analysisFxs.pivot_by_condition(stats_even)
+df = analysisFxs.hstack_sessions(odd_df, even_df, suffixes = ["_odd", "_even"])
+fig, ax = plt.subplots()
+figFxs.my_regplot(df['std_wtw_odd'], df['std_wtw_even'], ax = ax)
+ax.set_xlabel("Odd")
+ax.set_ylabel("Even")
+ax.set_title(r"$\sigma_{wtw}$ (s)")
+
+
+

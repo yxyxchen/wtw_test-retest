@@ -1,4 +1,4 @@
-expModelFitHM = function(expname, sess, modelName, isFirstFit, fit_method, stepSec = 0.5, parallel = F){
+expModelFitHM = function(expname, sess, modelName, fit_method, stepSec = 0.5, parallel = F, chainIdx = 1){
   # load experiment parameters
   load("expParas.RData")
 
@@ -13,10 +13,11 @@ expModelFitHM = function(expname, sess, modelName, isFirstFit, fit_method, stepS
   trialData = allData$trialData
   
   # make directions 
-  outputDir = sprintf("../../analysis_results/%s/modelfit_hm/%s/stepsize%.2f/%s", expname, fit_method, stepSec, modelName)
+  outputDir = sprintf("../../analysis_results/%s/modelfit_hm/%s/stepsize%.2f/%s/chain%d", expname, fit_method, stepSec, modelName, chainIdx)
   dir.create(sprintf("../../analysis_results/%s/modelfit_hm", expname))
   dir.create(sprintf("../../analysis_results/%s/modelfit_hm/%s", expname, fit_method))
   dir.create(sprintf("../../analysis_results/%s/modelfit_hm/%s/stepsize%.2f", expname,  fit_method, stepSec))
+  dir.create(sprintf("../../analysis_results/%s/modelfit_hm/%s/stepsize%.2f/%s/", expname,  fit_method, stepSec, modelName))
   dir.create(outputDir)
   # set output directory 
   
@@ -62,47 +63,22 @@ expModelFitHM = function(expname, sess, modelName, isFirstFit, fit_method, stepS
   }
   
   # set model fit configurations
-  if(isFirstFit){
-    config = list(
-      nChain = 4,
-      # nIter = 1000 + 1000,
-      # warmup = 1000,
-      nIter =  50 + 50,
-      warmup = 50,
-      adapt_delta = 0.99,
-      max_treedepth = 11,
-      warningFile = sprintf("stanWarnings/exp_%s.txt", modelName)
-    )
-  }
+  config = list(
+    nChain = 1,
+    # nIter = 1000 + 1000,
+    # warmup = 1000,
+    nIter =  50 + 50,
+    warmup = 50,
+    adapt_delta = 0.99,
+    max_treedepth = 11,
+    warningFile = sprintf("stanWarnings/exp_%s.txt", modelName)
+  )
     # load
     existing_files = list.files(sprintf("../../analysis_results/%s/modelfit/%s/stepsize%.2f/%s", expname, fit_method, stepSec, modelName),
                         pattern = sprintf("sess%d_summary.txt", sess))
     existing_ids = substr(existing_files, 1, 5)
     # divide data into small batches if batchIdx exists 
-    trialData = trialData[1:10]
-
-  # if it is the first time to fit the model, fit all participants
-  # otherwise, check model fitting results and refit those that fail any of the following criteria
-  ## no divergent transitions 
-  ## Rhat < 1.01 
-  ## Effective Sample Size (ESS) > nChain * 100
-  if(!isFirstFit){
-    ids = names(trialData)
-    paraNames = getParaNames(modelName)
-    expPara = loadExpPara(paraNames, outputDir, sess)
-    passCheck = checkFit(paraNames, expPara)
-    trialData = trialData[!passCheck]
-    
-    # increase the num of Iterations 
-    config = list(
-      nChain = 4,
-      nIter = 1000 + 5000,
-      warmup = 5000,
-      adapt_delta = 0.99,
-      max_treedepth = 11,
-      warningFile = sprintf("stanWarnings/exp_refit_%s.txt", modelName)
-    )
-  }
+    trialData = trialData[1:50]
 
   # fit the model for all participants
   modelFitHM(sess, modelName, trialData, stepSec, config, outputDir, parallel = parallel, isTrct = T)
@@ -115,7 +91,7 @@ if (sys.nframe() == 0){
   # print(length(args))
   # print(args[1])
   if(length(args) == 6){
-    expModelFit(args[1], as.numeric(args[2]), args[3], as.logical(args[4]), args[5], as.numeric(args[6]))
+    expModelFitHM(args[1], as.numeric(args[2]), args[3],  args[4], as.numeric(args[5]),  as.numeric(args[6]))
   }
 }
 expname = "passive"

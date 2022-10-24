@@ -53,20 +53,6 @@ s2_stats, s2_Psurv_b1_, s2_Psurv_b2_, s2_WTW_emp = analysisFxs.group_MF(trialdat
 
 s1_df = analysisFxs.pivot_by_condition(s1_stats)
 s2_df = analysisFxs.pivot_by_condition(s2_stats)
-df = s1_df.merge(s2_df, on = "id", suffixes = ['_sess1', '_sess2'])
-fig, ax = plt.subplots()
-figFxs.my_regplot(df['auc_sess1'], df['auc_sess2'], ax = ax)
-ax.set_title("AUC (s)")
-
-
-fig, ax = plt.subplots()
-figFxs.my_regplot(df['std_wtw_sess1'], df['std_wtw_sess2'], ax = ax)
-ax.set_title("std_wtw (s2)")
-
-
-fig, ax = plt.subplots()
-figFxs.my_regplot(df['auc_delta_sess1'], df['auc_delta_sess2'], ax = ax)
-ax.set_title("delta AUC (s)")
 
 ############ correlations among behavioral measures ############
 df = analysisFxs.agg_across_sessions(s1_df, s2_df)

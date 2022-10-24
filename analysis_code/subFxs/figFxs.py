@@ -36,6 +36,8 @@ sns.set_style("white")
 condition_palette = ["#762a83", "#1b7837"]
 
 
+
+
 ######## 
 def plot_group_emp_rep_wtw(modelname, s1_WTW_rep, s2_WTW_rep, s1_WTW_emp, s2_WTW_emp, hdrdata_sess1, hdrdata_sess2, s1_paradf, s2_paradf):
     # how do I truncate the ending part of data?
@@ -206,14 +208,14 @@ def WTW_reliability(sess1_WTW_, sess2_WTW_, hdrdata_sess1, hdrdata_sess2, ax):
     ax.set_xlabel('Task time (s)')
     ax.set_ylabel("Reliability of WTW")
 
-def AUC_reliability(sess1_stats, sess2_stats):
-    colnames = ['id', 'condition', 'auc']
-    df = sess1_stats.loc[:, colnames].merge(sess2_stats.loc[:, colnames], on = ["id", "condition"], suffixes = ['_sess1', '_sess2'])
-    g = sns.FacetGrid(df, col= "condition", hue = 'condition', sharex = True, sharey = True, palette = condition_palette)
-    # g.map(sns.scatterplot, 'auc_sess1', 'auc_sess2')
-    g.map(my_regplot, 'auc_sess1', "auc_sess2", exclude_outliers = False)
-    g.set(xlabel ="AUC SESS1 (s)", ylabel = "AUC SESS2 (s)")
-    g.set(ylim=(-0.5, expParas.tMax + 0.5), xlim = (-0.5, expParas.tMax + 0.5))
+# def AUC_reliability(sess1_stats, sess2_stats):
+#     colnames = ['id', 'condition', 'auc']
+#     df = sess1_stats.loc[:, colnames].merge(sess2_stats.loc[:, colnames], on = ["id", "condition"], suffixes = ['_sess1', '_sess2'])
+#     g = sns.FacetGrid(df, col= "condition", hue = 'condition', sharex = True, sharey = True, palette = condition_palette)
+#     # g.map(sns.scatterplot, 'auc_sess1', 'auc_sess2')
+#     g.map(my_regplot, 'auc_sess1', "auc_sess2", exclude_outliers = False)
+#     g.set(xlabel ="AUC SESS1 (s)", ylabel = "AUC SESS2 (s)")
+#     g.set(ylim=(-0.5, expParas.tMax + 0.5), xlim = (-0.5, expParas.tMax + 0.5))
     # def plot_reliability(sess1_df, sess2_df, varname, ax, **kwargs):
     #     df = sess1_df.merge(sess2_df, on = 'id', suffixes = ['_sess1', '_sess2']) 
     #     my_regplot(df[varname + '_sess1'], df[varname + '_sess2'], **kwargs)
@@ -368,8 +370,6 @@ def corr_analysis(row_df, col_df, n_perm):
 # def all_reliability(sess1_stats, sess2_stats):
 
 
-
-
 # reliability functions
 def my_regplot(x, y, ax = None, exclude_outliers = True, **kwargs):  
     if(ax is None):
@@ -397,7 +397,7 @@ def my_regplot(x, y, ax = None, exclude_outliers = True, **kwargs):
     # scatter plot with included data
     # 
     if exclude_outliers:
-        sns.regplot(x[~is_outlier], y[~is_outlier], **kwargs, ax = ax)
+        sns.regplot(x[~is_outlier], y[~is_outlier], scatter_kws={"color": "grey", "s": 40, "alpha":0.7, "edgecolor":'black'}, line_kws={"color": "black", "linestyle":"--"}, **kwargs, ax = ax)
         print('n_o = %d'%n_outlier)
         x_now_min = x[~is_outlier].min()
         y_now_min = y[~is_outlier].min()
@@ -412,8 +412,8 @@ def my_regplot(x, y, ax = None, exclude_outliers = True, **kwargs):
     # 
     # choose equal limits for the x and y axes
 
-    ax.set_xlabel("SESS1 value")
-    ax.set_ylabel("SESS2 value")
+    # ax.set_xlabel("SESS1 value")
+    # ax.set_ylabel("SESS2 value")
     ax.set_aspect('equal')
 
     # add text
