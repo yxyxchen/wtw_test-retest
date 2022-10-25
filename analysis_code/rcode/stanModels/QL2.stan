@@ -26,22 +26,22 @@ parameters {
   // gamma: discount factor
   // eta: prior belief parameter
   
-  // for computational efficiency,we sample raw parameters from unif(-0.5, 0.5)
-  // which are later transformed into actual parameters
-  real<lower = -0.5, upper = 0.5> raw_alpha;
-  real<lower = -0.5, upper = 0.5> raw_nu; // ratio between alphaR and alphaU
-  real<lower = -0.5, upper = 0.5> raw_tau;
-  real<lower = -0.5, upper = 0.5> raw_gamma;
-  real<lower = -0.5, upper = 0.5> raw_eta;
+  // for computational efficiency,we sample raw parameters from normal(0, 1)
+  // which are then transformed via the probit function into bounded parameters
+  real raw_alpha;
+  real raw_nu; // ratio between alphaR and alphaU
+  real raw_tau;
+  real raw_gamma;
+  real raw_eta; 
 }
 transformed parameters{
   // scale raw parameters into real parameters
-  real alpha = (raw_alpha + 0.5) * 0.3; // alpha ~ unif(0, 0.3)
-  real alphaU = min([alpha * (raw_nu + 0.5) * 5, 1]');// alphaU
-  real nu = alphaU / alpha;
-  real tau = (raw_tau + 0.5) * 41.9 + 0.1; // tau ~ unif(0.1, 22)
-  real gamma = (raw_gamma + 0.5) * 0.5 + 0.5; // gamma ~ unif(0.5, 1)
-  real eta = (raw_eta + 0.5) * 15; // eta ~ unif(0, 15)
+  real <lower=0, upper=0.3> alpha = Phi_approx(raw_alpha) * 0.3; 
+  real <lower=0, upper=1> alphaU = min([alpha * Phi_approx(raw_nu) * 10, 1]'); 
+  real <lower=0, upper=10> nu = alphaU / alpha;
+  real <lower=0, upper=42> tau = Phi_approx(raw_tau) * 42; 
+  real <lower=0.5, upper=1> gamma = Phi_approx(raw_gamma)* 0.5 + 0.5; 
+  real <lower=0, upper=15> eta = Phi_approx(raw_eta) * 15;
   
   // declare variables 
   // // state value of t = 0
@@ -101,11 +101,11 @@ model {
   int action; 
   vector[2] actionValues; 
   // distributions for raw parameters
-  raw_alpha ~ uniform(-0.5, 0.5);
-  raw_nu ~ uniform(-0.5, 0.5);
-  raw_tau ~ uniform(-0.5, 0.5);
-  raw_gamma ~ uniform(-0.5, 0.5);
-  raw_eta ~ uniform(-0.5, 0.5);
+  raw_alpha ~ normal(0, 1);
+  raw_nu ~ normal(0, 1);
+  raw_tau ~ normal(0, 1);
+  raw_gamma ~ normal(0, 1);
+  raw_eta ~ normal(0, 1);
   
   // loop over trials
   for(tIdx in 1 : N){

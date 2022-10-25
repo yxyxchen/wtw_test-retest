@@ -1,9 +1,9 @@
 library("stringr")
 # return learning parameters for each model 
 getParaNames = function(modelName){
-  if(modelName == "QL1reset_FL3") paraNames = c("alpha", "tau", "gamma", "eta1", "eta2")
-  else if(substr(modelName, 1, 3) == "QL1") paraNames = c("alpha", "tau", "gamma", "eta")
-  else if(modelName == "QL2reset_FL3") paraNames = c("alpha", "nu", "tau", "gamma", "eta1", "eta2")
+  # if(modelName == "QL1reset_FL3") paraNames = c("alpha", "tau", "gamma", "eta1", "eta2")
+  if(substr(modelName, 1, 3) == "QL1") paraNames = c("alpha", "tau", "gamma", "eta")
+  # else if(modelName == "QL2reset_FL3") paraNames = c("alpha", "nu", "tau", "gamma", "eta1", "eta2")
   else if(substr(modelName, 1, 3) == "QL2") paraNames = c("alpha", "nu", "tau", "gamma", "eta")
   else if(substr(modelName, 1, 3) == "RL1") paraNames = c("alpha", "tau", "eta", "beta")
   else if(substr(modelName, 1, 3) == "RL2") paraNames = c("alpha", "nu", "tau", "eta", "beta")

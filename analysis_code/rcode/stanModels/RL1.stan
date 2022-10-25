@@ -27,18 +27,18 @@ parameters {
   
   // for computational efficiency,we sample raw parameters from unif(-0.5, 0.5)
   // which are later transformed into actual parameters
-  real<lower = -0.5, upper = 0.5> raw_alpha;
-  real<lower = -0.5, upper = 0.5> raw_tau;
-  real<lower = -0.5, upper = 0.5> raw_eta;
-  real<lower = -0.5, upper = 0.5> raw_beta_alpha;
+  real raw_alpha;
+  real raw_tau;
+  real raw_eta;
+  real raw_beta_alpha;
 }
 transformed parameters{
   // scale raw parameters into real parameters
-  real alpha = (raw_alpha + 0.5) * 0.3; // alpha ~ unif(0, 0.3)
-  real tau = (raw_tau + 0.5) * 21.9 + 0.1; // tau ~ unif(0.1, 22)
-  real eta = (raw_eta + 0.5) * 6.5; // eta ~ unif(0, 6.5)
-  real beta_alpha = (raw_beta_alpha + 0.5) * 1; // the ratio between alpha and beta ~ unif(0, 1)
-  real beta = beta_alpha * alpha; // beta 
+  real <lower=0, upper=0.3> alpha = Phi_approx(raw_alpha) * 0.3; 
+  real <lower=0, upper=42> tau = Phi_approx(raw_tau) * 42; 
+  real <lower=0.5, upper=1> eta = Phi_approx(raw_eta)* 15; 
+  real <lower=0, upper=1> beta_alpha = Phi_approx(raw_beta_alpha); 
+  real <lower=0, upper=1> beta = beta_alpha * alpha; 
   
   // declare variables 
   // // state value of t = 0
@@ -101,10 +101,10 @@ model {
   int action; 
   vector[2] actionValues; 
   // distributions for raw parameters
-  raw_alpha ~ uniform(-0.5, 0.5);
-  raw_tau ~ uniform(-0.5, 0.5);
-  raw_eta ~ uniform(-0.5, 0.5);
-  raw_beta_alpha ~ uniform(-0.5, 0.5);
+  raw_alpha ~ normal(0, 1);
+  raw_tau ~ normal(0, 1);
+  raw_eta ~ normal(0, 1);
+  raw_beta_alpha ~ normal(0, 1);
   
   // loop over trials
   for(tIdx in 1 : N){

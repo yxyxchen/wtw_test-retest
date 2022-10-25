@@ -98,7 +98,7 @@ one_step_pwaits = 1 / (1 + np.exp(-Qwaits * tau))
 
 # modelnames = ['QL2reset_FL3']
 modelname = 'QL2reset_FL2'
-fitMethod = "even"
+fitMethod = "whole"
 stepsize = 0.5
 # s1_WTW_rep_ = []
 # s2_WTW_rep_ = []
@@ -266,7 +266,7 @@ plt.gcf().set_size_inches(5 * npara, 5)
 plt.savefig(os.path.join("..", 'figures', expname, "%s_%s_stepsize%.2f_para_reliability.pdf"%(modelname, fitMethod, stepsize)))
 
 
-#####################
+#####################################################
 ##################### split half reliability ########
 modelname = 'QL2reset_FL2'
 stepsize = 0.5

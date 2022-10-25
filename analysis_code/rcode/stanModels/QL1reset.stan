@@ -22,30 +22,24 @@ transformed data {
 parameters {
   // parameters:
   // alpha : learning rate 
-  // nu : valence-dependent bias
   // tau : action consistency, namely the soft-max temperature parameter
   // gamma: discount factor
   // eta: prior belief parameter
   
-  // for computational efficiency,we sample raw parameters from unif(-0.5, 0.5)
-  // which are later transformed into actual parameters
-  real<lower = -0.5, upper = 0.5> raw_alpha;
-  real raw_nu; // ratio between alphaR and alphaU
-  real<lower = -0.5, upper = 0.5> raw_tau;
-  real<lower = -0.5, upper = 0.5> raw_gamma;
-  real<lower = -0.5, upper = 0.5> raw_eta1;
-  real raw_eta2_eta1_ratio;
+  // for computational efficiency,we sample raw parameters from normal(0, 1)
+  // which are then transformed via the probit function into bounded parameters
+  real raw_alpha;
+  real raw_tau;
+  real raw_gamma;
+  real raw_eta; 
 }
 transformed parameters{
   // scale raw parameters into real parameters
-  real alpha = (raw_alpha + 0.5) * 0.3; // alpha ~ unif(0, 0.3)
-  real alphaU = max([min([alpha * (raw_nu + 1), 1]'), 0]');// alphaU
-  real nu = alphaU / alpha;
-  real tau = (raw_tau + 0.5) * 41.9 + 0.1; // tau ~ unif(0.1, 22)
-  real gamma = (raw_gamma + 0.5) * 0.5 + 0.5; // gamma ~ unif(0.5, 1)
-  real eta1 = (raw_eta1 + 0.5) * 15; // eta1 ~ unif(0, 15)
-  real eta2 = (eta1 * (raw_eta2_eta1_ratio + 1));
-  
+  real <lower=0, upper=0.3> alpha = Phi_approx(raw_alpha) * 0.3; // alpha ~ unif(0, 0.3)
+  real <lower=0, upper=42> tau = Phi_approx(raw_tau) * 42; // tau ~ unif(0.1, 42)
+  real <lower=0.5, upper=1> gamma = Phi_approx(raw_gamma)* 0.5 + 0.5; // gamma ~ unif(0.5, 1)
+  real <lower=0, upper=15> eta = Phi_approx(raw_eta) * 15; // eta ~ unif(0, 15)
+
   // declare variables 
   // // state value of t = 0
   real V0; 
@@ -63,7 +57,7 @@ transformed parameters{
   // the initial waiting value delines with elapsed time 
   // and the eta parameter determines at which step it falls below V0
   for(i in 1 : nWaitOrQuit){
-    Qwaits[i] = - tWaits[i] * 0.1 + eta1 + V0;
+    Qwaits[i] = - tWaits[i] * 0.1 + eta + V0;
   }
   
   // record initial action values
@@ -76,80 +70,66 @@ transformed parameters{
       real T = Ts[tIdx]; // this trial ends on t = T
       int R = Rs[tIdx]; // payoff in this trial
       int lastDecPoint = nMadeActions[tIdx]; // last decision point in this trial
-      real LR; 
     
-      // determine the learning rate 
-      if(R > 0){
-        LR = alpha;
-      }else{
-        LR = alphaU;
-      }
       // update Qwaits towards the discounted returns
       for(i in 1 : lastDecPoint){
         real t = tWaits[i]; // time for this decision points 
         real Gt = exp(log(gamma) * (T - t)) * (R + V0);
-        Qwaits[i] = Qwaits[i] + LR * (Gt - Qwaits[i]);
+        Qwaits[i] = Qwaits[i] + alpha * (Gt - Qwaits[i]);
       }
       
       // update V0 towards the discounted returns 
       G0 = exp(log(gamma) * (T - (-iti))) * (R + V0);
-      V0 = V0 + LR * (G0 - V0);
+      V0 = V0 + alpha * (G0 - V0);
       
       // save action values
       Qwaits_[,tIdx+1] = Qwaits;
       V0_[tIdx+1] = V0;
     }
   }
-
-  if (N > N_block1){
+  
+  if(N > N_block1){
     // reset
     V0 = V0_ini; 
     for(i in 1 : nWaitOrQuit){
-      Qwaits[i] = - tWaits[i] * 0.1 + eta2 + V0;
+      Qwaits[i] = - tWaits[i] * 0.1 + eta + V0;
     }
     Qwaits_[,N_block1 + 1] = Qwaits;
     V0_[N_block1 + 1] = V0; 
+    
     for(tIdx in (1 + N_block1): (N - 1)){
       real T = Ts[tIdx]; // this trial ends on t = T
       int R = Rs[tIdx]; // payoff in this trial
       int lastDecPoint = nMadeActions[tIdx]; // last decision point in this trial
       real LR; 
-      
-      // determine the learning rate 
-      if(R > 0){
-        LR = alpha;
-      }else{
-        LR = alphaU;
-      }
+    
       // update Qwaits towards the discounted returns
       for(i in 1 : lastDecPoint){
         real t = tWaits[i]; // time for this decision points 
         real Gt = exp(log(gamma) * (T - t)) * (R + V0);
-        Qwaits[i] = Qwaits[i] + LR * (Gt - Qwaits[i]);
+        Qwaits[i] = Qwaits[i] + alpha * (Gt - Qwaits[i]);
       }
       
       // update V0 towards the discounted returns 
       G0 = exp(log(gamma) * (T - (-iti))) * (R + V0);
-      V0 = V0 + LR * (G0 - V0);
+      V0 = V0 + alpha * (G0 - V0);
       
       // save action values
       Qwaits_[,tIdx+1] = Qwaits;
       V0_[tIdx+1] = V0;
     }
   }
-
 }
 model {
   // delcare variables 
   int action; 
   vector[2] actionValues; 
   // distributions for raw parameters
-  raw_alpha ~ uniform(-0.5, 0.5);
-  raw_nu ~ normal(0, 2);
-  raw_tau ~ uniform(-0.5, 0.5);
-  raw_gamma ~ uniform(-0.5, 0.5);
-  raw_eta1 ~ uniform(-0.5, 0.5);
-  raw_eta2_eta1_ratio~ normal(0, 2); 
+  raw_alpha ~ normal(0, 1);
+  raw_tau ~ normal(0, 1);
+  raw_gamma ~ normal(0, 1);
+  raw_eta ~ normal(0, 1);
+  
   // loop over trials
   for(tIdx in 1 : N){
     real T = Ts[tIdx]; // this trial ends on t = T
@@ -203,3 +183,4 @@ generated quantities {
   // calculate total log likelihood
   totalLL =sum(log_lik);
 }
+

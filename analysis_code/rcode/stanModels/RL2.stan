@@ -28,21 +28,21 @@ parameters {
   
   // for computational efficiency,we sample raw parameters from unif(-0.5, 0.5)
   // which are later transformed into actual parameters
-  real<lower = -0.5, upper = 0.5> raw_alpha;
-  real<lower = -0.5, upper = 0.5> raw_nu;
-  real<lower = -0.5, upper = 0.5> raw_tau;
-  real<lower = -0.5, upper = 0.5> raw_eta;
-  real<lower = -0.5, upper = 0.5> raw_beta_alpha;
+  real raw_alpha;
+  real raw_nu;
+  real raw_tau;
+  real raw_eta;
+  real raw_beta_alpha;
 }
 transformed parameters{
   // scale raw parameters into real parameters
-  real alpha = (raw_alpha + 0.5) * 0.3; // alpha ~ unif(0, 0.3)
-  real alphaU = min([alpha * (raw_nu + 0.5) * 5, 1]');// alphaU
-  real nu = alphaU / alpha;
-  real tau = (raw_tau + 0.5) * 21.9 + 0.1; // tau ~ unif(0.1, 22)
-  real eta = (raw_eta + 0.5) * 6.5; // prior ~ unif(0, 6.5)
-  real beta_alpha = (raw_beta_alpha + 0.5) * 1; // the ratio between beta and alpha
-  real beta = beta_alpha * alpha; // beta ~ unif(0, 0.3)
+  real <lower=0, upper=0.3> alpha = Phi_approx(raw_alpha) * 0.3; 
+  real <lower=0, upper=1> alphaU = min([alpha * Phi_approx(raw_nu) * 10, 1]'); 
+  real <lower=0, upper=10> nu = alphaU / alpha;
+  real <lower=0, upper=42> tau = Phi_approx(raw_tau) * 42; 
+  real <lower=0.5, upper=1> eta = Phi_approx(raw_eta)* 15; 
+  real <lower=0, upper=1> beta_alpha = Phi_approx(raw_beta_alpha); 
+  real <lower=0, upper=1> beta = beta_alpha * alpha;  
   
   // declare variables 
   // // state value of t = 0
@@ -75,49 +75,79 @@ transformed parameters{
   V0_[1] = V0;
  
   //loop over trials
-  for(tIdx in 1 : (N - 1)){
-    real T = Ts[tIdx]; // this trial ends on t = T
-    int R = Rs[tIdx]; // payoff in this trial
-    int nMadeAction = nMadeActions[tIdx]; // total number of actions in a trial
-    
-    // determine alpha
-    real LR;
-    if(R > 0){
-      LR = alpha;
-    }else{
-      LR = alphaU;
+  if(N_block1 > 0){
+    for(tIdx in 1 : (N_block1 - 1)){
+      real T = Ts[tIdx]; // this trial ends on t = T
+      int R = Rs[tIdx]; // payoff in this trial
+      int nMadeAction = nMadeActions[tIdx]; // last decision point in this trial
+      
+      // update Qwaits towards the discounted returns
+      for(i in 1 : nMadeAction){
+        real t = tWaits[i]; // time for this decision points 
+        real Gt = R - rewardRate * (T - t) + V0;
+        Qwaits[i] = Qwaits[i] + alpha * (Gt - Qwaits[i]);
+      }
+      
+      // update V0 towards the discounted returns 
+      G0 = R - rewardRate * (T - (-iti)) + V0;
+      delta0 = G0 - V0;
+      V0 = V0 + alpha * delta0;
+      
+      // update reward rate 
+      rewardRate = rewardRate + beta * delta0;
+      
+      // save action values
+      Qwaits_[,tIdx+1] = Qwaits;
+      V0_[tIdx+1] = V0;
     }
-    
-    // update Qwaits towards the discounted returns
-    for(i in 1 : nMadeAction){
-      real t = tWaits[i]; // time for this decision points 
-      real Gt = R - rewardRate * (T - t) + V0;
-      Qwaits[i] = Qwaits[i] + LR * (Gt - Qwaits[i]);
+  }
+  
+  if(N > N_block1){
+    // reset
+    V0 = V0_ini; 
+    for(i in 1 : nWaitOrQuit){
+      Qwaits[i] = - tWaits[i] * 0.1 + eta + V0;
     }
+    Qwaits_[,N_block1 + 1] = Qwaits;
+    V0_[N_block1 + 1] = V0; 
     
-    // update V0 towards the discounted returns 
-    G0 = R - rewardRate * (T - (-iti)) + V0;
-    delta0 = G0 - V0;
-    V0 = V0 + LR * delta0;
-    
-    // update reward rate 
-    rewardRate = rewardRate + beta * delta0;
-    
-    // save action values
-    Qwaits_[,tIdx+1] = Qwaits;
-    V0_[tIdx+1] = V0;
+    for(tIdx in (1 + N_block1): (N - 1)){
+      real T = Ts[tIdx]; // this trial ends on t = T
+      int R = Rs[tIdx]; // payoff in this trial
+      int nMadeAction = nMadeActions[tIdx]; // last decision point in this trial
+      
+      // update Qwaits towards the discounted returns
+      for(i in 1 : nMadeAction){
+        real t = tWaits[i]; // time for this decision points 
+        real Gt = R - rewardRate * (T - t) + V0;
+        Qwaits[i] = Qwaits[i] + alpha * (Gt - Qwaits[i]);
+      }
+      
+      // update V0 towards the discounted returns 
+      G0 = R - rewardRate * (T - (-iti)) + V0;
+      delta0 = G0 - V0;
+      V0 = V0 + alpha * delta0;
+      
+      // update reward rate 
+      rewardRate = rewardRate + beta * delta0;
+      
+      // save action values
+      Qwaits_[,tIdx+1] = Qwaits;
+      V0_[tIdx+1] = V0;
+    }
   }
 }
 model {
   // delcare variables 
   int action; 
   vector[2] actionValues; 
+  
   // distributions for raw parameters
-  raw_alpha ~ uniform(-0.5, 0.5);
-  raw_nu ~ uniform(-0.5, 0.5);
-  raw_tau ~ uniform(-0.5, 0.5);
-  raw_eta ~ uniform(-0.5, 0.5);
-  raw_beta_alpha ~ uniform(-0.5, 0.5);
+  raw_alpha ~ normal(0, 1);
+  raw_nu ~ normal(0, 1);
+  raw_tau ~ normal(0, 1);
+  raw_eta ~ normal(0, 1);
+  raw_beta_alpha ~ normal(0, 1);
   
   // loop over trials
   for(tIdx in 1 : N){
