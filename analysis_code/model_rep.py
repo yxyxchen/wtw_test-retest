@@ -97,7 +97,7 @@ tau = 5
 one_step_pwaits = 1 / (1 + np.exp(-Qwaits * tau))
 
 # modelnames = ['QL2reset_FL3']
-modelname = 'QL2reset_FL2'
+modelname = 'RL1'
 fitMethod = "whole"
 stepsize = 0.5
 # s1_WTW_rep_ = []

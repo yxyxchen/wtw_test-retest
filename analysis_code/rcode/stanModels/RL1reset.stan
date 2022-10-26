@@ -101,7 +101,10 @@ transformed parameters{
   
   if(N > N_block1){
     // reset
-    V0 = V0_ini; 
+    V0 = 0; 
+    rewardRate = rewardRate_ini;
+    // the initial waiting value delines with elapsed time 
+    // and the eta parameter determines at which step it falls below V0
     for(i in 1 : nWaitOrQuit){
       Qwaits[i] = - tWaits[i] * 0.1 + eta + V0;
     }
@@ -145,58 +148,25 @@ model {
   raw_beta_alpha ~ normal(0, 1);
   
   // loop over trials
-  if(N_block1 > 0){
-    for(tIdx in 1 : (N_block1 - 1)){
-      real T = Ts[tIdx]; // this trial ends on t = T
-      int R = Rs[tIdx]; // payoff in this trial
-      int nMadeAction = nMadeActions[tIdx]; // last decision point in this trial
-      
-      // loop over decision points
-      for(i in 1 : nMadeAction){
-        // the agent wait in every decision point in rewarded trials
-        // and wait except for the last decision point in non-rewarded trials
-        if(R == 0 && i == nMadeAction){
-          action = 2; // quit
-        }else{
-          action = 1; // wait
-        }
-        // calculate the likelihood using the soft-max function
-        actionValues[1] = Qwaits_[i, tIdx] * tau;
-        actionValues[2] = V0_[tIdx] * tau;
-        target += categorical_logit_lpmf(action | actionValues);
-      } 
-    }
-  }
-  
-  if(N > N_block1){
-    // reset
-    V0 = V0_ini; 
-    for(i in 1 : nWaitOrQuit){
-      Qwaits[i] = - tWaits[i] * 0.1 + eta + V0;
-    }
-    Qwaits_[,N_block1 + 1] = Qwaits;
-    V0_[N_block1 + 1] = V0; 
+  for(tIdx in 1 : N){
+    real T = Ts[tIdx]; // this trial ends on t = T
+    int R = Rs[tIdx]; // payoff in this trial
+    int nMadeAction = nMadeActions[tIdx]; // last decision point in this trial
     
-    for(tIdx in (1 + N_block1): (N - 1)){
-      real T = Ts[tIdx]; // this trial ends on t = T
-      int R = Rs[tIdx]; // payoff in this trial
-      int nMadeAction = nMadeActions[tIdx]; // last decision point in this trial
-      
-      // loop over decision points
-      for(i in 1 : nMadeAction){
-        // the agent wait in every decision point in rewarded trials
-        // and wait except for the last decision point in non-rewarded trials
-        if(R == 0 && i == nMadeAction){
-          action = 2; // quit
-        }else{
-          action = 1; // wait
-        }
-        // calculate the likelihood using the soft-max function
-        actionValues[1] = Qwaits_[i, tIdx] * tau;
-        actionValues[2] = V0_[tIdx] * tau;
-        target += categorical_logit_lpmf(action | actionValues);
-      } 
-    }
+    // loop over decision points
+    for(i in 1 : nMadeAction){
+      // the agent wait in every decision point in rewarded trials
+      // and wait except for the last decision point in non-rewarded trials
+      if(R == 0 && i == nMadeAction){
+        action = 2; // quit
+      }else{
+        action = 1; // wait
+      }
+      // calculate the likelihood using the soft-max function
+      actionValues[1] = Qwaits_[i, tIdx] * tau;
+      actionValues[2] = V0_[tIdx] * tau;
+      target += categorical_logit_lpmf(action | actionValues);
+    } 
   }
 }
 generated quantities {

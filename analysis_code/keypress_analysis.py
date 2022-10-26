@@ -11,8 +11,8 @@ import math
 from datetime import datetime
 import matplotlib.pyplot as plt
 
-data = pd.read_csv("/Users/cyx/Documents/wtw_test-retest/analysis_code/data/active/keypress-s0001-sess1.csv")
-taskdata = pd.read_csv("/Users/cyx/Documents/wtw_test-retest/analysis_code/data/active/task-s0001-sess1.csv")
+data = pd.read_csv("../keypress_data/keypress-s0001-sess1.csv")
+taskdata = pd.read_csv("./data/active/task-s0001-sess1.csv")
 data['totalKeypress'] = np.arange(data.shape[0]) + 1
 
 # I want to know what is the final keypress here

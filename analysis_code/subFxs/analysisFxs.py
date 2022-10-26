@@ -44,6 +44,7 @@ def vstack_sessions(s1_df, s2_df):
 
 def hstack_sessions(s1_df, s2_df, suffixes = ["_sess1", "_sess2"]):
     df = s1_df.merge(s2_df, on = 'id', suffixes = suffixes)
+    
     return df
 
 

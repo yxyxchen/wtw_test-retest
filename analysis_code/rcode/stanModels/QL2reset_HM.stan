@@ -59,6 +59,8 @@ transformed parameters{
 model {
 
   // distributions for raw parameters
+  mu ~ normal(0, 1);
+  sigma ~ normal(0, 0.2);
   raw_alpha ~ normal(0, 1);
   raw_nu ~ normal(0, 1);
   raw_tau ~ normal(0, 1);

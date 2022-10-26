@@ -90,13 +90,13 @@ if (sys.nframe() == 0){
   print(args)
   # print(length(args))
   # print(args[1])
-  if(length(args) == 6){
-    expModelFitHM(args[1], as.numeric(args[2]), args[3],  args[4], as.numeric(args[5]),  as.numeric(args[6]))
+  if(length(args) == 7){
+    expModelFitHM(args[1], as.numeric(args[2]), args[3],  args[4], as.numeric(args[5]),  as.numeric(args[6]), as.numeric(args[7]))
   }
 }
 expname = "passive"
 sess = 2
-modelName = "QL2reset_FL2_HM"
+modelName = "QL2reset_HM"
 isFirstFit = TRUE
 fit_method = "whole"
 batchIdx = NULL

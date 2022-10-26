@@ -21,9 +21,9 @@ transformed data {
 parameters {
   // parameters:
   // alpha : learning rate
-  // nu: valence-dependent bias
+  // nu: valence based bias
   // tau : action consistency, namely the soft-max temperature parameter
-  // eta: prior belief parameter
+  // eta: eta belief parameter
   // beta : learning rate for the task reward rate
   
   // for computational efficiency,we sample raw parameters from unif(-0.5, 0.5)
@@ -42,7 +42,7 @@ transformed parameters{
   real <lower=0, upper=42> tau = Phi_approx(raw_tau) * 42; 
   real <lower=0.5, upper=1> eta = Phi_approx(raw_eta)* 15; 
   real <lower=0, upper=1> beta_alpha = Phi_approx(raw_beta_alpha); 
-  real <lower=0, upper=1> beta = beta_alpha * alpha;  
+  real <lower=0, upper=1> beta = beta_alpha * alpha; 
   
   // declare variables 
   // // state value of t = 0
@@ -65,7 +65,7 @@ transformed parameters{
   V0 = 0; 
   rewardRate = rewardRate_ini;
   // the initial waiting value delines with elapsed time 
-  // and the prior parameter determines at which step it falls below V0
+  // and the eta parameter determines at which step it falls below V0
   for(i in 1 : nWaitOrQuit){
     Qwaits[i] = - tWaits[i] * 0.1 + eta + V0;
   }
@@ -75,80 +75,51 @@ transformed parameters{
   V0_[1] = V0;
  
   //loop over trials
-  if(N_block1 > 0){
-    for(tIdx in 1 : (N_block1 - 1)){
-      real T = Ts[tIdx]; // this trial ends on t = T
-      int R = Rs[tIdx]; // payoff in this trial
-      int nMadeAction = nMadeActions[tIdx]; // last decision point in this trial
-      
-      // update Qwaits towards the discounted returns
-      for(i in 1 : nMadeAction){
-        real t = tWaits[i]; // time for this decision points 
-        real Gt = R - rewardRate * (T - t) + V0;
-        Qwaits[i] = Qwaits[i] + alpha * (Gt - Qwaits[i]);
-      }
-      
-      // update V0 towards the discounted returns 
-      G0 = R - rewardRate * (T - (-iti)) + V0;
-      delta0 = G0 - V0;
-      V0 = V0 + alpha * delta0;
-      
-      // update reward rate 
-      rewardRate = rewardRate + beta * delta0;
-      
-      // save action values
-      Qwaits_[,tIdx+1] = Qwaits;
-      V0_[tIdx+1] = V0;
-    }
-  }
-  
-  if(N > N_block1){
-    // reset
-    V0 = V0_ini; 
-    for(i in 1 : nWaitOrQuit){
-      Qwaits[i] = - tWaits[i] * 0.1 + eta + V0;
-    }
-    Qwaits_[,N_block1 + 1] = Qwaits;
-    V0_[N_block1 + 1] = V0; 
+  for(tIdx in 1 : (N - 1)){
+    real T = Ts[tIdx]; // this trial ends on t = T
+    int R = Rs[tIdx]; // payoff in this trial
+    int nMadeAction = nMadeActions[tIdx]; // last decision point in this trial
     
-    for(tIdx in (1 + N_block1): (N - 1)){
-      real T = Ts[tIdx]; // this trial ends on t = T
-      int R = Rs[tIdx]; // payoff in this trial
-      int nMadeAction = nMadeActions[tIdx]; // last decision point in this trial
-      
-      // update Qwaits towards the discounted returns
-      for(i in 1 : nMadeAction){
-        real t = tWaits[i]; // time for this decision points 
-        real Gt = R - rewardRate * (T - t) + V0;
-        Qwaits[i] = Qwaits[i] + alpha * (Gt - Qwaits[i]);
-      }
-      
-      // update V0 towards the discounted returns 
-      G0 = R - rewardRate * (T - (-iti)) + V0;
-      delta0 = G0 - V0;
-      V0 = V0 + alpha * delta0;
-      
-      // update reward rate 
-      rewardRate = rewardRate + beta * delta0;
-      
-      // save action values
-      Qwaits_[,tIdx+1] = Qwaits;
-      V0_[tIdx+1] = V0;
+    // determine alpha
+    real LR;
+    if(R > 0){
+      LR = alpha;
+    }else{
+      LR = alphaU;
     }
+    
+    
+    // update Qwaits towards the discounted returns
+    for(i in 1 : nMadeAction){
+      real t = tWaits[i]; // time for this decision points 
+      real Gt = R - rewardRate * (T - t) + V0;
+      Qwaits[i] = Qwaits[i] + LR * (Gt - Qwaits[i]);
+    }
+    
+    // update V0 towards the discounted returns 
+    G0 = R - rewardRate * (T - (-iti)) + V0;
+    delta0 = G0 - V0;
+    V0 = V0 + LR * delta0;
+    
+    // update reward rate 
+    rewardRate = rewardRate + beta * delta0;
+    
+    // save action values
+    Qwaits_[,tIdx+1] = Qwaits;
+    V0_[tIdx+1] = V0;
   }
 }
 model {
   // delcare variables 
   int action; 
   vector[2] actionValues; 
-  
   // distributions for raw parameters
   raw_alpha ~ normal(0, 1);
   raw_nu ~ normal(0, 1);
   raw_tau ~ normal(0, 1);
   raw_eta ~ normal(0, 1);
   raw_beta_alpha ~ normal(0, 1);
-  
+
   // loop over trials
   for(tIdx in 1 : N){
     real T = Ts[tIdx]; // this trial ends on t = T
@@ -183,7 +154,7 @@ generated quantities {
   for(tIdx in 1 : N){
     real T = Ts[tIdx]; // this trial ends on t = T
     int R = Rs[tIdx]; // payoff in this trial
-    int nMadeAction = nMadeActions[tIdx]; // last decision point in this trial
+    int nMadeAction = nMadeActions[tIdx]; // total number of actions in a trial
     
     // loop over decision points
     for(i in 1 : nMadeAction){
