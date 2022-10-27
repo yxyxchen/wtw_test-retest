@@ -29,17 +29,13 @@ import concurrent.futures
 def getModelParas(modelname):
     """Function to return parameter names of a given model
     """
-    if modelname == 'QL1':
+    if modelname[:3] == 'QL1':
         return ['alpha', 'tau', 'gamma', 'eta']
-    elif modelname in ('QL2', 'QL2reset_FL1', 'QL2reset_FL2'):
+    elif modelname[:3] == 'QL2':
         return ['alpha', 'nu', 'tau', 'gamma', 'eta']
-    elif modelname == 'QL1reset_FL3':
-        return ['alpha', 'tau', 'gamma', 'eta1', 'eta2']
-    elif modelname == 'QL2reset_FL3':
-        return ['alpha', 'nu', 'tau', 'gamma', 'eta1', 'eta2'] 
-    elif modelname == 'RL1':
+    elif modelname[:3] == 'RL1':
         return ['alpha', 'tau', 'eta', 'beta']
-    elif modelname == 'RL2':
+    elif modelname[:3] == 'RL2':
         return ['alpha', 'nu', 'tau', 'eta', 'beta']
 
    
