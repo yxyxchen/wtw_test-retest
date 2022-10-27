@@ -133,12 +133,22 @@ generated quantities {
   real<lower=0, upper=42> mu_tau;
   real<lower=0.5, upper=1> mu_gamma;
   real<lower=0, upper=15> mu_eta;
+  real sigma_alpha;
+  real sigma_nu;
+  real sigma_tau;
+  real sigma_gamma;
+  real sigma_eta;
   
   mu_alpha = Phi_approx(mu[1]) * 0.3;
   mu_nu = Phi_approx(mu[2]) * 10;
   mu_tau = Phi_approx(mu[3]) * 42;
   mu_gamma = Phi_approx(mu[4]) * 0.5 + 0.5;
   mu_eta = Phi_approx(mu[5]) * 15;
+  sigma_alpha = sigma[1];
+  sigma_nu = sigma[2];
+  sigma_tau = sigma[3];
+  sigma_gamma = sigma[4];
+  sigma_eta = sigma[5];
   
  for(sIdx in 1 : S){
     // declare variables 

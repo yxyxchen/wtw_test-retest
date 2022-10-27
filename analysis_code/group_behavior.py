@@ -31,7 +31,7 @@ from datetime import datetime as dt
 
 
 
-expname = "passive"
+expname = "active"
 s1_selfdf = loadFxs.parse_group_selfreport(expname, 1, isplot = False)
 hdrdata_sess1, trialdata_sess1_ = loadFxs.group_quality_check(expname, 1, plot_quality_check = True)
 hdrdata_sess2, trialdata_sess2_ = loadFxs.group_quality_check(expname, 2, plot_quality_check = True)

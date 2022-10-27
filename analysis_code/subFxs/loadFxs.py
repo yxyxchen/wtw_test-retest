@@ -50,6 +50,25 @@ def loaddata(expname, sess):
         # use the scheduledWait as timeWaited on rewarded trials
         trialdata.loc[trialdata.trialEarnings != 0, 'timeWaited'] = trialdata.loc[trialdata.trialEarnings != 0, 'scheduledDelay']
 
+        # load keypress data
+        if expname == "active":
+            try:
+                data = pd.read_csv("../keypress_data/keypress-%s-sess%d.csv"%(thisid, sess))
+                data['ipi'] = np.concatenate([data['timestamp'][1:], [0]]) - data['timestamp']
+                data.loc[data.groupby(['bkIdx', 'trialIdx'])['timestamp'].idxmax(), 'ipi'] = np.nan
+
+                # let's get trialwise data 
+                tmp = data.groupby(['bkIdx', 'trialIdx'])['keypressIdx'].max().reset_index()
+                trialdata.merge(tmp, on = ['bkIdx', 'trialIdx'], how = "left")
+                tmp = data.groupby(['bkIdx', 'trialIdx'])['ipi'].mean().reset_index()
+                trialdata.merge(tmp, on = ['bkIdx', 'trialIdx'], how = "left")
+                tmp = data.groupby(['bkIdx', 'trialIdx']).agg({'ipi': np.median}).reset_index()
+                trialdata.merge(tmp, on = ['bkIdx', 'trialIdx'], how = "left") # because no timestamp is recorded on some trials 
+            except Exception as e:
+                # raise e
+                print(thisid)
+                code.interact(local = dict(locals(), **globals()))
+
         # fill in 
         trialdata_[(hdrdata.id.iloc[i], hdrdata.sess.iloc[i])] =  trialdata
 
