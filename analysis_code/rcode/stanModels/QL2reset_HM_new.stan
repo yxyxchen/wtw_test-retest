@@ -28,8 +28,8 @@ parameters {
   
   // Declare all parameters as vectors for vectorizing
   // Hyper(group)-parameters
-  vector[5] mu;
-  vector<lower=0>[5] sigma;
+  vector[5] mu; # mean of raw parameters
+  vector<lower=0>[5] sigma; # std of raw parameters
   
   vector[S] raw_alpha;
   vector[S] raw_nu; // ratio between alphaR and alphaU
@@ -48,19 +48,19 @@ transformed parameters{
   vector<lower=0, upper=15>[S] eta;
   
   for(sIdx in 1 : S){
-    alpha[sIdx] = Phi_approx(raw_alpha[sIdx]) * 0.3; // alpha ~ unif(0, 0.3)
-    alphaU[sIdx] = min([alpha[sIdx] * Phi_approx(raw_nu[sIdx]) * 10, 1]'); // 
+    alpha[sIdx] = inv_logit(raw_alpha[sIdx]) * 0.3; // alpha ~ unif(0, 0.3)
+    alphaU[sIdx] = min([alpha[sIdx] * inv_logit(raw_nu[sIdx]) * 10, 1]'); // 
     nu[sIdx] = alphaU[sIdx] / alpha[sIdx];
-    tau[sIdx] = Phi_approx(raw_tau[sIdx]) * 42; // tau ~ unif(0.1, 42)
-    gamma[sIdx] = Phi_approx(raw_gamma[sIdx])* 0.5 + 0.5; // gamma ~ unif(0.5, 1)
-    eta[sIdx] = Phi_approx(raw_gamma[sIdx]) * 15; // eta ~ unif(0, 15)
+    tau[sIdx] = inv_logit(raw_tau[sIdx]) * 42; // tau ~ unif(0.1, 42)
+    gamma[sIdx] = inv_logit(raw_gamma[sIdx])* 0.5 + 0.5; // gamma ~ unif(0.5, 1)
+    eta[sIdx] = inv_logit(raw_gamma[sIdx]) * 15; // eta ~ unif(0, 15)
   }
 }
 model {
 
   // distributions for raw parameters
   mu ~ normal(0, 1);
-  sigma ~ normal(0, 0.2);
+  sigma ~ normal(0, 1);
   raw_alpha ~ normal(mu[1], sigma[1]);
   raw_nu ~ normal(mu[2], sigma[2]);
   raw_tau ~ normal(mu[3], sigma[3]);
@@ -128,30 +128,17 @@ generated quantities {
   int no = 1; // action index
   
   // For group level parameters
-  real<lower=0, upper=0.3> mu_alpha;
-  real<lower=0, upper=10> mu_nu;
-  real<lower=0, upper=42> mu_tau;
-  real<lower=0.5, upper=1> mu_gamma;
-  real<lower=0, upper=15> mu_eta;
+  real mu_raw_alpha = mu[1];
+  real mu_raw_nu = mu[2];
+  real mu_raw_tau = mu[3];
+  real mu_raw_gamma = mu[4];
+  real mu_raw_eta = mu[5];
   
-  real sigma_alpha;
-  real sigma_nu;
-  real sigma_tau;
-  real sigma_gamma;
-  real sigma_eta;
-  
-  mu_alpha = Phi_approx(mu[1]) * 0.3;
-  mu_nu = Phi_approx(mu[2]) * 10;
-  mu_tau = Phi_approx(mu[3]) * 42;
-  mu_gamma = Phi_approx(mu[4]) * 0.5 + 0.5;
-  mu_eta = Phi_approx(mu[5]) * 15;
-  
-  sigma_alpha = sigma[1];
-  sigma_nu = sigma[2];
-  sigma_tau = sigma[3];
-  sigma_gamma = sigma[4];
-  sigma_eta = sigma[5];
-  
+  real sigma_raw_alpha = sigma[1];
+  real sigma_raw_nu = sigma[2];
+  real sigma_raw_tau = sigma[3];
+  real sigma_raw_gamma = sigma[4];
+  real sigma_raw_eta = sigma[5];
   
  for(sIdx in 1 : S){
     // declare variables 

@@ -28,12 +28,12 @@ sess = 2
 stepsize = 0.5
 chainIdxs = [1, 3, 4]
 S = 50
-modelname = "QL2reset_HM"
+modelname = "QL2reset_HM_new"
 paranames = modelFxs.getModelParas(modelname)
 fitMethod = "whole"
 
 # 
-chainIdx = 1
+chainIdx = 4
 colnames = ["mu_" + x for x in paranames] + [ x + "[" + str(y) + "]" for x, y in itertools.product(paranames, np.arange(S))]+ ["totalLL"]
 para_samples = pd.read_csv("../analysis_results/%s/modelfit_hm/%s/stepsize%.2f/%s/chain%d/sess%d_para_sample.txt"%(expname, fitMethod, stepsize,  modelname, chainIdx, sess),
 	header = None, names = colnames)
@@ -43,13 +43,15 @@ para_summary = pd.read_csv("../analysis_results/%s/modelfit_hm/%s/stepsize%.2f/%
 
 para_summary.columns = colnames
 
-raw_mu_alpha_ = norm.ppf(para_sampl
-
-	es['mu_alpha'] / 0.3)
+raw_mu_alpha_ = norm.ppf(para_samples['mu_alpha'] / 0.3)
 
 # I don't think this looks right ... ok
 raw_alpha_sds = norm.ppf(para_summary.iloc[0, 55:105] / 10) - norm.ppf(para_summary.iloc[0, 1] / 10)
 plt.hist(raw_alpha_sds)
 plt.show()
+
+# I think I did this wrong ...
+raw_alpha_mu = norm.ppf(para_summary['mu_alpha'][0] / 0.3)
+raw_alpha_ = norm.ppf( para_summary.iloc[0, 5:55] / 0.3)
 
 
