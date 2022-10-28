@@ -249,15 +249,12 @@ s1_stats_rep_median, s1_WTW_rep_median, s1_dist_vals_median = modelFxs.group_mod
 
 ################ ok this dosen't seem to work 
 ################ let me try the distance calculation 
-
-s1_paradf_hp, s1_parasd_df = loadFxs.load_parameter_estimates_hp(expname, 1, hdrdata_sess1, modelname, fitMethod, stepsize)
-s2_paradf_hp, s2_parasd_df = loadFxs.load_parameter_estimates_hp(expname, 2, hdrdata_sess2, modelname, fitMethod, stepsize)
 # compare parameter reliabiliy
-subtitles = [r'$\mathbf{log(\alpha)}$', r'$\mathbf{\nu}$', r'$\mathbf{\tau}$', r'$\mathbf{\gamma}$', r'$\mathbf{log(\eta)}$']
+subtitles = [r'$\mathbf{log(\alpha)}$', r'$\mathbf{log(\nu)}$', r'$\mathbf{\tau}$', r'$\mathbf{\gamma}$', r'$\mathbf{log(\eta)}$']
 paranames = modelFxs.getModelParas(modelname)
 npara = len(paranames)
 # plot parameter distributions
-figFxs.plot_parameter_distribution(modelname, s1_paradf.iloc[:,:-1], s2_paradf.iloc[:,:-1])
+figFxs.plot_parameter_distribution(modelname, s1_paradf.iloc[:,:-1], s2_paradf.iloc[:,:-1], color = "grey", edgecolor = "black")
 plt.gcf().set_size_inches(5 * npara, 5 * 2)
 plt.savefig(os.path.join("..", 'figures', expname, "%s_%s_stepsize%.2f_para_dist.pdf"%(modelname, fitMethod, stepsize)))
 # plot parameter correlations

@@ -35,12 +35,11 @@ sns.set_style("white")
 condition_palette = ["#762a83", "#1b7837"]
 
 vars = ['auc', 'std_wtw', 'auc_delta']
-varnames = ['AUC', r"$\sigma_\mathrm{wtw}$", r'$\Delta$AUC']
 labels = ['AUC (s)', r"$\sigma_\mathrm{wtw}$ (s)", r'$\Delta$AUC (s)']
 icc_vals_ = []
 var_vals_ = []
 exp_vals_ = []
-for expname in ['passive', 'active']:
+for expname in ['active', 'passive']:
 	s1_selfdf = loadFxs.parse_group_selfreport(expname, 1, isplot = False)
 	hdrdata_sess1, trialdata_sess1_ = loadFxs.group_quality_check(expname, 1, plot_quality_check = True)
 	hdrdata_sess2, trialdata_sess2_ = loadFxs.group_quality_check(expname, 2, plot_quality_check = True)
@@ -48,24 +47,115 @@ for expname in ['passive', 'active']:
 	s2_stats, s2_Psurv_b1_, s2_Psurv_b2_, s2_WTW_ = analysisFxs.group_MF(trialdata_sess2_, plot_each = False)   
 	s1_df = analysisFxs.pivot_by_condition(s1_stats)
 	s2_df = analysisFxs.pivot_by_condition(s2_stats)
+	####### reliability analysis ######
 	df = analysisFxs.hstack_sessions(s1_df, s2_df)
-	for var, varname in zip(vars, varnames):
+	for var, label in zip(vars, labels):
 		icc_vals, _, _ = analysisFxs.calc_bootstrap_reliability(df[var + '_sess1'], df[var + '_sess2'], n = 150)
-		var_vals = np.full(len(icc_vals), varname)
+		var_vals = np.full(len(icc_vals), label)
 		exp_vals = np.full(len(icc_vals), expname)
 		icc_vals_.append(icc_vals)
 		var_vals_.append(var_vals)
 		exp_vals_.append(exp_vals)
 
-	# plot 
-	df = pd.DataFrame({
-		"icc": np.array(icc_vals_).flatten(),
-		"var": np.array(var_vals_).flatten(),
-		"exp": np.array(exp_vals_).flatten(),
-		})
+	for var, label in zip(vars, labels):
+		fig, ax = plt.subplots()
+		figFxs.my_regplot(df[var + '_sess1'], df[var + '_sess2'], ax = ax)
+		ax.set_xlabel("Session 1")
+		ax.set_ylabel("Session 2")
+		ax.set_title(label)
+		plt.tight_layout()
+		fig.savefig(os.path.join('..', 'figures', expname, var + '_reliability.pdf'))
+	######## parctice effects ###########
+	df = analysisFxs.vstack_sessions(s1_df, s2_df)
+	for var, label in zip(vars, labels):
+		fig, ax = plt.subplots()
+		sns.swarmplot(data = df, x = "sess", y = var, color = "grey", edgecolor = "black", alpha = 0.4, linewidth=1, ax = ax, size = 3)
+		sns.boxplot(x="sess", y=var, data=df, boxprops={'facecolor':'None'}, medianprops={"linestyle":"--", "color": "red"}, ax=ax)
+		ax.set_xlabel("")
+		ax.set_ylabel(label)
+		plt.gcf().set_size_inches(4.5, 6)
+		plt.tight_layout()
+		fig.savefig(os.path.join('..', 'figures', expname, var + '_practice.pdf'))
+	######################## spilt half reliability #############
+	df_ = []
+	for sess in [1, 2]:
+		if sess == 1:
+			trialdata_ = trialdata_sess1_
+		else:
+			trialdata_ = trialdata_sess2_
+		odd_trialdata_, even_trialdata_ = analysisFxs.split_odd_even(trialdata_)
+		stats_odd, _, _, _ = analysisFxs.group_MF(odd_trialdata_, plot_each = False)  
+		stats_even, _, _, _ = analysisFxs.group_MF(even_trialdata_, plot_each = False) 
+		odd_df = analysisFxs.pivot_by_condition(stats_odd)
+		even_df = analysisFxs.pivot_by_condition(stats_even)
+		df = analysisFxs.hstack_sessions(odd_df, even_df, suffixes = ["_odd", "_even"])
+		df_.append(df)
 
-	fig, ax = plt.subplots()
-	sns.violinplot(x = "icc", y = "var", data = df, hue = "exp", ax = ax)
+	df = analysisFxs.vstack_sessions(*df_)
+
+	for var, label in zip(vars, labels):
+		g = sns.lmplot(data = df, x = var+'_odd', y = var+'_even', hue = "sess", scatter_kws={"s": 40, "alpha":0.5}, line_kws={"linestyle":"--"})
+		for sess in [1, 2]:
+			spearman_rho, pearson_rho, abs_icc, con_icc, ssbs, ssbm, sse, msbs, msbm, mse = analysisFxs.calc_reliability(df.loc[df['sess'] == 'Session %d'%sess, var+'_odd'], df.loc[df['sess'] == 'Session %d'%sess, var+'_even'])
+			g.axes[0,0].text(0.4, 0.3 - sess * 0.1, 'SESS%d r = %.3f\n'%(sess, spearman_rho), size=20, color = "red", transform = g.axes[0,0].transAxes)
+		g.axes[0,0].set_xlabel("Odd")
+		g.axes[0,0].set_ylabel("Even")
+		g.axes[0,0].set_title(label)
+		g.axes[0,0].set_aspect('equal')
+		plt.tight_layout()
+		g._legend.remove()
+		plt.savefig(os.path.join('..', 'figures', expname, var + '_split_half.pdf'))
+
+############ model parameter analysis ###########
+expname = 'passive'
+modelname = 'QL2reset'
+fitMethod = "whole"
+stepsize = 0.5
+s1_paradf = loadFxs.load_parameter_estimates(expname, 1, hdrdata_sess1, modelname, fitMethod, stepsize)
+s2_paradf = loadFxs.load_parameter_estimates(expname, 2, hdrdata_sess2, modelname, fitMethod, stepsize)
+paradf = analysisFxs.hstack_sessions(s1_paradf, s2_paradf)
+subtitles = [r'$\mathbf{log(\alpha)}$', r'$\mathbf{log(\nu)}$', r'$\mathbf{\tau}$', r'$\mathbf{\gamma}$', r'$\mathbf{log(\eta)}$']
+paranames = modelFxs.getModelParas(modelname)
+npara = len(paranames)
+
+# prepare data for combined reliability 
+paranames = ['alpha', 'nu', 'tau', 'gamma', 'eta']
+paralabels = [r"$\alpha$", r"$\nu$", r"$\tau$", r"$\gamma$", r"$eta$"]
+for paraname, paralabel in zip(paranames, paralabels):
+	icc_vals, _, _ = analysisFxs.calc_bootstrap_reliability(paradf[paraname + '_sess1'], paradf[paraname + '_sess2'], n = 150)
+	var_vals = np.full(len(icc_vals), paralabel)
+	exp_vals = np.full(len(icc_vals), expname)
+	icc_vals_.append(icc_vals)
+	var_vals_.append(var_vals)
+	exp_vals_.append(exp_vals)
+
+
+# plot parameter distributions
+figFxs.plot_parameter_distribution(modelname, s1_paradf.iloc[:,:-1], s2_paradf.iloc[:,:-1], color = "grey", edgecolor = "black")
+plt.gcf().set_size_inches(5 * npara, 5 * 2)
+plt.savefig(os.path.join("..", 'figures', expname, "%s_%s_stepsize%.2f_para_dist.pdf"%(modelname, fitMethod, stepsize)))
+# plot parameter correlations
+figFxs.plot_parameter_reliability(modelname, s1_paradf.iloc[:,:-1], s2_paradf.iloc[:,:-1], subtitles)
+plt.gcf().set_size_inches(5 * npara, 5)
+plt.savefig(os.path.join("..", 'figures', expname, "%s_%s_stepsize%.2f_para_reliability.pdf"%(modelname, fitMethod, stepsize)))
+# plot parameter practice
+figFxs.plot_parameter_practice(modelname, s1_paradf.iloc[:,:-1], s2_paradf.iloc[:,:-1], subtitles)
+plt.gcf().set_size_inches(5 * npara, 5)
+plt.savefig(os.path.join("..", 'figures', expname, "%s_%s_stepsize%.2f_para_practice.pdf"%(modelname, fitMethod, stepsize)))
+
+
+
+
+######## put all reliability measures together ######
+df = pd.DataFrame({
+	"icc": np.array(icc_vals_).flatten(),
+	"var": np.array(var_vals_).flatten(),
+	"exp": np.array(exp_vals_).flatten(),
+	})
+fig, ax = plt.subplots()
+sns.violinplot(x = "icc", y = "var", data = df, hue = "exp", ax = ax)
+
+
 	########## additional measures ###########
 	# n_sub = 4
 	# # calc within-block adaptation using the non-parametric method
@@ -107,61 +197,13 @@ for expname in ['passive', 'active']:
 
 
 
-for var, label in zip(vars, labels):
-	fig, ax = plt.subplots()
-	figFxs.my_regplot(df[var + '_sess1'], df[var + '_sess2'], ax = ax)
-	ax.set_xlabel("Session 1")
-	ax.set_ylabel("Session 2")
-	ax.set_title(label)
-	plt.tight_layout()
-	fig.savefig(os.path.join('..', 'figures', expname, var + '_reliability.pdf'))
+
 
 
 
 #########################
 # plot practice effects 
 ########################
-df = analysisFxs.vstack_sessions(s1_df, s2_df)
-
-for var, label in zip(vars, labels):
-	fig, ax = plt.subplots()
-	sns.swarmplot(data = df, x = "sess", y = var, color = "grey", edgecolor = "black", alpha = 0.4, linewidth=1, ax = ax, size = 3)
-	sns.boxplot(x="sess", y=var, data=df, boxprops={'facecolor':'None'}, medianprops={"linestyle":"--", "color": "red"}, ax=ax)
-	ax.set_xlabel("")
-	ax.set_ylabel(label)
-	plt.gcf().set_size_inches(4.5, 6)
-	plt.tight_layout()
-	fig.savefig(os.path.join('..', 'figures', expname, var + '_practice.pdf'))
-
-######################## spilt half reliability #############
-df_ = []
-for sess in [1, 2]:
-	if sess == 1:
-		trialdata_ = trialdata_sess1_
-	else:
-		trialdata_ = trialdata_sess2_
-	odd_trialdata_, even_trialdata_ = analysisFxs.split_odd_even(trialdata_)
-	stats_odd, _, _, _ = analysisFxs.group_MF(odd_trialdata_, plot_each = False)  
-	stats_even, _, _, _ = analysisFxs.group_MF(even_trialdata_, plot_each = False) 
-	odd_df = analysisFxs.pivot_by_condition(stats_odd)
-	even_df = analysisFxs.pivot_by_condition(stats_even)
-	df = analysisFxs.hstack_sessions(odd_df, even_df, suffixes = ["_odd", "_even"])
-	df_.append(df)
-
-df = analysisFxs.vstack_sessions(*df_)
-
-for var, label in zip(vars, labels):
-	g = sns.lmplot(data = df, x = var+'_odd', y = var+'_even', hue = "sess", scatter_kws={"s": 40, "alpha":0.5}, line_kws={"linestyle":"--"})
-	for sess in [1, 2]:
-		spearman_rho, pearson_rho, abs_icc, con_icc, ssbs, ssbm, sse, msbs, msbm, mse = analysisFxs.calc_reliability(df.loc[df['sess'] == 'Session %d'%sess, var+'_odd'], df.loc[df['sess'] == 'Session %d'%sess, var+'_even'])
-		g.axes[0,0].text(0.4, 0.3 - sess * 0.1, 'SESS%d r = %.3f\n'%(sess, spearman_rho), size=20, color = "red", transform = g.axes[0,0].transAxes)
-	g.axes[0,0].set_xlabel("Odd")
-	g.axes[0,0].set_ylabel("Even")
-	g.axes[0,0].set_title(label)
-	g.axes[0,0].set_aspect('equal')
-	plt.tight_layout()
-	g._legend.remove()
-	plt.savefig(os.path.join('..', 'figures', expname, var + '_split_half.pdf'))
 
 
 ######### combine all conditions #########, also I might want to compare with other tasks ...

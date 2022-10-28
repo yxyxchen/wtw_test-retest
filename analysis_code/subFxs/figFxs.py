@@ -253,7 +253,29 @@ def plot_parameter_reliability(modelname, paradf_sess1, paradf_sess2, subtitles)
         ax.set_title(subtitles[i], fontdict= { 'fontsize': 24, 'weight':'bold'})
     return g
 
-def plot_parameter_distribution(modelname, paradf_sess1, paradf_sess2):
+def plot_parameter_practice(modelname, paradf_sess1, paradf_sess2, subtitles, **kwargs):
+    log_transform_parameter(paradf_sess1, ['alpha', 'nu', 'eta'])
+    log_transform_parameter(paradf_sess2, ['alpha', 'nu', 'eta'])
+    plt.style.use('classic')
+    sns.set(font_scale=1.5)
+    sns.set_style("white")
+    paranames = modelFxs.getModelParas(modelname)
+    npara = len(paranames)
+
+    # merge sess1 and sess2 data
+    tmp = pd.concat([paradf_sess1, paradf_sess2])
+    plotdf = tmp.melt(id_vars = ['id', 'sess'], value_vars = paradf_sess1.columns.values[:npara])
+    sns.set(font_scale=1.5)
+    sns.set_style("white")
+
+    g = sns.FacetGrid(plotdf, col= "variable", sharey = False)
+    g.map(sns.swarmplot, "sess", "value",  color = "grey", edgecolor = "black", alpha = 0.4, linewidth=1, size = 3) # this works, but low flexibility
+    g.map(sns.boxplot, "sess", "value",  boxprops={'facecolor':'None'}, medianprops={"linestyle":"--", "color": "red"})
+    for i, ax in enumerate(g.axes.flatten()):
+        ax.set_title(subtitles[i], fontdict= { 'fontsize': 24, 'weight':'bold'})
+    return g
+
+def plot_parameter_distribution(modelname, paradf_sess1, paradf_sess2, **kwargs):
     # get model parameters
     # hmmm maybe i will think again 
     paranames = modelFxs.getModelParas(modelname)
@@ -266,7 +288,7 @@ def plot_parameter_distribution(modelname, paradf_sess1, paradf_sess2):
     sns.set(font_scale=1.5)
     sns.set_style("white")
     g = sns.FacetGrid(plotdf, col= "variable", row = 'sess', sharex = 'col')
-    g.map(sns.histplot, "value", bins = 10) # this works, but low flexibility
+    g.map(sns.histplot, "value", bins = 10, **kwargs) # this works, but low flexibility
     for (row_key, col_key), ax in g.axes_dict.items():
         ax.set_title(r'SESS%d, $\%s$'%(row_key, col_key), fontdict= { 'fontsize': 24, 'weight':'bold'})
     return g

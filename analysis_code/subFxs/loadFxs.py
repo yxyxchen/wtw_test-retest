@@ -56,14 +56,14 @@ def loaddata(expname, sess):
                 data = pd.read_csv("../keypress_data/keypress-%s-sess%d.csv"%(thisid, sess))
                 data['ipi'] = np.concatenate([data['timestamp'][1:], [0]]) - data['timestamp']
                 data.loc[data.groupby(['bkIdx', 'trialIdx'])['timestamp'].idxmax(), 'ipi'] = np.nan
-
+                data['condition'] = ['LP' if x == 1 else 'HP' for x in data['bkIdx']]
                 # let's get trialwise data 
-                tmp = data.groupby(['bkIdx', 'trialIdx'])['keypressIdx'].max().reset_index()
-                trialdata.merge(tmp, on = ['bkIdx', 'trialIdx'], how = "left")
-                tmp = data.groupby(['bkIdx', 'trialIdx'])['ipi'].mean().reset_index()
-                trialdata.merge(tmp, on = ['bkIdx', 'trialIdx'], how = "left")
-                tmp = data.groupby(['bkIdx', 'trialIdx']).agg({'ipi': np.median}).reset_index()
-                trialdata.merge(tmp, on = ['bkIdx', 'trialIdx'], how = "left") # because no timestamp is recorded on some trials 
+                tmp = data.groupby(['condition', 'trialIdx'])['keypressIdx'].max().reset_index()
+                trialdata = trialdata.merge(tmp, on = ['condition', 'trialIdx'], how = "left")
+                tmp = data.groupby(['condition', 'trialIdx'])['ipi'].mean().reset_index()
+                trialdata = trialdata.merge(tmp, on = ['condition', 'trialIdx'], how = "left")
+                tmp = data.groupby(['condition', 'trialIdx']).agg({'ipi': np.median}).reset_index()
+                trialdata = trialdata.merge(tmp, on = ['condition', 'trialIdx'], how = "left") # because no timestamp is recorded on some trials 
             except Exception as e:
                 # raise e
                 print(thisid)
