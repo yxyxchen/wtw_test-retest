@@ -28,13 +28,12 @@ sess = 2
 stepsize = 0.5
 chainIdxs = [1, 3, 4]
 S = 50
-modelname = "QL2reset_HM_newnew"
+modelname = "QL2reset_HM_new"
 paranames = modelFxs.getModelParas(modelname)
 fitMethod = "whole"
 
 # 
 chainIdx = 4
-fit = 
 colnames = ["mu_" + x for x in paranames] + [ x + "[" + str(y) + "]" for x, y in itertools.product(paranames, np.arange(S))]+ ["totalLL"]
 para_samples = pd.read_csv("../analysis_results/%s/modelfit_hm/%s/stepsize%.2f/%s/chain%d/sess%d_para_sample.txt"%(expname, fitMethod, stepsize,  modelname, chainIdx, sess),
 	header = None, names = colnames)

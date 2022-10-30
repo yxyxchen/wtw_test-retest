@@ -120,7 +120,7 @@ npara = len(paranames)
 
 # prepare data for combined reliability 
 paranames = ['alpha', 'nu', 'tau', 'gamma', 'eta']
-paralabels = [r"$\alpha$", r"$\nu$", r"$\tau$", r"$\gamma$", r"$eta$"]
+paralabels = [r"$\alpha$", r"$\nu$", r"$\tau$", r"$\gamma$", r"$\eta$"]
 for paraname, paralabel in zip(paranames, paralabels):
 	icc_vals, _, _ = analysisFxs.calc_bootstrap_reliability(paradf[paraname + '_sess1'], paradf[paraname + '_sess2'], n = 150)
 	var_vals = np.full(len(icc_vals), paralabel)
@@ -129,6 +129,18 @@ for paraname, paralabel in zip(paranames, paralabels):
 	var_vals_.append(var_vals)
 	exp_vals_.append(exp_vals)
 
+
+######## put all reliability measures together ######
+df = pd.DataFrame({
+	"icc": np.array(icc_vals_).flatten(),
+	"var": np.array(var_vals_).flatten(),
+	"exp": np.array(exp_vals_).flatten(),
+	})
+fig, ax = plt.subplots()
+sns.violinplot(x = "icc", y = "var", data = df, hue = "exp", ax = ax)
+plt.tight_layout()
+ax.legend(loc='center left', bbox_to_anchor=(1, 0.5))
+plt.savefig(os.path.join('..', 'figures', expname, var + '_all_reliability.pdf'), witdh = 18, height = 7)
 
 # plot parameter distributions
 figFxs.plot_parameter_distribution(modelname, s1_paradf.iloc[:,:-1], s2_paradf.iloc[:,:-1], color = "grey", edgecolor = "black")
@@ -146,14 +158,7 @@ plt.savefig(os.path.join("..", 'figures', expname, "%s_%s_stepsize%.2f_para_prac
 
 
 
-######## put all reliability measures together ######
-df = pd.DataFrame({
-	"icc": np.array(icc_vals_).flatten(),
-	"var": np.array(var_vals_).flatten(),
-	"exp": np.array(exp_vals_).flatten(),
-	})
-fig, ax = plt.subplots()
-sns.violinplot(x = "icc", y = "var", data = df, hue = "exp", ax = ax)
+
 
 
 	########## additional measures ###########

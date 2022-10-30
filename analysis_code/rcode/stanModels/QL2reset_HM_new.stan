@@ -53,11 +53,10 @@ transformed parameters{
     nu[sIdx] = alphaU[sIdx] / alpha[sIdx];
     tau[sIdx] = inv_logit(raw_tau[sIdx]) * 42; // tau ~ unif(0.1, 42)
     gamma[sIdx] = inv_logit(raw_gamma[sIdx])* 0.5 + 0.5; // gamma ~ unif(0.5, 1)
-    eta[sIdx] = inv_logit(raw_gamma[sIdx]) * 15; // eta ~ unif(0, 15)
+    eta[sIdx] = inv_logit(raw_eta[sIdx]) * 15; // eta ~ unif(0, 15)
   }
 }
 model {
-
   // distributions for raw parameters
   mu ~ normal(0, 1);
   sigma ~ normal(0, 1);

@@ -53,7 +53,7 @@ transformed parameters{
     nu[sIdx] = alphaU[sIdx] / alpha[sIdx];
     tau[sIdx] = Phi_approx(mu[3] + sigma[3] * raw_tau[sIdx]) * 42; // tau ~ unif(0.1, 42)
     gamma[sIdx] = Phi_approx(mu[4] + sigma[4] * raw_gamma[sIdx])* 0.5 + 0.5; // gamma ~ unif(0.5, 1)
-    eta[sIdx] = Phi_approx(mu[5] + sigma[5] * raw_gamma[sIdx]) * 15; // eta ~ unif(0, 15)
+    eta[sIdx] = Phi_approx(mu[5] + sigma[5] * raw_eta[sIdx]) * 15; // eta ~ unif(0, 15)
   }
 }
 model {

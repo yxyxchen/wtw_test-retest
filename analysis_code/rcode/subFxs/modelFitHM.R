@@ -125,7 +125,7 @@ modelFitHM = function(sess, modelName, trialData, stepSec, config, outputDir, pa
   save("WAIC", "LOO", file = sprintf("%s_waic.RData", outputFile))
   
   # summarise posterior parameters and total log likelihood
-  fitSummary <- summary(fit, pars = c(paste0("mu_", paraNames), paste0("sigma_raw_", paraNames), paraNames, "totalLL"), use_cache = F)$summary
+  fitSummary <- summary(fit, pars = c(paste0("mu_raw_", paraNames), paste0("sigma_raw_", paraNames), paraNames, "totalLL"), use_cache = F)$summary
   
   # detect participants with low ESSs and high Rhats 
   ESSCols = which(str_detect(colnames(fitSummary), "n_eff")) # columns recording ESSs
