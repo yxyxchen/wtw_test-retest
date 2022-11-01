@@ -42,19 +42,9 @@ def vstack_sessions(s1_df, s2_df):
     return df
 
 
-def hstack_sessions(s1_df, s2_df, suffixes = ["_sess1", "_sess2"]):
-    df = s1_df.merge(s2_df, on = 'id', suffixes = suffixes)
-    
+def hstack_sessions(s1_df, s2_df, on_var = "id", suffixes = ["_sess1", "_sess2"]):
+    df = s1_df.merge(s2_df, on = on_var, suffixes = suffixes)
     return df
-
-
-def agg_across_sessions(s1_df, s2_df):
-    """ average data across sessions
-    """
-    df = pd.concat([s1_df[np.isin(s1_df.id, s2_df)], s2_df], axis = 0)
-    # make it better later
-    outdf = df.groupby("id").mean().reset_index()
-    return outdf
 
 
 def pivot_by_condition(df):
@@ -70,6 +60,27 @@ def pivot_by_condition(df):
     out_df['auc'] = (out_df['auc_HP'] + out_df['auc_LP']) / 2
     out_df['std_wtw'] = (out_df['std_wtw_HP']**2 / 2 + out_df['std_wtw_LP']**2 / 2)**0.5
     return out_df
+
+
+
+def agg_across_sessions(s1_df, s2_df):
+    """ average data across sessions, used for correlation analyses
+    """
+    df = vstack_sessions(s1_df, s2_df)
+    # make it better later
+    outdf = df.groupby("id").mean().reset_index()
+    return outdf
+
+
+def sub_across_sessions(s1_df, s2_df, vars = ["auc", "std_wtw", "auc_delta"]):
+    """ calc the difference between the two sessions
+    """
+    df = hstack_sessions(s1_df, s2_df)
+    for var in vars:
+        df[var + "_diff"] = df[var + "_sess2"] - df[var + "_sess1"]
+    return df
+
+
 
 def calc_se(x):
     """calculate standard error after removing na values 
