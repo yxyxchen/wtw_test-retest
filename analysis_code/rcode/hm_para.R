@@ -36,8 +36,8 @@ write.table(samples, file = sprintf("%s_para_sample.txt", outputFile),
 sampler_params <- get_sampler_params(fit, inc_warmup=FALSE)
 divergent <- do.call(rbind, sampler_params)[,'divergent__']
 nDt = sum(divergent)
-fitSummary = cbind(fitSummary, nDt = rep(nDt, nrow(fitSummary)))
 fitSummary <- summary(fit, pars = c(paste0("mu_raw_", paraNames), paste0("sigma_raw_", paraNames), paraNames, "totalLL"), use_cache = F)$summary
+fitSummary = cbind(fitSummary, nDt = rep(nDt, nrow(fitSummary)))
 write.table(fitSummary, file = sprintf("%s_para_summary.txt", outputFile), 
             sep = ",")
 
