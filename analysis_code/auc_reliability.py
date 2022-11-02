@@ -108,7 +108,7 @@ for expname in ['active', 'passive']:
 
 ############ model parameter analysis ###########
 expname = 'passive'
-modelname = 'QL2reset'
+modelname = 'QL2reset_HM_short'
 fitMethod = "whole"
 stepsize = 0.5
 s1_paradf = loadFxs.load_parameter_estimates(expname, 1, hdrdata_sess1, modelname, fitMethod, stepsize)
@@ -156,9 +156,30 @@ plt.gcf().set_size_inches(5 * npara, 5)
 plt.savefig(os.path.join("..", 'figures', expname, "%s_%s_stepsize%.2f_para_practice.pdf"%(modelname, fitMethod, stepsize)))
 
 
+#################
+expname = 'passive'
+modelname = 'QL2reset_HM_short'
+fitMethod = "whole"
+stepsize = 0.5
+s1_paradf = loadFxs.load_hm_parameter_estimates(expname, 1, hdrdata_sess1, modelname, fitMethod, stepsize)
+s2_paradf = loadFxs.load_hm_parameter_estimates(expname, 2, hdrdata_sess2, modelname, fitMethod, stepsize)
 
+figFxs.plot_parameter_reliability(modelname, s1_paradf, s2_paradf, subtitles)
+plt.gcf().set_size_inches(5 * npara, 5)
+plt.savefig(os.path.join("..", 'figures', expname, "%s_%s_stepsize%.2f_para_reliability_short.pdf"%(modelname, fitMethod, stepsize)))
 
+HM_ids = list(set(s1_paradf.id) and set(s2_paradf.id))
 
+expname = 'passive'
+modelname = 'QL2reset'
+fitMethod = "whole"
+stepsize = 0.5
+s1_paradf = loadFxs.load_parameter_estimates(expname, 1, hdrdata_sess1, modelname, fitMethod, stepsize)
+s2_paradf = loadFxs.load_parameter_estimates(expname, 2, hdrdata_sess2, modelname, fitMethod, stepsize)
+
+figFxs.plot_parameter_reliability(modelname, s1_paradf[np.isin(s1_paradf.id, HM_ids)].iloc[:,:-1], s2_paradf[np.isin(s2_paradf.id, HM_ids)].iloc[:,:-1], subtitles)
+plt.gcf().set_size_inches(5 * npara, 5)
+plt.savefig(os.path.join("..", 'figures', expname, "%s_%s_stepsize%.2f_para_reliability_short.pdf"%(modelname, fitMethod, stepsize)))
 
 
 	########## additional measures ###########

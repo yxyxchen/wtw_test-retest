@@ -5,7 +5,7 @@ library(ggplot2)
 source("subFxs/helpFxs.R")
 
 expname = "passive"
-sess = 2
+sess = 1
 stepsize = 0.5
 chainIdxs = seq(1, 4)
 S = 50
@@ -21,12 +21,11 @@ for(chainIdx in chainIdxs){
 }
 fit = sflist2stanfit(fit_)
 
-for(chainIdx in chainIdxs){
-  fit = fit_[[chainIdx]]
-  fit %>% rstan::extract(permuted = F, pars = c(paste0("mu_raw_", paraNames), paste0("sigma_raw_", paraNames), paraNames, "totalLL")) 
-} 
 outputFile = sprintf("../../analysis_results/%s/modelfit_hm/%s/stepsize%.2f/%s/combined/sess%d", expname, fitMethod, stepsize,  modelname, sess)
 dir.create(sprintf("../../analysis_results/%s/modelfit_hm/%s/stepsize%.2f/%s/combined/", expname, fitMethod, stepsize,  modelname))
+
+
+samples = read_csv(sprintf("%s_para_sample.txt", outputFile))
 
 samples = fit %>% rstan::extract(permuted = F, pars = c(paste0("mu_raw_", paraNames), paste0("sigma_raw_", paraNames), paraNames, "totalLL")) 
 samples = rbind(samples[,1,], samples[,2,], samples[,3,], samples[,4,])

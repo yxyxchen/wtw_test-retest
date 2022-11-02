@@ -97,7 +97,7 @@ tau = 5
 one_step_pwaits = 1 / (1 + np.exp(-Qwaits * tau))
 
 # modelnames = ['QL2reset_FL3']
-modelname = 'QL2reset'
+modelname = 'QL2reset_HM_short'
 fitMethod = "whole"
 stepsize = 0.5
 # s1_WTW_rep_ = []
@@ -105,6 +105,10 @@ stepsize = 0.5
 # s1_paradf_ = []
 # s2_paradf_ = []
 # for modelname in modelnames:
+s1_paradf = loadFxs.load_hm_parameter_estimates(expname, 1, hdrdata_sess1, modelname, fitMethod, stepsize)
+s2_paradf = loadFxs.load_hm_parameter_estimates(expname, 2, hdrdata_sess2, modelname, fitMethod, stepsize)
+
+
 s1_paradf = loadFxs.load_parameter_estimates(expname, 1, hdrdata_sess1, modelname, fitMethod, stepsize)
 s2_paradf = loadFxs.load_parameter_estimates(expname, 2, hdrdata_sess2, modelname, fitMethod, stepsize)
 # s1_paradf_.append(s1_paradf)

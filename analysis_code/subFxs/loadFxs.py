@@ -15,6 +15,7 @@ from subFxs import modelFxs
 from datetime import datetime as dt
 import matplotlib.pyplot as plt
 import rpy2.robjects as robjects
+import re
 
 
 
@@ -278,12 +279,15 @@ def load_parameter_estimates(expname, sess, hdrdata, modelname, fitMethod, stepS
             # code.interact(local = dict(locals(), **globals()))
         # currently I didn't save index and columns 
         fit_summary.index = paranames + ['totalLL']
-        fit_summary.columns = ['mean', 'se_mean', 'sd', '2.5%', '25%', '50%', '75%', '97.5%', 'n_effe', 'Rhat', 'n_divergent']
+        fit_summary.columns = ['mean', 'se_mean', 'sd', '2.5%', '25%', '50%', '75%', '97.5%', 'n_eff', 'Rhat', 'n_divergent']
 
         # check quality
-        if not modelFxs.check_stan_diagnosis(fit_summary):
-            print(subj_id, 'not valid')
-            continue
+        try: 
+            if not modelFxs.check_stan_diagnosis(fit_summary):
+                print(subj_id, 'not valid')
+                continue
+        except:
+            print(subj_id)
 
         # load waic 
         try:
@@ -309,9 +313,21 @@ def load_hm_parameter_estimates(expname, sess, hdrdata, modelname, fitMethod, st
     fit_summary = pd.read_csv(os.path.join("..", "analysis_results", expname, "modelfit_hm", fitMethod, 'stepsize%.2f'%stepSec, modelname, "combined", 'sess%d_para_summary.txt'%sess))
     group_paras = fit_summary[:npara*2]
     ind_paras = fit_summary[npara*2:-1]
-    pattern = re.compile(r'*[{0-9}*]')
-    ind_paras["id"] = [pattern.search(x).groups[0] for x in ind_paras.index]
-
+    pattern = re.compile(r'[A-Za-z]*([0-9]{1,2})')
+    ind_paras["id"] = [hdrdata['id'].iloc[int(pattern.search(x).groups()[0])-1] for x in ind_paras.index]
+    ids = np.unique(ind_paras["id"])
+    paradf = []
+    for id in ids:
+        tmp = ind_paras[ind_paras['id'] == id]
+        tmp["n_divergent"] = 0
+        if not modelFxs.check_stan_diagnosis(tmp):
+            print(id, 'not valid')
+            continue 
+        this_row = pd.DataFrame(dict(zip(paranames, ind_paras.loc[ind_paras['id'] == id, "mean"])), index = [0])
+        this_row['id'] = id
+        this_row['sess'] = sess
+        paradf.append(this_row)
+    paradf = pd.concat(paradf)
     return paradf
 
 def load_parameter_estimates_hp(expname, sess, hdrdata, modelname, fitMethod, stepSec):

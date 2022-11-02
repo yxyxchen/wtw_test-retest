@@ -40,7 +40,7 @@ def getModelParas(modelname):
 
    
 def check_stan_diagnosis(fit_summary):
-    if any(fit_summary['n_divergent'] > 0) or any(fit_summary['Rhat'] > 1.05) or any(fit_summary['n_effe'] < 400):
+    if any(fit_summary['n_divergent'] > 0) or any(fit_summary['Rhat'] > 1.05) or any(fit_summary['n_eff'] < 400):
         return False
     else:
         return True
