@@ -75,7 +75,6 @@ def loaddata(expname, sess):
     return hdrdata, trialdata_
 
 ################# check quality of task data #################
-
 def group_quality_check(expname, sess, plot_quality_check = False):
     # code.interact(local = dict(locals(), **globals()))
     # quality check the data
@@ -303,6 +302,17 @@ def load_parameter_estimates(expname, sess, hdrdata, modelname, fitMethod, stepS
 
     return paradf
 
+
+def load_hm_parameter_estimates(expname, sess, hdrdata, modelname, fitMethod, stepSec):
+    paranames = modelFxs.getModelParas(modelname)
+    npara = len(paranames)
+    fit_summary = pd.read_csv(os.path.join("..", "analysis_results", expname, "modelfit_hm", fitMethod, 'stepsize%.2f'%stepSec, modelname, "combined", 'sess%d_para_summary.txt'%sess))
+    group_paras = fit_summary[:npara*2]
+    ind_paras = fit_summary[npara*2:-1]
+    pattern = re.compile(r'*[{0-9}*]')
+    ind_paras["id"] = [pattern.search(x).groups[0] for x in ind_paras.index]
+
+    return paradf
 
 def load_parameter_estimates_hp(expname, sess, hdrdata, modelname, fitMethod, stepSec):
     paranames = modelFxs.getModelParas(modelname)
