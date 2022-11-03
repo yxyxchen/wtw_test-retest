@@ -170,6 +170,8 @@ plt.savefig(os.path.join("..", 'figures', expname, "%s_%s_stepsize%.2f_para_reli
 
 HM_ids = list(set(s1_paradf.id) and set(s2_paradf.id))
 
+# it doesn't seem to increase defre... either 
+
 expname = 'passive'
 modelname = 'QL2reset'
 fitMethod = "whole"

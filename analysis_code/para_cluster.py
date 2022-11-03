@@ -26,6 +26,7 @@ from subFxs import loadFxs
 from subFxs import figFxs
 from subFxs import analysisFxs
 from datetime import datetime as dt
+from sklearn.cluster import KMeans
 
 # plot styles
 plt.style.use('classic')
@@ -78,39 +79,110 @@ hdrdata_sess1, trialdata_sess1_ = loadFxs.group_quality_check(expname, 1, plot_q
 hdrdata_sess2, trialdata_sess2_ = loadFxs.group_quality_check(expname, 2, plot_quality_check = False)
 s1_stats, s1_Psurv_b1_, s1_Psurv_b2_, s1_WTW_emp = analysisFxs.group_MF(trialdata_sess1_, plot_each = False)   
 s2_stats, s2_Psurv_b1_, s2_Psurv_b2_, s2_WTW_emp = analysisFxs.group_MF(trialdata_sess2_, plot_each = False)   
+s1_df = analysisFxs.pivot_by_condition(s1_stats)
+s2_df = analysisFxs.pivot_by_condition(s2_stats)
+
+plt.plot(s1_df["auc"], s1_df["auc_delta"])
+
+import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
+fig = plt.figure()
+ax = fig.gca(projection='3d')
+ax.scatter3D(s1_df["auc"], s1_df["auc_delta"], s1_df["std_wtw"])
+ax.set_xlabel("auc")
+ax.set_ylabel("std_wtw")
+ax.set_zlabel("auc_delta")
+plt.show()
+
+###### 
+fig = plt.figure()
+ax = fig.gca(projection='3d')
+ax.scatter3D(np.log(s2_paradf["alpha"]), s2_paradf["tau"], s2_paradf["eta"])
+ax.set_xlabel("log_alpha")
+ax.set_ylabel("tau")
+ax.set_zlabel("eta")
+plt.show()
+
+######## mf analysis #######
+stats_df = s1_df
+kmeans = KMeans(n_clusters=2, random_state=0).fit(stats_df[["auc", "auc_delta", "std_wtw"]])
+stats_df["label"] = kmeans.labels_
+stats_df['label'].value_counts()
+
+stats_df = s2_df
+kmeans = KMeans(n_clusters=2, random_state=0).fit(stats_df[["auc", "auc_delta", "std_wtw"]])
+stats_df["label"] = kmeans.labels_
+stats_df['label'].value_counts()
 
 
-tmp = s1_paradf.merge(s1_stats, on = "id")
-fig, ax = plt.subplots(nrows=1, ncols=1)
-ax.scatter(tmp['auc1'], tmp['eta'] * 10)
-ax.set_xlabel("auc1")
-ax.set_ylabel("eta")
-ax.set_aspect(1)
 
-# AUC values
-# maybe I should get empirical Qwaits
-ts = np.arange(0, 12, 0.5)
-eta = 0.5
-Qquit = 0
-Qwaits = eta - 0.1 * ts + Qquit
-tau = 5
-one_step_pwaits = 1 / (1 + np.exp(-Qwaits * tau))
+colors = ['red', "green", "blue"]
+fig = plt.figure()
+ax = fig.gca(projection='3d')
+for i in np.arange(2):
+    ax.scatter3D(stats_df.loc[stats_df["label"] == i, "auc"], stats_df.loc[stats_df["label"] == i, "std_wtw"], stats_df.loc[stats_df["label"] == i, "auc_delta"], c = colors[i])
+ax.set_xlabel("auc")
+ax.set_ylabel("std_wtw")
+ax.set_zlabel("auc_delta")
+plt.show()
 
+s1_selfdf = loadFxs.parse_group_selfreport(expname, 1, isplot = False)
+# s1_selfdf.to_csv(os.path.join("..", "analysis_results", expname, "selfreport", "selfreport_sess1.csv"), index = None)
+s2_selfdf = loadFxs.parse_group_selfreport(expname, 2, isplot = False)
+s1_tmp = s1_df.merge(s1_selfdf, on = "id")
+s1_tmp.groupby("label").agg({"BIS":"mean"})
+sns.boxplot(data = s1_tmp, x = "label", y ="GMK")
+
+##################### parameter analysis ###############
+paradf = s1_paradf_tf
+kmeans = KMeans(n_clusters=4, random_state=0).fit(paradf[["log_alpha", "tau", "log_eta", "log_nu", "gamma"]])
+paradf["label"] = kmeans.labels_
+paradf['label'].value_counts()
+colors = ['red', "green", "blue"]
+
+fig = plt.figure()
+ax = fig.gca(projection='3d')
+for i in np.arange(3):
+    ax.scatter3D(paradf.loc[paradf["label"] == i, "log_alpha"], paradf.loc[paradf["label"] == i, "tau"], paradf.loc[paradf["label"] == i, "log_eta"], c = colors[i])
+ax.set_xlabel("log_alpha")
+ax.set_ylabel("tau")
+ax.set_zlabel("eta")
+plt.show()
+
+
+m_paradf.loc[m_paradf["label_x"] == 0, "label_y"].value_counts()
+m_paradf.loc[m_paradf["label_x"] == 2, "label_y"].value_counts()
+
+
+s1_selfdf = loadFxs.parse_group_selfreport(expname, 1, isplot = False)
+# s1_selfdf.to_csv(os.path.join("..", "analysis_results", expname, "selfreport", "selfreport_sess1.csv"), index = None)
+s2_selfdf = loadFxs.parse_group_selfreport(expname, 2, isplot = False)
+s1_tmp = s1_paradf_tf.merge(s1_selfdf, on = "id")
+s1_tmp.groupby("label").agg({"GMK":"mean"})
+sns.boxplot(data = s1_tmp, x = "label", y ="GMK")
+######
+
+
+
+############# let me try the #####
 # modelnames = ['QL2reset_FL3']
 modelname = 'QL2reset'
 fitMethod = "whole"
 stepsize = 0.5
-# s1_WTW_rep_ = []
-# s2_WTW_rep_ = []
-# s1_paradf_ = []
-# s2_paradf_ = []
-# for modelname in modelnames:
-s1_paradf = loadFxs.load_hm_parameter_estimates(expname, 1, hdrdata_sess1, modelname, fitMethod, stepsize)
-s2_paradf = loadFxs.load_hm_parameter_estimates(expname, 2, hdrdata_sess2, modelname, fitMethod, stepsize)
-
 
 s1_paradf = loadFxs.load_parameter_estimates(expname, 1, hdrdata_sess1, modelname, fitMethod, stepsize)
 s2_paradf = loadFxs.load_parameter_estimates(expname, 2, hdrdata_sess2, modelname, fitMethod, stepsize)
+
+s1_paradf_tf = copy.copy(s1_paradf)
+s2_paradf_tf = copy.copy(s2_paradf)
+figFxs.log_transform_parameter(s1_paradf_tf, ["alpha", "nu", "eta"])
+figFxs.log_transform_parameter(s2_paradf_tf, ["alpha", "nu", "eta"])
+
+
+##########
+kmeans = KMeans(n_clusters=3, random_state=0).fit(s1_stats[["auc", "std_wtw"]])
+
+
 # s1_paradf_.append(s1_paradf)
 # s2_paradf_.append(s2_paradf)
 s1_stats_rep, s1_WTW_rep, s1_dist_vals_ = modelFxs.group_model_rep(trialdata_sess1_, s1_paradf, modelname, 'whole', stepsize, isTrct = True, plot_each = False)

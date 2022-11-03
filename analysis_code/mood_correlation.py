@@ -46,9 +46,9 @@ s2_stats, s2_Psurv_b1_, s2_Psurv_b2_, s2_WTW_ = analysisFxs.group_MF(trialdata_s
 
 
 s1_selfdf = loadFxs.parse_group_selfreport(expname, 1, isplot = False)
-s1_selfdf.to_csv(os.path.join("..", "analysis_results", expname, "selfreport", "selfreport_sess1.csv"), index = None)
+# s1_selfdf.to_csv(os.path.join("..", "analysis_results", expname, "selfreport", "selfreport_sess1.csv"), index = None)
 s2_selfdf = loadFxs.parse_group_selfreport(expname, 2, isplot = False)
-s2_selfdf.to_csv(os.path.join("..", "analysis_results", expname, "selfreport", "selfreport_sess2.csv"), index = None)
+# s2_selfdf.to_csv(os.path.join("..", "analysis_results", expname, "selfreport", "selfreport_sess2.csv"), index = None)
 
 selfreport_vars = ["UPPS", "BIS", "GMK", "PAS", "NAS"]
 df = pd.melt(s1_selfdf, id_vars = ["id"], value_vars = selfreport_vars).merge(
