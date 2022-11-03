@@ -74,11 +74,11 @@ expModelFitHM = function(expname, sess, modelName, fit_method, stepSec = 0.5, pa
     warningFile = sprintf("stanWarnings/exp_%s.txt", modelName)
   )
     # load
-    existing_files = list.files(sprintf("../../analysis_results/%s/modelfit/%s/stepsize%.2f/%s", expname, fit_method, stepSec, modelName),
-                        pattern = sprintf("sess%d_summary.txt", sess))
-    existing_ids = substr(existing_files, 1, 5)
-    # divide data into small batches if batchIdx exists 
-    trialData = trialData[1:50]
+  existing_files = list.files(sprintf("../../analysis_results/%s/modelfit/%s/stepsize%.2f/%s", expname, fit_method, stepSec, modelName),
+                      pattern = sprintf("sess%d_summary.txt", sess))
+  existing_ids = substr(existing_files, 1, 5)
+  # divide data into small batches if batchIdx exists 
+  trialData = trialData[1:50]
 
   # fit the model for all participants
   modelFitHM(sess, modelName, trialData, stepSec, config, outputDir, parallel = parallel, isTrct = T)
@@ -96,7 +96,7 @@ if (sys.nframe() == 0){
 }
 expname = "passive"
 sess = 2
-modelName = "QL2reset_HM_new"
+modelName = "QL2reset_HM_simple"
 isFirstFit = TRUE
 fit_method = "whole"
 batchIdx = NULL

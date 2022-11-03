@@ -1,0 +1,16 @@
+
+QL2reset_HM_simple simpleWarning: The largest R-hat is NA, indicating chains have not mixed.
+Running the chains for more iterations may help. See
+http://mc-stan.org/misc/warnings.html#r-hat
+
+QL2reset_HM_simple simpleWarning: Bulk Effective Samples Size (ESS) is too low, indicating posterior means and medians may be unreliable.
+Running the chains for more iterations may help. See
+http://mc-stan.org/misc/warnings.html#bulk-ess
+
+QL2reset_HM_simple simpleWarning: Tail Effective Samples Size (ESS) is too low, indicating posterior variances and tail quantiles may be unreliable.
+Running the chains for more iterations may help. See
+http://mc-stan.org/misc/warnings.html#tail-ess
+
+Finish QL2reset_HM_simple!
+QL2reset_HM_simple Low ESS
+QL2reset_HM_simple High Rhat
