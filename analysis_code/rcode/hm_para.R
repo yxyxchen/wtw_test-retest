@@ -5,13 +5,14 @@ library(ggplot2)
 source("subFxs/helpFxs.R")
 
 expname = "passive"
-sess = 1
+sess = 2
 stepsize = 0.5
 chainIdxs = seq(1, 4)
 S = 50
 modelname = "QL2reset_HM_short"
 fitMethod = "whole"
 paraNames = getParaNames(modelname)
+groupParaNames = getGroupParaNames(modelname)
 npara = length(paraNames)
 
 fit_ = list()
@@ -27,7 +28,7 @@ dir.create(sprintf("../../analysis_results/%s/modelfit_hm/%s/stepsize%.2f/%s/com
 
 samples = read_csv(sprintf("%s_para_sample.txt", outputFile))
 
-samples = fit %>% rstan::extract(permuted = F, pars = c(paste0("mu_raw_", paraNames), paste0("sigma_raw_", paraNames), paraNames, "totalLL")) 
+samples = fit %>% rstan::extract(permuted = F, pars = c(paste0("mu_raw_", groupParaNames), paste0("sigma_raw_", groupParaNames), paraNames, "totalLL")) 
 samples = rbind(samples[,1,], samples[,2,], samples[,3,], samples[,4,])
 write.table(samples, file = sprintf("%s_para_sample.txt", outputFile), 
             sep = ",", row.names=FALSE)
@@ -35,14 +36,14 @@ write.table(samples, file = sprintf("%s_para_sample.txt", outputFile),
 sampler_params <- get_sampler_params(fit, inc_warmup=FALSE)
 divergent <- do.call(rbind, sampler_params)[,'divergent__']
 nDt = sum(divergent)
-fitSummary <- summary(fit, pars = c(paste0("mu_raw_", paraNames), paste0("sigma_raw_", paraNames), paraNames, "totalLL"), use_cache = F)$summary
+fitSummary <- summary(fit, pars = c(paste0("mu_raw_", groupParaNames), paste0("sigma_raw_", groupParaNames), paraNames, "totalLL"), use_cache = F)$summary
 fitSummary = cbind(fitSummary, nDt = rep(nDt, nrow(fitSummary)))
 write.table(fitSummary, file = sprintf("%s_para_summary.txt", outputFile), 
             sep = ",")
 
 #### raw estimate #####
-mu_raw_ = fit %>% rstan::extract(sprintf('mu_raw_%s', paraNames), permuted = F, inc_warmup = FALSE, include = T) %>% adply(2, function(x) x) %>% dplyr::select(-chains) 
-sigma_raw_ = fit %>% rstan::extract(sprintf('sigma_raw_%s', paraNames), permuted = F, inc_warmup = FALSE, include = T) %>% adply(2, function(x) x) %>% dplyr::select(-chains) 
+mu_raw_ = fit %>% rstan::extract(sprintf('mu_raw_%s', groupParaNames), permuted = F, inc_warmup = FALSE, include = T) %>% array(dim =c(1000*4, length(groupParaNames)) )
+sigma_raw_ = fit %>% rstan::extract(sprintf('sigma_raw_%s', groupParaNames), permuted = F, inc_warmup = FALSE, include = T) %>% array(dim =c(1000*4, length(groupParaNames)) )
 
 mu_raw_means = apply(mu_raw_, FUN= mean, MARGIN = 2)
 mu_raw_medians= apply(mu_raw_, FUN= median, MARGIN = 2)
@@ -51,14 +52,14 @@ sigma_raw_medians = apply(sigma_raw_, FUN= median, MARGIN = 2)
 
 indv_paraname_ = vector(mode = "list", length = npara)
 paraname_ = vector(mode = "list", length = npara)
-for(i in 1 : npara){
-  para = paraNames[i]
+for(i in 1 : length(groupParaNames)){
+  para = groupParaNames[i]
   indv_paraname_[[i]] = sprintf("raw_%s[%d]", para, 1:S)
   paraname_[[i]] = rep(para, S)
 }
 indv_paranames = unlist(indv_paraname_)
 
-raw_ = fit %>% rstan::extract(indv_paranames, permuted = F, inc_warmup = FALSE, include = TRUE)  %>% adply(2, function(x) x) %>% dplyr::select(-chains)
+raw_ = fit %>% rstan::extract(indv_paranames, permuted = F, inc_warmup = FALSE, include = TRUE)  %>% array(dim =c(1000*4, 150) )
 raw_pe_ = apply(raw_, FUN = mean, MARGIN = 2)
 
 
@@ -73,10 +74,10 @@ x = seq(-8, 5, by = 0.1)
 x_ = vector(mode = "list", length = npara)
 y_ = vector(mode = "list", length = npara)
 paraname_ = vector(mode = "list", length = npara)
-for(i in 1 : npara){
+for(i in 1 : length(groupParaNames)){
   x_[[i]] = x
   y_[[i]] = dnorm(x, mu_raw_means[i], sigma_raw_means[i]) 
-  paraname_[[i]] = rep(paraNames[i], length(x))
+  paraname_[[i]] = rep(groupParaNames[i], length(x))
 }
 normdf = data.frame(
   "x" = unlist(x_),

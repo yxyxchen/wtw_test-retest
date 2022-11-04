@@ -293,6 +293,24 @@ def plot_parameter_distribution(modelname, paradf_sess1, paradf_sess2, **kwargs)
         ax.set_title(r'SESS%d, $\%s$'%(row_key, col_key), fontdict= { 'fontsize': 24, 'weight':'bold'})
     return g
 
+def plot_parameter_density(modelname, paradf_sess1, paradf_sess2, **kwargs):
+    paranames = modelFxs.getModelParas(modelname)
+    npara = len(paranames)
+
+    # merge sess1 and sess2 data
+    tmp = pd.concat([paradf_sess1, paradf_sess2])
+    plotdf = tmp.melt(id_vars = ['id', 'sess'], value_vars = paranames)
+    plt.style.use('classic')
+    sns.set(font_scale=1.5)
+    sns.set_style("white")
+    g = sns.FacetGrid(plotdf, col= "variable", sharex = False, sharey = False, hue = "sess", palette=sns.diverging_palette(220, 20, n=2))
+    g.map(sns.kdeplot, "value") # this works, but low flexibility
+    for i, ax in enumerate(g.axes.flatten()):
+        ax.set_title(paranames[i], fontdict= { 'fontsize': 24, 'weight':'bold'})
+        ax.axvline(np.median(paradf_sess1[paranames[i]]), color = "#d6604d", linestyle = "--")
+        ax.axvline(np.median(paradf_sess2[paranames[i]]), color = "#4393c3", linestyle = "--")
+    return g
+
 def plot_parameter_compare(modelname, paradf_sess1, paradf_sess2, subtitles):
     # compare session-by-session differences
     log_transform_parameter(paradf_sess1, ['alpha', 'nu', 'eta'])

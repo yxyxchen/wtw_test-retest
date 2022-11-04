@@ -309,10 +309,12 @@ def load_parameter_estimates(expname, sess, hdrdata, modelname, fitMethod, stepS
 
 def load_hm_parameter_estimates(expname, sess, hdrdata, modelname, fitMethod, stepSec):
     paranames = modelFxs.getModelParas(modelname)
+    group_paras = modelFxs.getModelGroupParas(modelname)
     npara = len(paranames)
+    n_group_para = len(group_paras)
     fit_summary = pd.read_csv(os.path.join("..", "analysis_results", expname, "modelfit_hm", fitMethod, 'stepsize%.2f'%stepSec, modelname, "combined", 'sess%d_para_summary.txt'%sess))
-    group_paras = fit_summary[:npara*2]
-    ind_paras = fit_summary[npara*2:-1]
+    group_paras = fit_summary[:n_group_para*2]
+    ind_paras = fit_summary[n_group_para*2:-1]
     pattern = re.compile(r'[A-Za-z]*([0-9]{1,2})')
     ind_paras["id"] = [hdrdata['id'].iloc[int(pattern.search(x).groups()[0])-1] for x in ind_paras.index]
     ids = np.unique(ind_paras["id"])

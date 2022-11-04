@@ -1,0 +1,22 @@
+
+QL2reset_HM_p4 simpleWarning: There were 1 divergent transitions after warmup. Increasing adapt_delta above 0.99 may help. See
+http://mc-stan.org/misc/warnings.html#divergent-transitions-after-warmup
+
+QL2reset_HM_p4 simpleWarning: Examine the pairs() plot to diagnose sampling problems
+
+
+QL2reset_HM_p4 simpleWarning: The largest R-hat is NA, indicating chains have not mixed.
+Running the chains for more iterations may help. See
+http://mc-stan.org/misc/warnings.html#r-hat
+
+QL2reset_HM_p4 simpleWarning: Bulk Effective Samples Size (ESS) is too low, indicating posterior means and medians may be unreliable.
+Running the chains for more iterations may help. See
+http://mc-stan.org/misc/warnings.html#bulk-ess
+
+QL2reset_HM_p4 simpleWarning: Tail Effective Samples Size (ESS) is too low, indicating posterior variances and tail quantiles may be unreliable.
+Running the chains for more iterations may help. See
+http://mc-stan.org/misc/warnings.html#tail-ess
+
+Finish QL2reset_HM_p4!
+QL2reset_HM_p4 Low ESS
+QL2reset_HM_p4 High Rhat

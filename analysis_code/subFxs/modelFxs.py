@@ -38,6 +38,14 @@ def getModelParas(modelname):
     elif modelname[:3] == 'RL2':
         return ['alpha', 'nu', 'tau', 'eta', 'beta']
 
+def getModelGroupParas(modelname):
+    """Function to return parameter names of a given model
+    """
+    if modelname == "QL2reset_HM_simple":
+        return ['alpha', 'tau', 'eta']
+    else:
+        return ['alpha', 'nu', 'tau', 'eta', 'beta']
+
    
 def check_stan_diagnosis(fit_summary):
     if any(fit_summary['n_divergent'] > 0) or any(fit_summary['Rhat'] > 1.05) or any(fit_summary['n_eff'] < 400):

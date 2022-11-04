@@ -15,8 +15,11 @@ getParaNames = function(modelName){
 getGroupParaNames = function(modelName){
   if(modelName == "QL2reset_HM_simple"){
     groupParaNames = c("alpha", "tau", "eta")
-  }else{
-    groupParaNamesc("alpha", "tau", "gamma", "eta")
+  }else if(modelName == "QL2reset_HM_p4"){
+    groupParaNames =  c("alpha", "tau", "gamma", "eta")
+  }
+  else{
+    groupParaNames = c("alpha","nu", "tau", "gamma", "eta")
   }
 }
 # check MCMC fitting results 

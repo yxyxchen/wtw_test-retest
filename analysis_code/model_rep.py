@@ -105,10 +105,12 @@ stepsize = 0.5
 # s1_paradf_ = []
 # s2_paradf_ = []
 # for modelname in modelnames:
-s1_paradf = loadFxs.load_hm_parameter_estimates(expname, 1, hdrdata_sess1, modelname, fitMethod, stepsize)
-s2_paradf = loadFxs.load_hm_parameter_estimates(expname, 2, hdrdata_sess2, modelname, fitMethod, stepsize)
-
-
+# s1_paradf = loadFxs.load_hm_parameter_estimates(expname, 1, hdrdata_sess1, modelname, fitMethod, stepsize)
+# s2_paradf = loadFxs.load_hm_parameter_estimates(expname, 2, hdrdata_sess2, modelname, fitMethod, stepsize)
+# compare parameter reliabiliy
+subtitles = [r'$\mathbf{log(\alpha)}$', r'$\mathbf{log(\nu)}$', r'$\mathbf{\tau}$', r'$\mathbf{\gamma}$', r'$\mathbf{log(\eta)}$']
+paranames = modelFxs.getModelParas(modelname)
+npara = len(paranames)
 s1_paradf = loadFxs.load_parameter_estimates(expname, 1, hdrdata_sess1, modelname, fitMethod, stepsize)
 s2_paradf = loadFxs.load_parameter_estimates(expname, 2, hdrdata_sess2, modelname, fitMethod, stepsize)
 # s1_paradf_.append(s1_paradf)
@@ -122,7 +124,7 @@ s2_stats_rep.to_csv(os.path.join('..', 'analysis_results', expname, 'taskstats',
 #s1_stats_rep = pd.read_csv(os.path.join('..', 'analysis_results', expname, 'taskstats', 'rep_%s_sess1.csv'%modelname))
 #s2_stats_rep = pd.read_csv(os.path.join('..', 'analysis_results', expname, 'taskstats', 'rep_%s_sess2.csv'%modelname))
 # plot replication 
-sns.set(font_scale = 2)
+sns.set(font_scale = 1.5)
 sns.set_style("white")
 figFxs.plot_group_emp_rep_wtw(modelname, s1_WTW_rep, s2_WTW_rep, s1_WTW_emp, s2_WTW_emp, hdrdata_sess1, hdrdata_sess2, s1_paradf, s2_paradf)
 plt.tight_layout()
@@ -131,6 +133,7 @@ plt.savefig(os.path.join("..", "figures", expname, "emp_rep_%s_wtw_%s_stepsize%.
 figFxs.plot_group_emp_rep(modelname, s1_stats_rep, s2_stats_rep, s1_stats, s2_stats)
 plt.gcf().set_size_inches(10, 6)
 plt.savefig(os.path.join("..", "figures", expname, "emp_rep_%s_%s_stepsize%.2f.pdf"%(modelname, fitMethod, stepsize)))
+
 # plot dist distributions 
 s1_dist_vals = s1_dist_vals_.mean(axis = 1)
 s1_dist_grand_median = np.median(s1_dist_vals_)
@@ -140,6 +143,7 @@ s1_dist_grand_median_ = np.median(s1_dist_vals_, axis = 0)
 # 
 s1_ntrial_vals = [y.shape[0] for x, y in zip(hdrdata_sess1.id, trialdata_sess1_.values()) if np.isin(x, s1_paradf['id'])]
 plt.scatter(s1_ntrial_vals, s1_dist_vals) ... # hmmm I am not sure ... let's use this temperally 
+
 
 # 
 s2_dist_vals = s2_dist_vals_.mean(axis = 1)
@@ -261,6 +265,28 @@ npara = len(paranames)
 figFxs.plot_parameter_distribution(modelname, s1_paradf.iloc[:,:-1], s2_paradf.iloc[:,:-1], color = "grey", edgecolor = "black")
 plt.gcf().set_size_inches(5 * npara, 5 * 2)
 plt.savefig(os.path.join("..", 'figures', expname, "%s_%s_stepsize%.2f_para_dist.pdf"%(modelname, fitMethod, stepsize)))
+
+# density
+figFxs.plot_parameter_density(modelname, s1_paradf.iloc[:,:-1], s2_paradf.iloc[:,:-1], color = "grey", edgecolor = "black")
+plt.gcf().set_size_inches(5 * npara, 5 * 2)
+plt.savefig(os.path.join("..", 'figures', expname, "%s_%s_stepsize%.2f_para_density.pdf"%(modelname, fitMethod, stepsize)))
+
+
+# transformed 
+s1_paradf_tf = copy.copy(s1_paradf)
+s2_paradf_tf = copy.copy(s2_paradf)
+for i, para in enumerate(paranames):
+    if para in ["alpha", "gamma"]:
+        s1_paradf_tf[para] = np.log(s1_paradf_tf[para] / (1 - s1_paradf_tf[para]))
+        s2_paradf_tf[para] = np.log(s2_paradf_tf[para] / (1 - s2_paradf_tf[para]))
+    else:
+        s1_paradf_tf[para] = np.log(s1_paradf_tf[para])
+        s2_paradf_tf[para] = np.log(s2_paradf_tf[para])
+
+figFxs.plot_parameter_density(modelname, s1_paradf_tf.iloc[:,:-1], s2_paradf_tf.iloc[:,:-1], color = "grey", edgecolor = "black")
+plt.gcf().set_size_inches(5 * npara, 5 * 2)
+plt.savefig(os.path.join("..", 'figures', expname, "%s_%s_stepsize%.2f_para_invlogit_density.pdf"%(modelname, fitMethod, stepsize)))
+
 # plot parameter correlations
 figFxs.plot_parameter_reliability(modelname, s1_paradf.iloc[:,:-1], s2_paradf.iloc[:,:-1], subtitles)
 plt.gcf().set_size_inches(5 * npara, 5)
@@ -285,7 +311,6 @@ spearmanr(a.loc[a.block == 1, 'std_wtw'], a.loc[a.block == 1, 'tau'])
 spearmanr(a.loc[a.block == 2, 'std_wtw'], a.loc[a.block == 2, 'tau'])
 
 # prior has high correlation with AUC
-
 
 
 
