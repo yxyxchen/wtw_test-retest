@@ -271,7 +271,6 @@ figFxs.plot_parameter_density(modelname, s1_paradf.iloc[:,:-1], s2_paradf.iloc[:
 plt.gcf().set_size_inches(5 * npara, 5 * 2)
 plt.savefig(os.path.join("..", 'figures', expname, "%s_%s_stepsize%.2f_para_density.pdf"%(modelname, fitMethod, stepsize)))
 
-
 # transformed 
 s1_paradf_tf = copy.copy(s1_paradf)
 s2_paradf_tf = copy.copy(s2_paradf)
