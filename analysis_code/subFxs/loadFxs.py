@@ -60,10 +60,13 @@ def loaddata(expname, sess):
                 data['condition'] = ['LP' if x == 1 else 'HP' for x in data['bkIdx']]
                 # let's get trialwise data 
                 tmp = data.groupby(['condition', 'trialIdx'])['keypressIdx'].max().reset_index()
+                tmp.columns = ['condition', 'trialIdx', 'nKeypress']
                 trialdata = trialdata.merge(tmp, on = ['condition', 'trialIdx'], how = "left")
                 tmp = data.groupby(['condition', 'trialIdx'])['ipi'].mean().reset_index()
+                tmp.columns = ['condition', 'trialIdx', 'mean_ipi']
                 trialdata = trialdata.merge(tmp, on = ['condition', 'trialIdx'], how = "left")
                 tmp = data.groupby(['condition', 'trialIdx']).agg({'ipi': np.median}).reset_index()
+                tmp.columns = ['condition', 'trialIdx', 'median_ipi']
                 trialdata = trialdata.merge(tmp, on = ['condition', 'trialIdx'], how = "left") # because no timestamp is recorded on some trials 
             except Exception as e:
                 # raise e

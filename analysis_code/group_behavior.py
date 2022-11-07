@@ -29,16 +29,11 @@ from subFxs import analysisFxs
 from datetime import datetime as dt
 
 
-
-
+# 
 expname = "active"
 s1_selfdf = loadFxs.parse_group_selfreport(expname, 1, isplot = False)
 hdrdata_sess1, trialdata_sess1_ = loadFxs.group_quality_check(expname, 1, plot_quality_check = True)
 hdrdata_sess2, trialdata_sess2_ = loadFxs.group_quality_check(expname, 2, plot_quality_check = True)
-
-
-
-
 
 
 ########
@@ -59,7 +54,6 @@ figFxs.plot_group_WTW_both(s1_WTW_, s2_WTW_, hdrdata_sess1, hdrdata_sess2, ax)
 ax.set_ylim([4, 10])
 ax.set_ylabel("Willingness-to-wait")
 fig.savefig(os.path.join('..', 'figures', expname, 'WTW.pdf'))
-
 
 ############# make sure there is learning 
 for sess in [1, 2]:

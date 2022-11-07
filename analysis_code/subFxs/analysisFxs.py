@@ -51,13 +51,18 @@ def pivot_by_condition(df):
     """ pivot a table of summary statistics based on condition 
     """
     # code.interact(local = dict(locals(), **globals()))
-    columns = ['auc', 'std_wtw']
+    if "ipi" in df:
+        columns = ['auc', 'std_wtw', "ipi"]
+    else: 
+        columns = ['auc', 'std_wtw']
     index = ['id']
     HP_df = df.loc[df['condition'] == 'HP', columns + index]
     LP_df = df.loc[df['condition'] == 'LP', columns + index]
     out_df = HP_df.merge(LP_df, left_on = index, right_on = index, suffixes = ['_HP', "_LP"])
     out_df['auc_delta'] = out_df['auc_HP'] - out_df['auc_LP']
     out_df['auc'] = (out_df['auc_HP'] + out_df['auc_LP']) / 2
+    if "ipi" in df:
+        out_df['ipi'] = (out_df['ipi_HP'] + out_df['ipi_LP']) / 2
     out_df['std_wtw'] = (out_df['std_wtw_HP']**2 / 2 + out_df['std_wtw_LP']**2 / 2)**0.5
     return out_df
 
@@ -150,8 +155,8 @@ def calc_prod_correlations(df, row_vars, col_vars):
     r_ = pd.DataFrame(np.full((nrow, ncol), np.nan), index = row_vars, columns = col_vars)
     p_ = pd.DataFrame(np.full((nrow, ncol), np.nan), index = row_vars, columns = col_vars)
     for row_var, col_var in itertools.product(row_vars, col_vars):
-        # res = stats.spearmanr(df[row_var], df[col_var], nan_policy = 'omit')
-        res = stats.pearsonr(df[row_var], df[col_var])
+        res = stats.spearmanr(df[row_var], df[col_var], nan_policy = 'omit')
+        # res = stats.pearsonr(df[row_var], df[col_var])
         r_.loc[row_var, col_var] = res[0]
         p_.loc[row_var, col_var] = res[1]
     return r_, p_
@@ -822,6 +827,10 @@ def ind_MF(trialdata, key, isTrct = True, plot_RT = False, plot_trial = False, p
         condition = blockdata.condition.values[0]
         conditionColor = expParas.conditionColors[condition]
 
+        # keypress stats
+        if 'mean_ipi' in blockdata:
+            ipi = np.mean(blockdata["mean_ipi"])
+
         # Survival analysis
         time, psurv, Time, Psurv, block_auc, block_std_wtw = kmsc(blockdata, expParas.tMax, expParas.Time, False)
         if plot_KMSC:
@@ -857,9 +866,14 @@ def ind_MF(trialdata, key, isTrct = True, plot_RT = False, plot_trial = False, p
         init_wtw = junk[0]
         end_wtw = junk[-1]
 
-        tmp = {"id": key[0], "sess": key[1], "key": str(key), "block": i + 1, "auc": block_auc,  "std_wtw": block_std_wtw, \
-        "auc_rh": block_auc_rh, "std_wtw_rh": block_std_wtw_rh,\
-        "init_wtw": init_wtw, "end_wtw": end_wtw, "sell_RT_median": sell_RT_median, "sell_RT_mean": sell_RT_mean, "sell_RT_se": sell_RT_se, "condition": condition}
+        if 'mean_ipi' in blockdata:
+            tmp = {"id": key[0], "sess": key[1], "key": str(key), "block": i + 1, "auc": block_auc,  "std_wtw": block_std_wtw, \
+            "auc_rh": block_auc_rh, "std_wtw_rh": block_std_wtw_rh, "ipi": ipi, \
+            "init_wtw": init_wtw, "end_wtw": end_wtw, "sell_RT_median": sell_RT_median, "sell_RT_mean": sell_RT_mean, "sell_RT_se": sell_RT_se, "condition": condition}
+        else:
+            tmp = {"id": key[0], "sess": key[1], "key": str(key), "block": i + 1, "auc": block_auc,  "std_wtw": block_std_wtw, \
+            "auc_rh": block_auc_rh, "std_wtw_rh": block_std_wtw_rh,\
+            "init_wtw": init_wtw, "end_wtw": end_wtw, "sell_RT_median": sell_RT_median, "sell_RT_mean": sell_RT_mean, "sell_RT_se": sell_RT_se, "condition": condition}
         tmp.update(dict(zip(['auc' + str((i + 1)) for i in range(n_subblock)], sub_aucs)))
         tmp.update(dict(zip(['std_wtw' + str((i + 1)) for i in range(n_subblock)], sub_std_wtws)))
         stats.append(pd.DataFrame(tmp, index = [i]))
