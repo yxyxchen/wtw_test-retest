@@ -150,7 +150,8 @@ def calc_prod_correlations(df, row_vars, col_vars):
     r_ = pd.DataFrame(np.full((nrow, ncol), np.nan), index = row_vars, columns = col_vars)
     p_ = pd.DataFrame(np.full((nrow, ncol), np.nan), index = row_vars, columns = col_vars)
     for row_var, col_var in itertools.product(row_vars, col_vars):
-        res = stats.spearmanr(df[row_var], df[col_var], nan_policy = 'omit')
+        # res = stats.spearmanr(df[row_var], df[col_var], nan_policy = 'omit')
+        res = stats.pearsonr(df[row_var], df[col_var])
         r_.loc[row_var, col_var] = res[0]
         p_.loc[row_var, col_var] = res[1]
     return r_, p_

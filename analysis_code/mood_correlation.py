@@ -42,40 +42,61 @@ hdrdata_sess1, trialdata_sess1_ = loadFxs.group_quality_check(expname, 1, plot_q
 hdrdata_sess2, trialdata_sess2_ = loadFxs.group_quality_check(expname, 2, plot_quality_check = True)
 s1_stats, s1_Psurv_b1_, s1_Psurv_b2_, s1_WTW_ = analysisFxs.group_MF(trialdata_sess1_, plot_each = False)   
 s2_stats, s2_Psurv_b1_, s2_Psurv_b2_, s2_WTW_ = analysisFxs.group_MF(trialdata_sess2_, plot_each = False)   
+s1_df = analysisFxs.pivot_by_condition(s1_stats)
+s2_df = analysisFxs.pivot_by_condition(s2_stats)
+
+
+####################### analyze only selfreport data ####################
+if expname == "passive":
+	s1_selfdf = loadFxs.parse_group_selfreport(expname, 1, isplot = False)
+	s2_selfdf = loadFxs.parse_group_selfreport(expname, 2, isplot = False)
+###################################### reliability of selfreport data #################
+	selfreport_vars = ["UPPS", "BIS", "GMK", "PAS", "NAS"]
+	df = pd.melt(s1_selfdf, id_vars = ["id"], value_vars = selfreport_vars).merge(
+		pd.melt(s2_selfdf, id_vars = ["id"], value_vars = selfreport_vars), on = ["id", "variable"],
+		suffixes = ["_sess1", "_sess2"])
+	g = sns.FacetGrid(data = df, col = "variable", sharex= False, sharey = False)
+	g.map(figFxs.my_regplot, "value_sess1", "value_sess2")
+
+	# let's do practice effects 
+	df = analysisFxs.vstack_sessions(pd.melt(s1_selfdf[np.isin(s1_selfdf.id, s2_selfdf)], id_vars = ["id"], value_vars = selfreport_vars),
+		pd.melt(s2_selfdf, id_vars = ["id"], value_vars = selfreport_vars))
+	g = sns.FacetGrid(data = df, col = "variable", sharex= False, sharey = False)
+	g.map(sns.swarmplot, "sess", "value")
+
+
+	# this might be a useful table to show ....
+	    # selfreport_vars = ['NU', 'PU', 'PM', 'PS', 'SS', 'attention', 'cogstable', 'motor', 'perseverance', 'selfcontrol', 'cogcomplex', 'UPPS', 'BIS', 'GMK'] 
+	selfdf = analysisFxs.hstack_sessions(s1_selfdf, s2_selfdf)
+	to_be_tested_vars = list(zip([x + "_sess1" for x in expParas.selfreport_vars], [x + "_sess2" for x in expParas.selfreport_vars]))
+	spearman_rho_, pearson_rho_, abs_icc_, con_icc_, n_, report = analysisFxs.calc_zip_reliability(selfdf, to_be_tested_vars)
+	report.sort_values(by = "spearman_rho")
+else:
+	selfdf = loadFxs.parse_group_selfreport(expname, 1, isplot = False)
+
+
+################### correlations among selfreports ###############
+selfdf = analysisFxs.agg_across_sessions(s1_selfdf, s2_selfdf)
+selfdf['log_GMK'] = np.log(selfdf['GMK'])
+sns.pairplot(selfdf[["UPPS", "BIS", "log_GMK"]])
+
+################### correlations among selfreports and model measures ###############
+statsdf = analysisFxs.agg_across_sessions(s1_df, s2_df)
+
+df = statsdf.merge(selfdf, on = "id")
+sns.pairplot(df[["UPPS", "BIS", "log_GMK", "auc"]])
+r_, p_ = analysisFxs.calc_prod_correlations(df, ["UPPS", "BIS", "log_GMK"], ["auc", "std_wtw", "auc_delta"])
 
 
 
-s1_selfdf = loadFxs.parse_group_selfreport(expname, 1, isplot = False)
-# s1_selfdf.to_csv(os.path.join("..", "analysis_results", expname, "selfreport", "selfreport_sess1.csv"), index = None)
-s2_selfdf = loadFxs.parse_group_selfreport(expname, 2, isplot = False)
-# s2_selfdf.to_csv(os.path.join("..", "analysis_results", expname, "selfreport", "selfreport_sess2.csv"), index = None)
+########
+# import statsmodels
+import statsmodels.formula.api as smf
+results = smf.ols('log_GMK ~ auc + std_wtw + auc_delta', data=df).fit()
+print(results.summary())
 
-selfreport_vars = ["UPPS", "BIS", "GMK", "PAS", "NAS"]
-df = pd.melt(s1_selfdf, id_vars = ["id"], value_vars = selfreport_vars).merge(
-	pd.melt(s2_selfdf, id_vars = ["id"], value_vars = selfreport_vars), on = ["id", "variable"],
-	suffixes = ["_sess1", "_sess2"])
-
-g = sns.FacetGrid(data = df, col = "variable", sharex= False, sharey = False)
-g.map(figFxs.my_regplot, "value_sess1", "value_sess2")
-
-
-# let's do practice effects 
-df = analysisFxs.vstack_sessions(pd.melt(s1_selfdf[np.isin(s1_selfdf.id, s2_selfdf)], id_vars = ["id"], value_vars = selfreport_vars),
-	pd.melt(s2_selfdf, id_vars = ["id"], value_vars = selfreport_vars))
-g = sns.FacetGrid(data = df, col = "variable", sharex= False, sharey = False)
-g.map(sns.swarmplot, "sess", "value")
-
-
-
-# this might be a useful table to show ....
-    # selfreport_vars = ['NU', 'PU', 'PM', 'PS', 'SS', 'attention', 'cogstable', 'motor', 'perseverance', 'selfcontrol', 'cogcomplex', 'UPPS', 'BIS', 'GMK'] 
-to_be_tested_vars = list(zip([x + "_sess1" for x in expParas.selfreport_vars], [x + "_sess2" for x in expParas.selfreport_vars]))
-spearman_rho_, pearson_rho_, abs_icc_, con_icc_, n_, report = analysisFxs.calc_zip_reliability(selfdf, to_be_tested_vars)
-report.sort_values(by = "spearman_rho")
-
-
-
-# I would like to know autocorrelations though ...
+################## there is 
+r_, p_ = analysisFxs.calc_prod_correlations(df, ["auc", "std_wtw"], ["auc", "std_wtw"])
 
 
 
