@@ -117,21 +117,62 @@ sns.pairplot(df[["UPPS", "BIS", "log_GMK", "auc"]])
 r_, p_ = analysisFxs.calc_prod_correlations(df, ["UPPS", "BIS", "log_GMK", "motor", "attention"], ["auc", "std_wtw", "auc_delta", "ipi"])
 
 
+r_, p_ = analysisFxs.calc_prod_correlations(df, ["UPPS", "BIS", "log_GMK", "Motor", "Nonplanning", "Attentional", "motor"], ["log_alpha", "log_nu", "tau", "gamma", "log_eta"])
+
 ########
 # import statsmodels
 import statsmodels.formula.api as smf
+
+df = s1_df.merge(s1_selfdf, on = "id").merge(s1_paradf, on = "id")
+results = smf.ols('Motor ~ auc + std_wtw + auc_delta', data=df).fit()
+print(results.summary())
+
+
+df = s2_df.merge(s2_selfdf, on = "id").merge(s2_paradf, on = "id")
+results = smf.ols('Motor ~ auc + std_wtw + auc_delta', data=df).fit()
+print(results.summary())
+
+
+df = s1_df.merge(s1_selfdf, on = "id").merge(s1_paradf, on = "id")
+results = smf.ols('Attentional ~ auc + std_wtw + auc_delta', data=df).fit()
+print(results.summary())
+
+
+df = s2_df.merge(s2_selfdf, on = "id").merge(s2_paradf, on = "id")
+results = smf.ols('Attentional ~ auc + std_wtw + auc_delta', data=df).fit()
+print(results.summary())
+
+
+############## So it seems that different aspects of impulsivity influence different aspects of ##########
+df = s1_df.merge(s1_selfdf, on = "id").merge(s1_paradf, on = "id")
+results = smf.ols('Nonplanning ~ auc + std_wtw + auc_delta', data=df).fit()
+print(results.summary())
+
+df = s2_df.merge(s2_selfdf, on = "id").merge(s2_paradf, on = "id")
+results = smf.ols('Nonplanning ~ auc + std_wtw + auc_delta', data=df).fit()
+print(results.summary())
+
+
+########## XXXX ######
 results = smf.ols('log_GMK ~ auc + std_wtw + auc_delta', data=df).fit()
 print(results.summary())
 
-results = smf.ols('BIS ~ auc + std_wtw + auc_delta', data=df).fit()
+
+
+results = smf.ols('log_GMK ~ log_nu', data=df).fit()
 print(results.summary())
 
 
-results = smf.ols('log_GMK ~ log_alpha + tau + log_eta + gamma', data=df).fit() # I think there is a correlation with log alpha 
+df = statsdf.merge(selfdf, on = "id").merge(paradf, on = "id")
+results = smf.ols('log_GMK ~ log_alpha', data=df).fit() # I think there is a correlation with log nu? 
 print(results.summary())
 
-results = smf.ols('BIS ~ log_alpha + tau + log_eta + gamma', data=df).fit()
+
+df = s1_df.merge(s1_selfdf, on = "id").merge(s1_paradf, on = "id")
+results = smf.ols('Motor ~ log_alpha + log_nu  + tau + gamma + log_eta', data=df).fit()
 print(results.summary())
+
+
 ################## there is 
 r_, p_ = analysisFxs.calc_prod_correlations(df, ["auc", "std_wtw"], ["auc", "std_wtw"])
 
