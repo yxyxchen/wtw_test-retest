@@ -143,6 +143,7 @@ def group_quality_check(expname, sess, plot_quality_check = False):
     # filter excluded data 
     hdrdata = hdrdata.loc[~np.isin(hdrdata.id, excluded.id), :]
     hdrdata.reset_index(drop=True, inplace  = True)
+    hdrdata = hdrdata.merge(consentdata[["id", "age", "gender"]], on = "id")
     # code.interact(local = dict(locals(), **globals()))
     trialdata_ = {x:y for x, y in trialdata_.items() if x[0] not in excluded.id.values}
     print("Exclude %d participants with low data quality!"%excluded.shape[0])

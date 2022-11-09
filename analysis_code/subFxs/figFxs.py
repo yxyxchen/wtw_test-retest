@@ -411,6 +411,20 @@ def corr_analysis(row_df, col_df, n_perm):
 
 
 # reliability functions
+
+def annotate_reg(x, y, test = "spearman", ax = None, **kwargs):
+    if(ax is None):
+        ax = plt.gca()
+    spearman_rho, pearson_rho, abs_icc, con_icc, ssbs, ssbm, sse, msbs, msbm, mse = analysisFxs.calc_reliability(x, y)
+    print(test)
+    if test == "spearman":
+        ax.text(0.4, 0.1, "spearman's r = %.3f\n"%spearman_rho, size=12, color='red', transform=ax.transAxes)
+    elif test == "pearson":
+        ax.text(0.4, 0.1, "pearson's r = %.3f\n"%pearson_rho, size=12, color='red', transform=ax.transAxes)
+    elif test == "icc":
+        ax.text(0.4, 0.1, "icc = %.3f\n"%abs_icc, size=12, color='red', transform=ax.transAxes)
+
+
 def my_regplot(x, y, ax = None, exclude_outliers = True, **kwargs):  
     if(ax is None):
         ax = plt.gca()

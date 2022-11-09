@@ -343,9 +343,6 @@ def my_compare_correlations(x1, x2, y1, y2, n_perm = 1000):
     # code.interact(local = dict(locals(), **globals()))
     return r_x_observed, r_y_observed, p_val
 
-# bootstrapped methods to compare two samples
-
-
 # I think I can first focus on paired permustations first
 def my_paired_permutation(x, y, func, n_perm = 1000):
     # calculate the observed critical stats
@@ -422,6 +419,8 @@ def score_PANAS(choices, isplot = True):
         ax.set_xlabel("Lags")
 
     return PAS, NAS
+
+
 
 def score_BIS(choices, isplot = True):
     """score BIS questionaire answers
