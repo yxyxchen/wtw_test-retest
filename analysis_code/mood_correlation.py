@@ -127,10 +127,12 @@ sns.pairplot(df[["NU", "PU", "PM", "PS", "SS"]])
 plt.savefig(os.path.join("..", "figures", expname, "UPPS_corr.pdf"))
 r_, p_ = analysisFxs.calc_prod_correlations(df, ['motor', "selfcontrol", "cogstable"], ['motor', "selfcontrol", "cogstable"])
 
+r_, p_ = analysisFxs.calc_prod_correlations(df, ['auc', "std_wtw", "auc_delta"], ['auc', "std_wtw", "auc_delta"])
 r_, p_ = analysisFxs.calc_prod_correlations(df, ['motor', "selfcontrol", "cogstable"], ['auc', "std_wtw", "auc_delta"])
 
 r_, p_ = analysisFxs.calc_prod_correlations(df, ["Motor", "Nonplanning", "Attentional"], ['auc', "std_wtw", "auc_delta"])
 
+r_, p_ = analysisFxs.calc_prod_correlations(df, ["BIS", "UPPS", "log_GMK"], ['auc', "std_wtw", "auc_delta"])
 
 r_, p_ = analysisFxs.calc_prod_correlations(df, ['motor', "perseverance",  "cogcomplex", "selfcontrol", "attention", "cogstable"], ['auc', "std_wtw", "auc_delta"])
 
@@ -165,15 +167,13 @@ se_ = []
 pval_ = []
 impulse_vars = ["BIS", "UPPS", "log_GMK"]
 # impulse_vars = ["NU", "PU", "PM", "PS", "SS"]
-for source in ["sess1", "sess2", "combined"]:
+for source in ["sess1", "combined"]:
 	if source == "sess1":
-		df = s1_df.merge(s1_selfdf, on = "id")
-	elif source == "sess2":
-		df = s2_df.merge(s2_selfdf, on = "id")
+		df = s1_df.merge(selfdf, on = "id")
 	else:
 		df = statsdf.merge(selfdf, on = "id")
 	for impulse_var in impulse_vars:
-		df[df.select_dtypes('number').columns] = df.select_dtypes('number').apply(lambda x:scipy.stats.zscore(x[~np.isnan(x)])) 
+		df[df.select_dtypes('number').columns] = df.select_dtypes('number').apply(lambda x:scipy.stats.zscore(x, nan_policy = "omit")) 
 		results = smf.ols(impulse_var + ' ~ auc + std_wtw + auc_delta', data=df).fit()
 		source_ = source_ + [source] * 3
 		sp_var_ = sp_var_ + [impulse_var] * 3
@@ -195,6 +195,7 @@ plotdf = pd.DataFrame({
 	})
 plotdf["source"] =  pd.Categorical(plotdf["source"], categories = ["sess1", "sess2", "combined"])
 plotdf["bh_var"] =  pd.Categorical(plotdf["bh_var"], categories = ["auc", "std_wtw", "auc_delta"])
+
 
 # look at UPPS, BIS and Log_gamma
 p = (ggplot(plotdf[plotdf["source"] == "combined"]) \
@@ -227,13 +228,14 @@ coef_ = []
 se_ = []
 pval_ = []
 impulse_vars = ["Motor", "Attentional", "Nonplanning"]
-for source in ["sess1", "sess2", "combined"]:
+for source in ["sess1", "combined"]:
 	if source == "sess1":
-		df = s1_df.merge(s1_selfdf, on = "id").merge(s1_paradf, on = "id")
-	elif source == "sess2":
-		df = s2_df.merge(s2_selfdf, on = "id").merge(s2_paradf, on = "id")
+		df = s1_df.merge(selfdf, on = "id")
+	# 	df = s1_df.merge(s1_selfdf, on = "id").merge(s1_paradf, on = "id")
+	# elif source == "sess2":
+	# 	df = s2_df.merge(s2_selfdf, on = "id").merge(s2_paradf, on = "id")
 	else:
-		df = statsdf.merge(selfdf, on = "id").merge(paradf, on = "id")
+		df = statsdf.merge(selfdf, on = "id")
 	for impulse_var in impulse_vars:
 		df[df.select_dtypes('number').columns] = df.select_dtypes('number').apply(scipy.stats.zscore) 
 		results = smf.ols(impulse_var + ' ~ auc + std_wtw + auc_delta', data=df).fit()
