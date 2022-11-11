@@ -73,10 +73,6 @@ if expname == "passive":
 	s1_selfdf = loadFxs.parse_group_selfreport(expname, 1, isplot = False)
 	s2_selfdf = loadFxs.parse_group_selfreport(expname, 2, isplot = False)
 	s1_selfdf = s1_selfdf[np.isin(s1_selfdf["id"], hdrdata_ssess1["id"])]
-	s1_selfdf["BUP"] = s1_selfdf["BIS"] + s1_selfdf["UPPS"]
-	s2_selfdf["BUP"] = s2_selfdf["BIS"] + s2_selfdf["UPPS"]
-	s1_selfdf['log_GMK'] = np.log(s1_selfdf['GMK'])
-	s2_selfdf['log_GMK'] = np.log(s2_selfdf['GMK'])
 ###################################### reliability of selfreport data #################
 	selfreport_vars = ["UPPS", "BIS", "GMK", "PAS", "NAS"]
 	df = pd.melt(s1_selfdf, id_vars = ["id"], value_vars = selfreport_vars).merge(

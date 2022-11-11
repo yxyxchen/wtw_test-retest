@@ -1,4 +1,3 @@
-
 ########################### import modules ############################
 import pandas as pd
 import numpy as np
@@ -31,26 +30,17 @@ from datetime import datetime as dt
 import scipy 
 import statsmodels.formula.api as smf
 from plotnine import ggplot, aes, facet_grid, labs, geom_point, geom_errorbar, geom_text, position_dodge, scale_fill_manual, labs, theme_classic, ggsave, geom_bar
+from scipy.stats import mannwhitneyu
 
-def tosig(x):
-	if x > 0.05:
-		y = ""
-	elif x <= 0.05 and x > 0.01:
-		y = "*"
-	elif x <= 0.01 and x > 0.001:
-		y = "**"
-	else:
-		y = "***"
-	return y
 
 # plot styles
 plt.style.use('classic')
-sns.set(font_scale = 2)
+sns.set(font_scale = 1)
 sns.set_style("white")
 condition_palette = ["#762a83", "#1b7837"]
 
 # passive version
-expname = "passive"
+expname = "active"
 hdrdata_sess1, trialdata_sess1_ = loadFxs.group_quality_check(expname, 1, plot_quality_check = True)
 hdrdata_sess2, trialdata_sess2_ = loadFxs.group_quality_check(expname, 2, plot_quality_check = True)
 
@@ -66,53 +56,119 @@ s2_df = analysisFxs.pivot_by_condition(s2_stats)
 statsdf = analysisFxs.agg_across_sessions(s1_df, s2_df)
 
 
-
-##### showing demographic results 
-tmp = hdrdata_sess2["gender"].value_counts()
-fig, ax = plt.subplots()
-ax.pie(tmp.values, labels = tmp.index, autopct='%.0f%%')
-fig.savefig(os.path.join("..", "figures", expname, "gender_pie.pdf"))
-
-
-fig, ax = plt.subplots()
-ax.hist(hdrdata_sess2["age"], color = "grey", edgecolor = "black")
-fig.savefig(os.path.join("..", "figures", expname, "age_dist.pdf"))
-####################### analyze only selfreport data ####################
-if expname == "passive":
-	s1_selfdf = loadFxs.parse_group_selfreport(expname, 1, isplot = False)
-	s2_selfdf = loadFxs.parse_group_selfreport(expname, 2, isplot = False)
-	s1_selfdf = s1_selfdf[np.isin(s1_selfdf["id"], s2_selfdf["id"])]
-	s1_selfdf['log_GMK'] = np.log(s1_selfdf['GMK'])
-	s2_selfdf['log_GMK'] = np.log(s2_selfdf['GMK'])
-###################################### reliability of selfreport data #################
-	selfreport_vars = ["UPPS", "BIS", "GMK", "PAS", "NAS"]
-	df = pd.melt(s1_selfdf, id_vars = ["id"], value_vars = selfreport_vars).merge(
-		pd.melt(s2_selfdf, id_vars = ["id"], value_vars = selfreport_vars), on = ["id", "variable"],
-		suffixes = ["_sess1", "_sess2"])
-	g = sns.FacetGrid(data = df, col = "variable", sharex= False, sharey = False)
-	g.map(figFxs.my_regplot, "value_sess1", "value_sess2")
-
-	# let's do practice effects 
-	df = analysisFxs.vstack_sessions(pd.melt(s1_selfdf[np.isin(s1_selfdf.id, s2_selfdf)], id_vars = ["id"], value_vars = selfreport_vars),
-		pd.melt(s2_selfdf, id_vars = ["id"], value_vars = selfreport_vars))
-	g = sns.FacetGrid(data = df, col = "variable", sharex= False, sharey = False)
-	g.map(sns.swarmplot, "sess", "value")
-
-	# this might be a useful table to show ....
-		# selfreport_vars = ['NU', 'PU', 'PM', 'PS', 'SS', 'attention', 'cogstable', 'motor', 'perseverance', 'selfcontrol', 'cogcomplex', 'UPPS', 'BIS', 'GMK'] 
-	selfdf = analysisFxs.hstack_sessions(s1_selfdf, s2_selfdf)
-	to_be_tested_vars = list(zip([x + "_sess1" for x in expParas.selfreport_vars], [x + "_sess2" for x in expParas.selfreport_vars]))
-	spearman_rho_, pearson_rho_, abs_icc_, con_icc_, n_, report = analysisFxs.calc_zip_reliability(selfdf, to_be_tested_vars)
-	report.sort_values(by = "spearman_rho")
-
-	selfdf = analysisFxs.agg_across_sessions(s1_selfdf, s2_selfdf)
-else:
-	s1_selfdf = loadFxs.parse_group_selfreport(expname, 1, isplot = Fa
-	selfdf = s1_selfdf
-	selfdf['log_GMK'] = np.log(selfdf['GMK'])
+# effect of seq, color and cb on gender 
+df = hdrdata_sess2[np.isin(hdrdata_sess2["gender"], ["Female", "Male"])]
+chi2, p, dof, ex = scipy.stats.chi2_contingency(df.groupby(["seq"])["gender"].value_counts().rename("sum").reset_index().pivot(index = "seq", columns = "gender",values = "sum"))
+p
+chi2, p, dof, ex = scipy.stats.chi2_contingency(df.groupby(["color"])["gender"].value_counts().rename("sum").reset_index().pivot(index = "color", columns = "gender",values = "sum"))
+p
+chi2, p, dof, ex = scipy.stats.chi2_contingency(df.groupby(["cb"])["gender"].value_counts().rename("sum").reset_index().pivot(index = "cb", columns = "gender",values = "sum"))
+p
 
 
-######## load model parameters ########
+fig, axes = plt.subplots(1,3)
+for var, ax in zip(["seq", "color", "cb"], axes): 
+	var_levels = np.unique(hdrdata_sess2[var])
+	sns.violinplot(data = hdrdata_sess2, x = var, y = "age", order = var_levels, ax = ax)
+	sns.boxplot(data = hdrdata_sess2, x=var, y='age', order = var_levels, saturation=0.5, width=0.4, boxprops={'zorder': 2}, ax=ax)
+	ax.set_xlabel("")
+	for i, j in itertools.combinations(np.arange(len(var_levels)), 2):
+		sig = figFxs.tosig(mannwhitneyu(hdrdata_sess2.loc[hdrdata_sess2[var] == var_levels[i], "age"], hdrdata_sess2.loc[hdrdata_sess2[var] == var_levels[j], "age"]).pvalue)
+		ax.plot([i, i, i+1, i+1], [80, 84, 84, 80], lw=1.5)
+		plt.text((2*i + 1)*.5, 81, sig, ha='center', va='bottom')
+fig.savefig(os.path.join("..", "figures", expname, "age_seq.pdf"))
+
+
+fig, axes = plt.subplots(1,3)
+for var, ax in zip(["seq", "color", "cb"], axes):
+	df = hdrdata_sess2[np.isin(hdrdata_sess2["gender"], ["Female", "Male"])]
+	df = df.groupby(var)["gender"].value_counts(normalize = True).rename("percent").reset_index().pivot(index = var,  columns = "gender")
+	df.plot(kind='bar', stacked=True, ax = ax)
+fig.savefig(os.path.join("..", "figures", expname, "gender_seq.pdf"))
+
+
+########################## effects of seq on the tasks 
+for groupvar in ["seq", "color", "cb"]:
+	plt.style.use('classic')
+	sns.set(font_scale = 1)
+	sns.set_style("white")
+	condition_palette = ["#762a83", "#1b7837"]
+	df = statsdf.merge(hdrdata_sess2, on = "id")
+	tmp = df.melt(id_vars = ["id", groupvar], value_vars = ["auc", "std_wtw", "auc_delta"])
+	var_levels = np.unique(df[groupvar])
+	g = sns.FacetGrid(data = tmp, col = "variable", sharey = False)
+	g.map(sns.barplot, groupvar, "value", color = "grey")
+	for var, ax in zip(["auc", "std_wtw", "auc_delta"], g.axes.flatten()):
+		for i, j in itertools.combinations(np.arange(len(var_levels)), 2):
+			sig = figFxs.tosig(mannwhitneyu(tmp.loc[np.logical_and(tmp[groupvar] == var_levels[i], tmp["variable"] == var), "value"], tmp.loc[np.logical_and(tmp[groupvar] == var_levels[j], tmp["variable"] == var), "value"]).pvalue)
+			ymax = tmp.loc[tmp["variable"] == var].groupby(groupvar)["value"].mean().max()
+			ax.plot([i, i, i+1, i+1], [ymax, ymax*1.2, ymax*1.2, ymax], lw=1.5)
+			ax.text((2*i + 1)*.5, ymax, sig, ha='center', va='bottom')
+	g.savefig(os.path.join("..", "figures", expname, groupvar + "_task_comparison.pdf"))
+	# for ax, var in zip(g.axes.flatten(), ["auc", "std_wtw", "auc_delta"]):
+	# 	sig = figFxs.tosig(mannwhitneyu(df.loc[df[groupvar] == "seq1", var].dropna(), df.loc[df["seq"] == "seq2", var].dropna()).pvalue)
+	# 	
+	# 	print(ymax)
+	# 	ax.plot([0, 0, 1, 1], [ymax * 1.1, ymax * 1.2, ymax * 1.2, ymax * 1.1], lw=1.5)
+	# 	ax.text(.5, ymax * 1.2, sig, ha='center', va='bottom')
+	
+
+
+################## task vars ##################
+# there might be an interaction, I don't think it will be that important
+# plot styles
+plt.style.use('classic')
+sns.set(font_scale = 1)
+sns.set_style("white")
+condition_palette = ["#762a83", "#1b7837"]
+df = statsdf.merge(hdrdata_sess2, on = "id")
+df = df[np.isin(df["gender"], ["Male", "Female"])]
+tmp = df.melt(id_vars = ["id", "gender"], value_vars = ["auc", "std_wtw", "auc_delta"])
+g = sns.FacetGrid(data = tmp, col = "variable", sharey = False)
+g.map(sns.barplot, "gender", "value", color = "grey")
+for ax, var in zip(g.axes.flatten(), ["auc", "std_wtw", "auc_delta"]):
+	sig = figFxs.tosig(mannwhitneyu(df.loc[df["gender"] == "Female", var].dropna(), df.loc[df["gender"] == "Male", var].dropna()).pvalue)
+	ymax = df.loc[~np.isnan(df[var])].groupby(["gender"])[var].mean().max()
+	print(ymax)
+	ax.plot([0, 0, 1, 1], [ymax * 1.1, ymax * 1.2, ymax * 1.2, ymax * 1.1], lw=1.5)
+	ax.text(.5, ymax * 1.2, sig, ha='center', va='bottom')
+g.savefig(os.path.join("..", "figures", expname, "gender_task_comparison.pdf"))
+
+
+df = statsdf.merge(hdrdata_sess2, on = "id")
+df = df[np.isin(df["gender"], ["Male", "Female"])]
+# df = df[df["age"] < 50]
+tmp = df.melt(id_vars = ["id", "age", "gender"], value_vars = ["auc", "std_wtw", "auc_delta"])
+g = sns.FacetGrid(data = tmp, col = "variable", sharey = False, margin_titles=True )
+g.map(sns.regplot, "age", "value", line_kws = {'color':'red'}, scatter_kws = {"color": "grey", "edgecolor": "black"})
+g.map(figFxs.annotate_reg, "age", "value")
+g.set_titles(col_template="{col_name}", row_template="{row_name}")
+g.savefig(os.path.join("..", "figures", expname, "age_task_corr.pdf"))
+
+
+df = statsdf.merge(hdrdata_sess2, on = "id")
+df = df[np.isin(df["gender"], ["Male", "Female"])]
+tmp = df.melt(id_vars = ["id", "age", "gender"], value_vars = ["auc", "std_wtw", "auc_delta"])
+g = sns.FacetGrid(data = tmp, row = "gender", col = "variable", sharey = False, margin_titles=True)
+g.map(sns.regplot, "age", "value", line_kws = {'color':'red'}, scatter_kws = {"color": "grey", "edgecolor": "black"})
+g.map(figFxs.annotate_reg, "age", "value")
+g.set_titles(col_template="{col_name}", row_template="{row_name}")
+g.savefig(os.path.join("..", "figures", expname, "age_gender_task_corr.pdf"))
+
+
+df = statsdf.merge(hdrdata_sess2, on = "id")
+df = df[np.isin(df["gender"], ["Female", "Male"])]
+# df = df[df["age"] < 50]
+predictors = ["gender", "age", "age*gender"]
+yvals = [ "auc", "std_wtw", "auc_delta"]
+coef = []
+for yval in yvals:
+	results = smf.ols(yval + " ~ age * gender + seq", data = df).fit()
+	coef.append(["%.3f( "%x + "p=%.3f"%y + " )" for x, y in zip(results.params[1:].values, results.pvalues[1:].values)])
+coef_report = pd.DataFrame(coef).rename(index = dict(zip(np.arange(4), yvals)), columns = dict(zip(np.arange(3), predictors)))
+coef_report
+
+############## load model parameters ###########
 modelname = 'QL2reset'
 fitMethod = "whole"
 stepsize = 0.5

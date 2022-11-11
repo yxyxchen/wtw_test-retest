@@ -36,7 +36,21 @@ sns.set_style("white")
 condition_palette = ["#762a83", "#1b7837"]
 
 
-
+def tosig(x, marginal = False):
+    if x > 0.1:
+        y = "ns"
+    elif x > 0.05 and x <= 0.1:
+        if marginal:
+            y = "p = %.3f"%x
+        else:
+            y = "ns"
+    elif x <= 0.05 and x > 0.01:
+        y = "*"
+    elif x <= 0.01 and x > 0.001:
+        y = "**"
+    else:
+        y = "***"
+    return y
 
 ######## 
 def plot_group_emp_rep_wtw(modelname, s1_WTW_rep, s2_WTW_rep, s1_WTW_emp, s2_WTW_emp, hdrdata_sess1, hdrdata_sess2, s1_paradf, s2_paradf):
@@ -417,10 +431,14 @@ def annotate_reg(x, y, test = "spearman", ax = None, **kwargs):
         ax = plt.gca()
     spearman_rho, pearson_rho, abs_icc, con_icc, ssbs, ssbm, sse, msbs, msbm, mse = analysisFxs.calc_reliability(x, y)
     print(test)
+    x = x[np.logical_and(~np.isnan(x), ~np.isnan(y))]
+    y = y[np.logical_and(~np.isnan(x), ~np.isnan(y))]
     if test == "spearman":
-        ax.text(0.4, 0.1, "spearman's r = %.3f\n"%spearman_rho, size=12, color='red', transform=ax.transAxes)
+        r, p = spearmanr(x, y)
+        ax.text(0.4, 0.1, "spearman's r = %.3f\n p = %.3f"%(r, p), size=12, color='red', transform=ax.transAxes)
     elif test == "pearson":
-        ax.text(0.4, 0.1, "pearson's r = %.3f\n"%pearson_rho, size=12, color='red', transform=ax.transAxes)
+        r, p = pearsonr(x, y)
+        ax.text(0.4, 0.1, "pearson's r = %.3f\n p = %.3f"%(r, p), size=12, color='red', transform=ax.transAxes)
     elif test == "icc":
         ax.text(0.4, 0.1, "icc = %.3f\n"%abs_icc, size=12, color='red', transform=ax.transAxes)
 

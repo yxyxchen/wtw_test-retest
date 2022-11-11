@@ -16,6 +16,7 @@ from datetime import datetime as dt
 import matplotlib.pyplot as plt
 import rpy2.robjects as robjects
 import re
+import scipy
 
 
 
@@ -144,6 +145,9 @@ def group_quality_check(expname, sess, plot_quality_check = False):
     hdrdata = hdrdata.loc[~np.isin(hdrdata.id, excluded.id), :]
     hdrdata.reset_index(drop=True, inplace  = True)
     hdrdata = hdrdata.merge(consentdata[["id", "age", "gender"]], on = "id")
+    hdrdata["seq"] = ["seq1" if x in ["A", "C"] else "seq2" for x in hdrdata["cb"]]
+    hdrdata["color"] = ["color1" if x in ["A", "B"] else "color2" for x in hdrdata["cb"]]
+
     # code.interact(local = dict(locals(), **globals()))
     trialdata_ = {x:y for x, y in trialdata_.items() if x[0] not in excluded.id.values}
     print("Exclude %d participants with low data quality!"%excluded.shape[0])
@@ -265,6 +269,9 @@ def parse_group_selfreport(expname, sess, isplot):
         mcqdata = mcqdata.loc[k_filter,:] 
         selfdata = selfdata.merge(mcqdata[['GMK', 'SubjID']], how = 'outer', right_on = 'SubjID', left_on = 'id').drop("SubjID", axis = 1)
     selfdata.reset_index(inplace = True, drop = True)
+    selfdata = selfdata.rename(columns = {"GMK":"discount_k"})
+    selfdata["discount_logk"] = np.log(selfdata["discount_k"])
+    selfdata["survey_impulsivity"] = scipy.stats.zscore(selfdata["UPPS"], nan_policy = "omit") + scipy.stats.zscore(selfdata["BIS"], nan_policy = "omit")
     return selfdata 
 
 # Maybe I need a function to load MCQ
