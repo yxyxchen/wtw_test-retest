@@ -40,7 +40,7 @@ sns.set_style("white")
 condition_palette = ["#762a83", "#1b7837"]
 
 # passive version
-expname = "active"
+expname = "passive"
 hdrdata_sess1, trialdata_sess1_ = loadFxs.group_quality_check(expname, 1, plot_quality_check = True)
 hdrdata_sess2, trialdata_sess2_ = loadFxs.group_quality_check(expname, 2, plot_quality_check = True)
 
@@ -158,15 +158,18 @@ g.savefig(os.path.join("..", "figures", expname, "age_gender_task_corr.pdf"))
 
 df = statsdf.merge(hdrdata_sess2, on = "id")
 df = df[np.isin(df["gender"], ["Female", "Male"])]
-# df = df[df["age"] < 50]
-predictors = ["gender", "age", "age*gender"]
+df = df[df["age"] < 50]
 yvals = [ "auc", "std_wtw", "auc_delta"]
 coef = []
 for yval in yvals:
 	results = smf.ols(yval + " ~ age * gender + seq", data = df).fit()
 	coef.append(["%.3f( "%x + "p=%.3f"%y + " )" for x, y in zip(results.params[1:].values, results.pvalues[1:].values)])
-coef_report = pd.DataFrame(coef).rename(index = dict(zip(np.arange(4), yvals)), columns = dict(zip(np.arange(3), predictors)))
+
+predictors = results.pvalues[1:].index.values
+coef_report = pd.DataFrame(coef).rename(index = dict(zip(np.arange(len(yvals)), yvals)), columns = dict(zip(np.arange(len(predictors)), predictors)))
 coef_report
+
+
 
 ############## load model parameters ###########
 modelname = 'QL2reset'
