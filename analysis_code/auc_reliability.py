@@ -57,6 +57,66 @@ for expname in ['active', 'passive']:
 		var_vals_.append(var_vals)
 		exp_vals_.append(exp_vals)
 
+
+expname = "passive"
+s1_selfdf = loadFxs.parse_group_selfreport(expname, 1, isplot = False)
+s2_selfdf = loadFxs.parse_group_selfreport(expname, 2, isplot = False)
+df = analysisFxs.hstack_sessions(s1_selfdf, s2_selfdf)
+for var, label in zip(["UPPS", "BIS", "Motor", "Nonplanning", "Attentional", "attention", "cogstable", "motor", "perseverance", "selfcontrol", "cogcomplex"], ["UPPS", "BIS", "Motor", "Nonplanning", "Attentional", "attention", "cogstable", "motor", "perseverance", "selfcontrol", "cogcomplex"]):
+	icc_vals, _, _ = analysisFxs.calc_bootstrap_reliability(df[var + '_sess1'], df[var + '_sess2'], n = 150)
+	var_vals = np.full(len(icc_vals), label)
+	exp_vals = np.full(len(icc_vals), expname)
+	icc_vals_.append(icc_vals)
+	var_vals_.append(var_vals)
+	exp_vals_.append(exp_vals)
+
+######## put all reliability measures together ######
+df = pd.DataFrame({
+	"icc": np.array(icc_vals_).flatten(),
+	"var": np.array(var_vals_).flatten(),
+	"exp": np.array(exp_vals_).flatten(),
+	})
+df.loc[~np.isin(df["var"], ["AUC (s)", "$\\sigma_\\mathrm{wtw}$ (s)", "$\\Delta$AUC (s)"]), "exp"] = "survey"
+vars = ["UPPS", "BIS", "Motor", "Nonplanning", "Attentional", "attention", "cogstable", "motor", "perseverance", "selfcontrol", "cogcomplex",  "AUC (s)", "$\\sigma_\\mathrm{wtw}$ (s)", "$\\Delta$AUC (s)"]
+fig, ax = plt.subplots()
+sns.set_palette(sns.color_palette(["#d73027", "#4575b4", "#a1d76a"]))
+sns.violinplot(x = "icc", y = "var", data = df, hue = "exp", ax = ax, order = vars)
+summarydf = df[~np.isin(df["var"], ["AUC (s)", "$\\sigma_\\mathrm{wtw}$ (s)", "$\\Delta$AUC (s)"])].groupby(["var", "exp"]).agg({"icc":[np.median, "max"]})
+for i, var in enumerate(["UPPS", "BIS", "Motor", "Nonplanning", "Attentional", "attention", "cogstable", "motor", "perseverance", "selfcontrol", "cogcomplex"]):
+	ax.text(summarydf.loc[(var, "survey"), ('icc', 'max')] * 1.1, i + 0.5, round(summarydf.loc[(var, "survey"),('icc', "median")], 2), color = "green")
+
+summarydf = df[np.isin(df["var"], ["AUC (s)", "$\\sigma_\\mathrm{wtw}$ (s)", "$\\Delta$AUC (s)"])].groupby(["var", "exp"]).agg({"icc":[np.median, "max"]})
+for i, var in enumerate(["AUC (s)", "$\\sigma_\\mathrm{wtw}$ (s)", "$\\Delta$AUC (s)"]):
+	for j, exp in enumerate(["active", "passive"]):
+		c =  "blue" if exp == "passive" else "red"
+		max_icc = max(summarydf.loc[(var, "passive"), ('icc', 'max')], summarydf.loc[(var, "active"), ('icc', 'max')])
+		if exp == "active":
+			ax.text(max_icc * 1.1, 11.25 + i  , round(summarydf.loc[(var, exp),('icc', "median")], 2), color = c)
+		if exp == "passive":
+			ax.text(max_icc * 1.1 + 0.08,  11.25 + i  , "/ %.2f"%summarydf.loc[(var, exp),('icc', "median")], color = c)
+
+plt.tight_layout()
+ax.legend(loc='upper left')
+ax.set_xlabel("Bootstrapped ICC")
+ax.set_ylabel("")
+fig.set_size_inches(18.5, 10.5)
+fig.savefig(os.path.join('..', 'figures', expname, 'all_reliability.pdf'))
+
+#############	
+vars = ['auc', 'std_wtw', 'auc_delta']
+labels = ['AUC (s)', r"$\sigma_\mathrm{wtw}$ (s)", r'$\Delta$AUC (s)']
+icc_vals_ = []
+var_vals_ = []
+exp_vals_ = []
+for expname in ['active', 'passive']:
+	s1_selfdf = loadFxs.parse_group_selfreport(expname, 1, isplot = False)
+	hdrdata_sess1, trialdata_sess1_ = loadFxs.group_quality_check(expname, 1, plot_quality_check = True)
+	hdrdata_sess2, trialdata_sess2_ = loadFxs.group_quality_check(expname, 2, plot_quality_check = True)
+	s1_stats, s1_Psurv_b1_, s1_Psurv_b2_, s1_WTW_ = analysisFxs.group_MF(trialdata_sess1_, plot_each = False)   
+	s2_stats, s2_Psurv_b1_, s2_Psurv_b2_, s2_WTW_ = analysisFxs.group_MF(trialdata_sess2_, plot_each = False)   
+	s1_df = analysisFxs.pivot_by_condition(s1_stats)
+	s2_df = analysisFxs.pivot_by_condition(s2_stats)
+	df = analysisFxs.hstack_sessions(s1_df, s2_df)
 	for var, label in zip(vars, labels):
 		fig, ax = plt.subplots()
 		figFxs.my_regplot(df[var + '_sess1'], df[var + '_sess2'], ax = ax)
@@ -90,9 +150,7 @@ for expname in ['active', 'passive']:
 		even_df = analysisFxs.pivot_by_condition(stats_even)
 		df = analysisFxs.hstack_sessions(odd_df, even_df, suffixes = ["_odd", "_even"])
 		df_.append(df)
-
 	df = analysisFxs.vstack_sessions(*df_)
-
 	for var, label in zip(vars, labels):
 		g = sns.lmplot(data = df, x = var+'_odd', y = var+'_even', hue = "sess", scatter_kws={"s": 40, "alpha":0.5}, line_kws={"linestyle":"--"})
 		for sess in [1, 2]:
@@ -130,17 +188,7 @@ for paraname, paralabel in zip(paranames, paralabels):
 	exp_vals_.append(exp_vals)
 
 
-######## put all reliability measures together ######
-df = pd.DataFrame({
-	"icc": np.array(icc_vals_).flatten(),
-	"var": np.array(var_vals_).flatten(),
-	"exp": np.array(exp_vals_).flatten(),
-	})
-fig, ax = plt.subplots()
-sns.violinplot(x = "icc", y = "var", data = df, hue = "exp", ax = ax)
-plt.tight_layout()
-ax.legend(loc='center left', bbox_to_anchor=(1, 0.5))
-plt.savefig(os.path.join('..', 'figures', expname, var + '_all_reliability.pdf'), witdh = 18, height = 7)
+
 
 # plot parameter distributions
 figFxs.plot_parameter_distribution(modelname, s1_paradf.iloc[:,:-1], s2_paradf.iloc[:,:-1], color = "grey", edgecolor = "black")
@@ -182,6 +230,35 @@ s2_paradf = loadFxs.load_parameter_estimates(expname, 2, hdrdata_sess2, modelnam
 figFxs.plot_parameter_reliability(modelname, s1_paradf[np.isin(s1_paradf.id, HM_ids)].iloc[:,:-1], s2_paradf[np.isin(s2_paradf.id, HM_ids)].iloc[:,:-1], subtitles)
 plt.gcf().set_size_inches(5 * npara, 5)
 plt.savefig(os.path.join("..", 'figures', expname, "%s_%s_stepsize%.2f_para_reliability_short.pdf"%(modelname, fitMethod, stepsize)))
+
+
+
+##################### reliability about selfreport measures
+ if expname == "passive":
+	s1_selfdf = loadFxs.parse_group_selfreport(expname, 1, isplot = False)
+	s2_selfdf = loadFxs.parse_group_selfreport(expname, 2, isplot = False)
+	s1_selfdf = s1_selfdf[np.isin(s1_selfdf["id"], hdrdata_sess1["id"])]
+	###################################### reliability of selfreport data #################
+	selfreport_vars = ["UPPS", "BIS", "Motor", "Nonplanning", "Attentional", "attention", "cogstable", "motor", "perseverance", "selfcontrol", "cogcomplex"]
+	df = pd.melt(s1_selfdf, id_vars = ["id"], value_vars = selfreport_vars).merge(
+		pd.melt(s2_selfdf, id_vars = ["id"], value_vars = selfreport_vars), on = ["id", "variable"],
+		suffixes = ["_sess1", "_sess2"])
+	g = sns.FacetGrid(data = df, col = "variable", sharex= False, sharey = False)
+	g.map(figFxs.my_regplot, "value_sess1", "value_sess2")
+	g.savefig(os.path.join("..", 'figures', expname, "selfreport_reliability.pdf"))
+
+	# let's do practice effects 
+	df = analysisFxs.vstack_sessions(pd.melt(s1_selfdf[np.isin(s1_selfdf.id, s2_selfdf)], id_vars = ["id"], value_vars = selfreport_vars),
+		pd.melt(s2_selfdf, id_vars = ["id"], value_vars = selfreport_vars))
+	g = sns.FacetGrid(data = df, col = "variable", sharex= False, sharey = False)
+	g.map(sns.swarmplot, "sess", "value")
+
+	# this might be a useful table to show ....
+		# selfreport_vars = ['NU', 'PU', 'PM', 'PS', 'SS', 'attention', 'cogstable', 'motor', 'perseverance', 'selfcontrol', 'cogcomplex', 'UPPS', 'BIS', 'GMK'] 
+	selfdf = analysisFxs.hstack_sessions(s1_selfdf, s2_selfdf)
+	to_be_tested_vars = list(zip([x + "_sess1" for x in expParas.selfreport_vars], [x + "_sess2" for x in expParas.selfreport_vars]))
+	spearman_rho_, pearson_rho_, abs_icc_, con_icc_, n_, report = analysisFxs.calc_zip_reliability(selfdf, to_be_tested_vars)
+	report.sort_values(by = "spearman_rho")
 
 
 	########## additional measures ###########

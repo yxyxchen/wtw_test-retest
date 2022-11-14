@@ -56,8 +56,29 @@ for expname in ["passive", "active"]:
 	selfdf_.append(selfdf)
 
 
-selfdf = pd.concat(selfdf_, axis = 0)
-hdrdata = pd.concat(hdrdata_, axis = 0)
+selfdf = pd.concat(selfdf_, axis = 0).reset_index()
+hdrdata = pd.concat(hdrdata_, axis = 0).reset_index()
+
+#################### plot correlations among selfreport datas
+g = sns.pairplot(selfdf[["UPPS", "BIS", "discount_logk"]], kind = "reg", diag_kws = {"color": "grey", "edgecolor": "black"},\
+	plot_kws ={'line_kws':{'color':'red'}, "scatter_kws": {"color": "grey", "edgecolor": "black"}})
+g.map_lower(figFxs.annotate_reg)
+plt.savefig(os.path.join("..", "figures", "combined", "impulsivity_corr.pdf"))
+
+g = sns.pairplot(selfdf[["NU", "PU", "PM", "PS", "SS"]], kind = "reg", diag_kws = {"color": "grey", "edgecolor": "black"},\
+	plot_kws ={'line_kws':{'color':'red'}, "scatter_kws": {"color": "grey", "edgecolor": "black"}})
+g.map_lower(figFxs.annotate_reg)
+plt.savefig(os.path.join("..", "figures", "combined", "UPPS_corr.pdf"))
+
+g = sns.pairplot(selfdf[["Motor", "Nonplanning", "Attentional"]], kind = "reg", diag_kws = {"color": "grey", "edgecolor": "black"},\
+	plot_kws ={'line_kws':{'color':'red'}, "scatter_kws": {"color": "grey", "edgecolor": "black"}})
+g.map_lower(figFxs.annotate_reg)
+plt.savefig(os.path.join("..", "figures", "combined", "BIS_corr.pdf"))
+
+g = sns.pairplot(selfdf[['motor', "perseverance", "cogstable", "selfcontrol", "attention", "cogcomplex"]], kind = "reg", diag_kws = {"color": "grey", "edgecolor": "black"},\
+	plot_kws ={'line_kws':{'color':'red'}, "scatter_kws": {"color": "grey", "edgecolor": "black"}})
+g.map_lower(figFxs.annotate_reg)
+plt.savefig(os.path.join("..", "figures", "combined", "BIS_sub_corr.pdf"))
 
 ############# showing demographic results ########
 plt.style.use('classic')
@@ -146,7 +167,7 @@ g.savefig(os.path.join("..", "figures", expname, "age_gender_selfreport_corr_lim
 ######
 df = selfdf.merge(hdrdata, on = "id")
 df = df[np.isin(df["gender"], ["Female", "Male"])]
-# df = df[df["age"] < 50]
+df[df.select_dtypes('number').columns] = df.select_dtypes('number').apply(lambda x:scipy.stats.zscore(x, nan_policy = "omit")) 
 predictors = ["gender", "age", "age*gender"]
 yvals = [ "BIS", "UPPS", "survey_impulsivity", "SS", "PU", "NU", "PM", "PS", "Motor", "Nonplanning", "Attentional", "discount_logk"]
 coef = []
@@ -155,13 +176,19 @@ for yval in yvals:
 	coef.append(["%.3f( "%x + "p=%.3f"%y + " )" for x, y in zip(results.params[1:].values, results.pvalues[1:].values)])
 
 coef_report = pd.DataFrame(coef).rename(index = dict(zip(np.arange(len(yvals)), yvals)), columns = dict(zip(np.arange(3), predictors)))
-coef_report
+coef_report.loc[["BIS", "UPPS", "discount_logk"],:]
 
+
+df = selfdf.merge(hdrdata, on = "id")
+df = df[np.isin(df["gender"], ["Female", "Male"])]
+df[df.select_dtypes('number').columns] = df.select_dtypes('number').apply(lambda x:scipy.stats.zscore(x, nan_policy = "omit")) 
 coef = []
 for yval in yvals:
 	results = smf.ols(yval + " ~ age * gender", data = df).fit()
 	coef.append(["%.3f( "%x + figFxs.tosig(y, True) + " )" for x, y in zip(results.params[1:].values, results.pvalues[1:].values)])
+
 coef_report = pd.DataFrame(coef).rename(index = dict(zip(np.arange(len(yvals)), yvals)), columns = dict(zip(np.arange(3), predictors)))
+coef_report.loc[["BIS", "UPPS", "discount_logk"],:]
 
 
 

@@ -427,12 +427,13 @@ def corr_analysis(row_df, col_df, n_perm):
 # reliability functions
 
 def annotate_reg(x, y, test = "spearman", ax = None, **kwargs):
+    x, y = x[np.logical_and(~np.isnan(x), ~np.isnan(y))], y[np.logical_and(~np.isnan(x), ~np.isnan(y))]
+    print(len(x))
+    print(len(y))
     if(ax is None):
         ax = plt.gca()
     spearman_rho, pearson_rho, abs_icc, con_icc, ssbs, ssbm, sse, msbs, msbm, mse = analysisFxs.calc_reliability(x, y)
     print(test)
-    x = x[np.logical_and(~np.isnan(x), ~np.isnan(y))]
-    y = y[np.logical_and(~np.isnan(x), ~np.isnan(y))]
     if test == "spearman":
         r, p = spearmanr(x, y)
         ax.text(0.4, 0.1, "spearman's r = %.3f\n p = %.3f"%(r, p), size=12, color='red', transform=ax.transAxes)
