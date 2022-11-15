@@ -144,7 +144,7 @@ def group_quality_check(expname, sess, plot_quality_check = False):
     # filter excluded data 
     hdrdata = hdrdata.loc[~np.isin(hdrdata.id, excluded.id), :]
     hdrdata.reset_index(drop=True, inplace  = True)
-    hdrdata = hdrdata.merge(consentdata[["id", "age", "gender"]], on = "id")
+    hdrdata = hdrdata.merge(consentdata[["id", "age", "gender", "education", "language", "race"]], on = "id")
     hdrdata["seq"] = ["seq1" if x in ["A", "C"] else "seq2" for x in hdrdata["cb"]]
     hdrdata["color"] = ["color1" if x in ["A", "B"] else "color2" for x in hdrdata["cb"]]
 
