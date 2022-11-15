@@ -1,0 +1,11 @@
+
+QL2reset_ind ../../analysis_results/passive/modelfit/whole/stepsize0.50/QL2reset_ind/s1001_sess2 simpleWarning: Bulk Effective Samples Size (ESS) is too low, indicating posterior means and medians may be unreliable.
+Running the chains for more iterations may help. See
+http://mc-stan.org/misc/warnings.html#bulk-ess
+
+QL2reset_ind ../../analysis_results/passive/modelfit/whole/stepsize0.50/QL2reset_ind/s1001_sess2 simpleWarning: Tail Effective Samples Size (ESS) is too low, indicating posterior variances and tail quantiles may be unreliable.
+Running the chains for more iterations may help. See
+http://mc-stan.org/misc/warnings.html#tail-ess
+
+Finish QL2reset_ind ../../analysis_results/passive/modelfit/whole/stepsize0.50/QL2reset_ind/s1001_sess2 !
+QL2reset_ind ../../analysis_results/passive/modelfit/whole/stepsize0.50/QL2reset_ind/s1001_sess2 High Rhat
