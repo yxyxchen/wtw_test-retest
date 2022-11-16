@@ -40,7 +40,7 @@ sns.set_style("white")
 condition_palette = ["#762a83", "#1b7837"]
 
 # passive version
-expname = "passive"
+expname = "active"
 hdrdata_sess1, trialdata_sess1_ = loadFxs.group_quality_check(expname, 1, plot_quality_check = True)
 hdrdata_sess2, trialdata_sess2_ = loadFxs.group_quality_check(expname, 2, plot_quality_check = True)
 
@@ -60,38 +60,19 @@ statsdf = analysisFxs.agg_across_sessions(s1_df, s2_df)
 
 ####################### analyze only selfreport data ####################
 if expname == "passive":
-	s1_selfdf = loadFxs.parse_group_selfreport(expname, 1, isplot = False)
-	s2_selfdf = loadFxs.parse_group_selfreport(expname, 2, isplot = False)
-	selfdf = analysisFxs.agg_across_sessions(s1_selfdf, s2_selfdf)
+    s1_selfdf = loadFxs.parse_group_selfreport(expname, 1, isplot = False)
+    s2_selfdf = loadFxs.parse_group_selfreport(expname, 2, isplot = False)
+    selfdf = analysisFxs.agg_across_sessions(s1_selfdf, s2_selfdf)
 else:
-	s1_selfdf = loadFxs.parse_group_selfreport(expname, 1, isplot = False)
-	s1_selfdf[np.isin(s1_selfdf["id"], hdrdata_sess1["id"])]
-	selfdf = s1_selfdf	
-
-######## load model parameters ########
-modelname = 'QL2reset'
-fitMethod = "whole"
-stepsize = 0.5
-subtitles = [r'$\mathbf{log(\alpha)}$', r'$\mathbf{log(\nu)}$', r'$\mathbf{\tau}$', r'$\mathbf{\gamma}$', r'$\mathbf{log(\eta)}$']
-paranames = modelFxs.getModelParas(modelname)
-npara = len(paranames)
-s1_paradf = loadFxs.load_parameter_estimates(expname, 1, hdrdata_sess1, modelname, fitMethod, stepsize)
-s2_paradf = loadFxs.load_parameter_estimates(expname, 2, hdrdata_sess2, modelname, fitMethod, stepsize)
-s1_paradf["alphaU"] = s1_paradf["alpha"] * s1_paradf["nu"]
-s2_paradf["alphaU"] = s2_paradf["alpha"] * s2_paradf["nu"]
-figFxs.log_transform_parameter(s1_paradf, ["alpha", "nu", "eta", "tau", "alphaU"])
-figFxs.log_transform_parameter(s2_paradf, ["alpha", "nu", "eta", "tau", "alphaU"])
-paradf = analysisFxs.agg_across_sessions(s1_paradf, s2_paradf)
+    s1_selfdf = loadFxs.parse_group_selfreport(expname, 1, isplot = False)
+    s1_selfdf[np.isin(s1_selfdf["id"], hdrdata_sess1["id"])]
+    selfdf = s1_selfdf  
 
 ################### self autocorrelations ###############
-
-
 g = sns.pairplot(statsdf[["auc", "std_wtw", "auc_delta"]], kind = "reg", diag_kws = {"color": "grey", "edgecolor": "black"},\
-	plot_kws ={'line_kws':{'color':'red'}, "scatter_kws": {"color": "grey", "edgecolor": "black"}})
+    plot_kws ={'line_kws':{'color':'red'}, "scatter_kws": {"color": "grey", "edgecolor": "black"}})
 g.map_lower(figFxs.annotate_reg)
 plt.savefig(os.path.join("..", "figures", expname, "task_corr.pdf"))
-
-
 
 
 
@@ -124,6 +105,64 @@ plt.savefig(os.path.join("..", "figures", expname, "para_corr_%s_wtw_%s_stepsize
 
 
 
+########### effects of age and gender and education 
+
+bh_vars = ["auc", "std_wtw", "auc_delta"]
+if expname == "passive":
+    sources = ["sess1", "sess2", "combined"]
+elif expname == "active":
+    sources = ["sess1", "combined"]
+
+# impulse_vars = ["NU", "PU", "PM", "PS", "SS"]
+source_ = []
+sp_var_ = []
+bh_var_ = []
+coef_ = [] 
+se_ = []
+pval_ = []
+for source in sources:
+    if source == "sess1":
+        df = s1_df.merge(s1_selfdf, on = "id").merge(hdrdata_sess1[["id", "age", "gender", "education", "seq"]], on = "id")
+    elif source == "sess2":
+        df = s2_df.merge(s2_selfdf, on = "id").merge(hdrdata_sess1[["id", "age", "gender", "education", "seq"]], on = "id")
+    elif source == "combined":
+        df = statsdf.merge(selfdf, on = "id").merge(hdrdata_sess1[["id", "age", "gender", "education", "seq"]], on = "id")
+    # df = df[np.logical_and(df["gender"] != "Neither/Do not wish to disclose", df["seq"] == "seq1")]
+    df = df[df["gender"] != "Neither/Do not wish to disclose"]
+    df[df.select_dtypes('number').columns] = df.select_dtypes('number').apply(lambda x:scipy.stats.zscore(x, nan_policy = "omit")) 
+    for bh_var in bh_vars:
+        results = smf.ols(bh_var + ' ~ age', data=df).fit()
+        source_ = source_ + [source] * len(results.params[1:].index.values)
+        bh_var_ = bh_var_ + [bh_var] * len(results.params[1:].index.values)
+        sp_var_ = sp_var_ + list(results.params[1:].index.values)
+        coef_ = coef_ + list(results.params[1:].values)
+        se_ = se_ + list(results.bse[1:].values)
+        pval_ = pval_ + list(results.pvalues[1:].values)
+
+plotdf = pd.DataFrame({
+    "source": source_,
+    "bh_var": bh_var_,
+    "sp_var": sp_var_,
+    "coef": coef_,
+    "se": se_,
+    "ymax": [x + y for x, y in zip(coef_, se_)],
+    "ymin": [x - y for x, y in zip(coef_, se_)],
+    "pval": [figFxs.tosig(x, marginal = True) for x in pval_],
+    "label_y": [x + 0.03 * np.sign(x) for x in coef_]
+    })
+plotdf["source"] =  pd.Categorical(plotdf["source"], categories = ["sess1", "sess2", "combined"])
+plotdf["sp_var"] =  pd.Categorical(plotdf["sp_var"], categories = results.params[1:].index.values)
+plotdf["bh_var"] =  pd.Categorical(plotdf["bh_var"], categories = ["auc", "std_wtw", "auc_delta"])
+
+(ggplot(plotdf[np.logical_and(plotdf["source"] == "combined", plotdf["sp_var"] != "seq[T.seq2]")]) \
+    + aes(x="bh_var", y="coef") \
+    + geom_bar(stat = "identity", position="dodge", width=0.75) \
+    # + geom_errorbar(aes(ymin = "ymin", ymax = "ymax"), position = "dodge", width = 0.9)\
+    + facet_grid(facets="~sp_var") 
+    + geom_text(aes(y="label_y", label = "pval"), position=position_dodge(width=0.75)) 
+    + scale_fill_manual(values = ["#ca0020", "#0571b0", "#bababa"]) \
+    + labs(x = "", y = "Standardized coef") + theme_classic())
+
 ################### regression correlations among selfreports and model measures ###############
 source_ = []
 sp_var_ = []
@@ -134,53 +173,53 @@ pval_ = []
 impulse_vars = ["BIS", "UPPS",  "survey_impulsivity", "discount_logk"]
 bh_vars = ["auc", "std_wtw", "auc_delta", "age"]
 if expname == "passive":
-	sources = ["sess1", "sess2", "combined"]
+    sources = ["sess1", "sess2", "combined"]
 elif expname == "active":
-	sources = ["sess1", "combined"]
+    sources = ["sess1", "combined"]
 
 # impulse_vars = ["NU", "PU", "PM", "PS", "SS"]
 for source in sources:
-	if source == "sess1":
-		df = s1_df.merge(s1_selfdf, on = "id").merge(hdrdata_sess1[["id", "age", "gender"]], on = "id")
-	elif source == "sess2":
-		df = s2_df.merge(s2_selfdf, on = "id").merge(hdrdata_sess1[["id", "age", "gender"]], on = "id")
-	elif source == "combined":
-		df = statsdf.merge(selfdf, on = "id").merge(hdrdata_sess1[["id", "age", "gender"]], on = "id")
-	df = df[df["gender"] != "Neither/Do not wish to disclose"]
-	for impulse_var in impulse_vars:
-		df[df.select_dtypes('number').columns] = df.select_dtypes('number').apply(lambda x:scipy.stats.zscore(x, nan_policy = "omit")) 
-		results = smf.ols(impulse_var + ' ~ auc + auc_delta + std_wtw + age * gender', data=df).fit()
-		source_ = source_ + [source] * len(results.params[1:].index.values)
-		sp_var_ = sp_var_ + [impulse_var] * len(results.params[1:].index.values)
-		bh_var_ = bh_var_ + list(results.params[1:].index.values)
-		coef_ = coef_ + list(results.params[1:].values)
-		se_ = se_ + list(results.bse[1:].values)
-		pval_ = pval_ + list(results.pvalues[1:].values)
+    if source == "sess1":
+        df = s1_df.merge(s1_selfdf, on = "id").merge(hdrdata_sess1[["id", "age", "gender"]], on = "id")
+    elif source == "sess2":
+        df = s2_df.merge(s2_selfdf, on = "id").merge(hdrdata_sess1[["id", "age", "gender"]], on = "id")
+    elif source == "combined":
+        df = statsdf.merge(selfdf, on = "id").merge(hdrdata_sess1[["id", "age", "gender"]], on = "id")
+    df = df[df["gender"] != "Neither/Do not wish to disclose"]
+    for impulse_var in impulse_vars:
+        df[df.select_dtypes('number').columns] = df.select_dtypes('number').apply(lambda x:scipy.stats.zscore(x, nan_policy = "omit")) 
+        results = smf.ols(impulse_var + ' ~ auc + auc_delta + std_wtw + age * gender', data=df).fit()
+        source_ = source_ + [source] * len(results.params[1:].index.values)
+        sp_var_ = sp_var_ + [impulse_var] * len(results.params[1:].index.values)
+        bh_var_ = bh_var_ + list(results.params[1:].index.values)
+        coef_ = coef_ + list(results.params[1:].values)
+        se_ = se_ + list(results.bse[1:].values)
+        pval_ = pval_ + list(results.pvalues[1:].values)
 
 plotdf = pd.DataFrame({
-	"source": source_,
-	"bh_var": bh_var_,
-	"sp_var": sp_var_,
-	"coef": coef_,
-	"se": se_,
-	"ymax": [x + y for x, y in zip(coef_, se_)],
-	"ymin": [x - y for x, y in zip(coef_, se_)],
-	"pval": [round(x,3) for x in pval_],
-	"label_y": [x + 0.03 * np.sign(x) for x in coef_]
-	})
+    "source": source_,
+    "bh_var": bh_var_,
+    "sp_var": sp_var_,
+    "coef": coef_,
+    "se": se_,
+    "ymax": [x + y for x, y in zip(coef_, se_)],
+    "ymin": [x - y for x, y in zip(coef_, se_)],
+    "pval": [round(x,3) for x in pval_],
+    "label_y": [x + 0.03 * np.sign(x) for x in coef_]
+    })
 plotdf["source"] =  pd.Categorical(plotdf["source"], categories = ["sess1", "sess2", "combined"])
 plotdf["bh_var"] =  pd.Categorical(plotdf["bh_var"], categories = results.params[1:].index.values)
 
 
 p = 
 (ggplot(plotdf[plotdf["source"] == "combined"]) \
-	+ aes(x="bh_var", y="coef") \
-	+ geom_bar(stat = "identity", position="dodge", width=0.75) \
-	# + geom_errorbar(aes(ymin = "ymin", ymax = "ymax"), position = "dodge", width = 0.9)\
-	+ facet_grid(facets="~sp_var") 
-	+ geom_text(aes(y="label_y", label = "pval"), position=position_dodge(width=0.75)) 
-	+ scale_fill_manual(values = ["#ca0020", "#0571b0", "#bababa"]) 
-	+ labs(x = "", y = "Standardized coef") + theme_classic())
+    + aes(x="bh_var", y="coef") \
+    + geom_bar(stat = "identity", position="dodge", width=0.75) \
+    # + geom_errorbar(aes(ymin = "ymin", ymax = "ymax"), position = "dodge", width = 0.9)\
+    + facet_grid(facets="~sp_var") 
+    + geom_text(aes(y="label_y", label = "pval"), position=position_dodge(width=0.75)) 
+    + scale_fill_manual(values = ["#ca0020", "#0571b0", "#bababa"]) 
+    + labs(x = "", y = "Standardized coef") + theme_classic())
 
 ##################################
 # basically all the results are gone ...
@@ -194,42 +233,42 @@ pval_ = []
 impulse_vars = ["BIS", "UPPS",  "survey_impulsivity", "discount_logk"]
 bh_vars = ["auc", "std_wtw", "auc_delta"]
 if expname == "passive":
-	sources = ["sess1", "sess2", "combined"]
+    sources = ["sess1", "sess2", "combined"]
 elif expname == "active":
-	sources = ["sess1", "combined"]
+    sources = ["sess1", "combined"]
 
 # impulse_vars = ["NU", "PU", "PM", "PS", "SS"]
 for source in sources:
-	if source == "sess1":
-		df = s1_df.merge(s1_selfdf, on = "id").merge(hdrdata_sess1[["id", "age", "gender", "seq"]], on = "id")
-	elif source == "sess2":
-		df = s2_df.merge(s2_selfdf, on = "id").merge(hdrdata_sess1[["id", "age", "gender", "seq"]], on = "id")
-	elif source == "combined":
-		df = statsdf.merge(selfdf, on = "id").merge(hdrdata_sess1[["id", "age", "gender", "seq"]], on = "id")
-	df = df[df["gender"] != "Neither/Do not wish to disclose"]
-	# df = df[df["age"] < 50]
-	# df = df[1:140]
-	for bh_var in bh_vars:
-		df[df.select_dtypes('number').columns] = df.select_dtypes('number').apply(lambda x:scipy.stats.zscore(x, nan_policy = "omit")) 
-		results = smf.ols(bh_var + ' ~ motor + age * gender * seq', data=df).fit()
-		source_ = source_ + [source] * len(results.params[1:])
-		sp_var_ = sp_var_ + list(results.params[1:].index.values)
-		bh_var_ = bh_var_ + [bh_var] * len(results.params[1:])
-		coef_ = coef_ + list(results.params[1:].values)
-		se_ = se_ + list(results.bse[1:].values)
-		pval_ = pval_ + list(results.pvalues[1:].values)
+    if source == "sess1":
+        df = s1_df.merge(s1_selfdf, on = "id").merge(hdrdata_sess1[["id", "age", "gender", "seq"]], on = "id")
+    elif source == "sess2":
+        df = s2_df.merge(s2_selfdf, on = "id").merge(hdrdata_sess1[["id", "age", "gender", "seq"]], on = "id")
+    elif source == "combined":
+        df = statsdf.merge(selfdf, on = "id").merge(hdrdata_sess1[["id", "age", "gender", "seq"]], on = "id")
+    df = df[df["gender"] != "Neither/Do not wish to disclose"]
+    # df = df[df["age"] < 50]
+    # df = df[1:140]
+    for bh_var in bh_vars:
+        df[df.select_dtypes('number').columns] = df.select_dtypes('number').apply(lambda x:scipy.stats.zscore(x, nan_policy = "omit")) 
+        results = smf.ols(bh_var + ' ~ motor + age * gender * seq', data=df).fit()
+        source_ = source_ + [source] * len(results.params[1:])
+        sp_var_ = sp_var_ + list(results.params[1:].index.values)
+        bh_var_ = bh_var_ + [bh_var] * len(results.params[1:])
+        coef_ = coef_ + list(results.params[1:].values)
+        se_ = se_ + list(results.bse[1:].values)
+        pval_ = pval_ + list(results.pvalues[1:].values)
 
 plotdf = pd.DataFrame({
-	"source": source_,
-	"bh_var": bh_var_,
-	"sp_var": sp_var_,
-	"coef": coef_,
-	"se": se_,
-	"ymax": [x + y for x, y in zip(coef_, se_)],
-	"ymin": [x - y for x, y in zip(coef_, se_)],
-	"pval": [round(x,3) for x in pval_],
-	"label_y": [x + 0.03 * np.sign(x) for x in coef_]
-	})
+    "source": source_,
+    "bh_var": bh_var_,
+    "sp_var": sp_var_,
+    "coef": coef_,
+    "se": se_,
+    "ymax": [x + y for x, y in zip(coef_, se_)],
+    "ymin": [x - y for x, y in zip(coef_, se_)],
+    "pval": [round(x,3) for x in pval_],
+    "label_y": [x + 0.03 * np.sign(x) for x in coef_]
+    })
 plotdf["source"] =  pd.Categorical(plotdf["source"], categories = ["sess1", "sess2", "combined"])
 plotdf["sp_var"] =  pd.Categorical(plotdf["sp_var"], categories = results.params[1:].index.values)
 plotdf[np.logical_and(plotdf["source"] == "combined", plotdf["sp_var"] == "motor")]
@@ -238,15 +277,15 @@ plotdf[np.logical_and(plotdf["source"] == "combined", plotdf["sp_var"] == "motor
 
 # only combined sessions
 (ggplot(plotdf[plotdf["source"] == "combined"]) \
-	+ aes(x="sp_var", y="coef") \
-	+ geom_bar(stat = "identity", position="dodge", width=0.75) \
-	# + geom_errorbar(aes(ymin = "ymin", ymax = "ymax"), position = "dodge", width = 0.9)\
-	+ facet_grid(facets="~bh_var") 
-	+ geom_text(aes(y="label_y", label = "pval"), position=position_dodge(width=0.75)) 
-	+ scale_fill_manual(values = ["#ca0020", "#0571b0", "#bababa"]) 
-	+ labs(x = "", y = "Standardized coef") + theme_classic())
+    + aes(x="sp_var", y="coef") \
+    + geom_bar(stat = "identity", position="dodge", width=0.75) \
+    # + geom_errorbar(aes(ymin = "ymin", ymax = "ymax"), position = "dodge", width = 0.9)\
+    + facet_grid(facets="~bh_var") 
+    + geom_text(aes(y="label_y", label = "pval"), position=position_dodge(width=0.75)) 
+    + scale_fill_manual(values = ["#ca0020", "#0571b0", "#bababa"]) 
+    + labs(x = "", y = "Standardized coef") + theme_classic())
 + 
-	  scale_x_discrete(labels= ["BUP", "log_GMK"]))
+      scale_x_discrete(labels= ["BUP", "log_GMK"]))
 ggsave(plot = p, filename= "../figures/%s/coef_combined_BIS.pdf"%(expname))
 
 results = smf.ols('auc_delta ~ age * gender + seq', data=df[df["age"]<50]).fit()
@@ -254,12 +293,12 @@ results = smf.ols('auc_delta ~ age * gender + seq', data=df[df["age"]<50]).fit()
 
 # all sessions 
 p = (ggplot(plotdf) \
-	+ aes(x="sp_var", y="coef", fill = "source") \
-	+ geom_bar(stat = "identity", position="dodge", width=0.75) \
-	# + geom_errorbar(aes(ymin = "ymin", ymax = "ymax"), position = "dodge", width = 0.9)\
-	+ facet_grid(facets="~bh_var") 
-	+ geom_text(aes(y="label_y", label = "pval"), position=position_dodge(width=0.75)) 
-	+ scale_fill_manual(values = ["#ca0020", "#0571b0", "#bababa"]) 
-	+ labs(x = "", y = "Standardized coef") +
-	scale_x_discrete(labels= ["BUP", "log_GMK", "age"]))
+    + aes(x="sp_var", y="coef", fill = "source") \
+    + geom_bar(stat = "identity", position="dodge", width=0.75) \
+    # + geom_errorbar(aes(ymin = "ymin", ymax = "ymax"), position = "dodge", width = 0.9)\
+    + facet_grid(facets="~bh_var") 
+    + geom_text(aes(y="label_y", label = "pval"), position=position_dodge(width=0.75)) 
+    + scale_fill_manual(values = ["#ca0020", "#0571b0", "#bababa"]) 
+    + labs(x = "", y = "Standardized coef") +
+    scale_x_discrete(labels= ["BUP", "log_GMK", "age"]))
 ggsave(plot = p, filename= "../figures/%s/coef_all-sessions_BIS.pdf"%(expname))

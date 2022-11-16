@@ -17,6 +17,14 @@ def RL_initialize(ts, paras):
 	Qwaits = -0.1 * ts + paras['eta'] + Qquit
 	return Qwaits, Qquit, reward_rate
 
+
+def QL_ind_initialize(ts, paras):
+	Qquit = np.mean(expParas.optimRewardRates) / 0.15
+	# code.interact(local = dict(locals(), **globals()))
+	Qwaits = -0.1 / paras["tau"] * ts + paras['eta'] / paras["tau"] + Qquit
+
+	return Qwaits, Qquit
+
 def QL_initialize(ts, paras):
 	""" A helper function to initialize action values for Q-Learning models
 	
@@ -182,7 +190,9 @@ def ind_fit_sim(modelname, paras, condition_, blockIdx_, scheduledDelay_, schedu
 
 		if tIdx >0 and blockIdx_[tIdx - 1] != blockIdx_[tIdx]:
 			if re.search('reset', modelname):
-				if modelname[:2] == 'QL':
+				if modelname == "QL2reset_ind":
+					Qwaits, Qquit = QL_ind_initialize(ts, paras)
+				elif modelname[:2] == 'QL':
 					Qwaits, Qquit = QL_initialize(ts, paras)
 				elif modelname[:2] == 'RL':
 					Qwaits, Qquit, reward_rate = RL_initialize(ts, paras)
@@ -265,7 +275,9 @@ def ind_sim(modelname, paras, condition_, blockIdx_, scheduledDelay_, scheduledR
 
 	# initialize value functions
 	ts = np.arange(0, max(expParas.tMaxs), stepsize) 
-	if modelname[:2] == 'QL':
+	if modelname == "QL2reset_ind":
+		Qwaits, Qquit = QL_ind_initialize(ts, paras)
+	elif modelname[:2] == 'QL':
 		Qwaits, Qquit = QL_initialize(ts, paras)
 	elif modelname[:2] == 'RL':
 		Qwaits, Qquit, reward_rate = RL_initialize(ts, paras)
@@ -283,7 +295,9 @@ def ind_sim(modelname, paras, condition_, blockIdx_, scheduledDelay_, scheduledR
 
 		if blockIdx_[tIdx - 1] != blockIdx_[tIdx]:
 			if re.search('reset', modelname):
-				if modelname[:2] == 'QL':
+				if modelname == "QL2reset_ind":
+					Qwaits, Qquit = QL_ind_initialize(ts, paras)
+				elif modelname[:2] == 'QL':
 					Qwaits, Qquit = QL_initialize(ts, paras)
 				elif modelname[:2] == 'RL':
 					Qwaits, Qquit, reward_rate = RL_initialize(ts, paras)

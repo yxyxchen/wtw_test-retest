@@ -21,6 +21,6 @@ for i, j in itertools.product(np.arange(len(tau_vals)), np.arange(len(eta_vals))
 pd.DataFrame(auc_, columns = ["eta = %.1f"%x for x in eta_vals], index = ["tau = %.1f"%x for x in tau_vals])
 
 
-# 
+# maybe 0.1 is not the best parameter here.
 
 

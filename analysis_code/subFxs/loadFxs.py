@@ -116,7 +116,7 @@ def group_quality_check(expname, sess, plot_quality_check = False):
     statsdf = pd.concat(stats_)
     statsdf['tasktime_block1'] = statsdf.eval("ntrial_block1 * @expParas.iti + total_timeWaited_block1")
     statsdf['tasktime_block2'] = statsdf.eval("ntrial_block2 * @expParas.iti + total_timeWaited_block2")
-    
+
     if plot_quality_check:
         _, ax_tasktime = plt.subplots(1,2)
         statsdf.hist('tasktime_block1', ax = ax_tasktime[0])
@@ -127,26 +127,26 @@ def group_quality_check(expname, sess, plot_quality_check = False):
         statsdf.hist("sell_RT_median", ax = ax_sellRT[0])
         statsdf.hist("sell_RT_mean", ax = ax_sellRT[1])
 
-    # exclude participants with low quality data 
-    excluded = statsdf.loc[np.logical_or.reduce(
-        [statsdf.sell_RT_median > 1.2,
-        statsdf.tasktime_block1 < 450,
-        statsdf.tasktime_block2 < 450]
-        ), :].drop(['ntrial_block1', 'ntrial_block2', 'total_timeWaited_block1', 'total_timeWaited_block2'], axis=1)
+# exclude participants with low quality data 
+excluded = statsdf.loc[np.logical_or.reduce(
+    [statsdf.sell_RT_median > 1.2,
+    statsdf.tasktime_block1 < 450,
+    statsdf.tasktime_block2 < 450]
+    ), :].drop(['ntrial_block1', 'ntrial_block2', 'total_timeWaited_block1', 'total_timeWaited_block2'], axis=1)
 
-    # code.interact(local = dict(locals(), **globals()))
-    consentdata = pd.read_csv(os.path.join(datadir, expname, "consent_sess%d.csv"%sess))
-    # code.interact(local = dict(globals(), **locals()))
-    excluded = pd.merge(excluded, right = consentdata[['id', 'worker_id']], how = "left", left_on = "id", right_on = "id")
-    excluded.to_csv(os.path.join("..", "analysis_results", expname, "excluded", "excluded_participants_sess%d.csv"%sess), index = False)
-    # excluded = pd.read_csv(os.path.join("..", "analysis_results", "excluded", "excluded_participants_sess%d.csv"%sess))
+# code.interact(local = dict(locals(), **globals()))
+consentdata = pd.read_csv(os.path.join(datadir, expname, "consent_sess%d.csv"%sess))
+# code.interact(local = dict(globals(), **locals()))
+excluded = pd.merge(excluded, right = consentdata[['id', 'worker_id']], how = "left", left_on = "id", right_on = "id")
+excluded.to_csv(os.path.join("..", "analysis_results", expname, "excluded", "excluded_participants_sess%d.csv"%sess), index = False)
+# excluded = pd.read_csv(os.path.join("..", "analysis_results", "excluded", "excluded_participants_sess%d.csv"%sess))
 
-    # filter excluded data 
-    hdrdata = hdrdata.loc[~np.isin(hdrdata.id, excluded.id), :]
-    hdrdata.reset_index(drop=True, inplace  = True)
-    hdrdata = hdrdata.merge(consentdata[["id", "age", "gender", "education", "language", "race"]], on = "id")
-    hdrdata["seq"] = ["seq1" if x in ["A", "C"] else "seq2" for x in hdrdata["cb"]]
-    hdrdata["color"] = ["color1" if x in ["A", "B"] else "color2" for x in hdrdata["cb"]]
+# filter excluded data 
+hdrdata = hdrdata.loc[~np.isin(hdrdata.id, excluded.id), :]
+hdrdata.reset_index(drop=True, inplace  = True)
+hdrdata = hdrdata.merge(consentdata[["id", "age", "gender", "education", "language", "race"]], on = "id")
+hdrdata["seq"] = ["seq1" if x in ["A", "C"] else "seq2" for x in hdrdata["cb"]]
+hdrdata["color"] = ["color1" if x in ["A", "B"] else "color2" for x in hdrdata["cb"]]
 
     # code.interact(local = dict(locals(), **globals()))
     trialdata_ = {x:y for x, y in trialdata_.items() if x[0] not in excluded.id.values}

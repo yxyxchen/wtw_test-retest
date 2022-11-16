@@ -44,40 +44,8 @@ selfdf_ = []
 for expname in ["passive", "active"]:	
 	hdrdata_sess2, trialdata_sess2_ = loadFxs.group_quality_check(expname, 2, plot_quality_check = True)
 	hdrdata_.append(hdrdata_sess2)
-	####################### analyze only selfreport data ####################
-	if expname == "passive":
-		s1_selfdf = loadFxs.parse_group_selfreport(expname, 1, isplot = False)
-		s2_selfdf = loadFxs.parse_group_selfreport(expname, 2, isplot = False)
-		s1_selfdf = s1_selfdf[np.isin(s1_selfdf["id"], s2_selfdf["id"])]
-		selfdf = analysisFxs.agg_across_sessions(s1_selfdf, s2_selfdf)
-	else:
-		selfdf = loadFxs.parse_group_selfreport(expname, 1, isplot = False)
-	selfdf_.append(selfdf)
 
 selfdf = pd.concat(selfdf_, axis = 0).reset_index()
-hdrdata = pd.concat(hdrdata_, axis = 0).reset_index()
-
-#################### plot correlations among selfreport datas
-g = sns.pairplot(selfdf[["UPPS", "BIS", "discount_logk"]], kind = "reg", diag_kws = {"color": "grey", "edgecolor": "black"},\
-	plot_kws ={'line_kws':{'color':'red'}, "scatter_kws": {"color": "grey", "edgecolor": "black"}})
-g.map_lower(figFxs.annotate_reg)
-plt.savefig(os.path.join("..", "figures", "combined", "impulsivity_corr.pdf"))
-
-g = sns.pairplot(selfdf[["NU", "PU", "PM", "PS", "SS"]], kind = "reg", diag_kws = {"color": "grey", "edgecolor": "black"},\
-	plot_kws ={'line_kws':{'color':'red'}, "scatter_kws": {"color": "grey", "edgecolor": "black"}})
-g.map_lower(figFxs.annotate_reg)
-plt.savefig(os.path.join("..", "figures", "combined", "UPPS_corr.pdf"))
-
-g = sns.pairplot(selfdf[["Motor", "Nonplanning", "Attentional"]], kind = "reg", diag_kws = {"color": "grey", "edgecolor": "black"},\
-	plot_kws ={'line_kws':{'color':'red'}, "scatter_kws": {"color": "grey", "edgecolor": "black"}})
-g.map_lower(figFxs.annotate_reg)
-plt.savefig(os.path.join("..", "figures", "combined", "BIS_corr.pdf"))
-
-g = sns.pairplot(selfdf[['motor', "perseverance", "cogstable", "selfcontrol", "attention", "cogcomplex"]], kind = "reg", diag_kws = {"color": "grey", "edgecolor": "black"},\
-	plot_kws ={'line_kws':{'color':'red'}, "scatter_kws": {"color": "grey", "edgecolor": "black"}})
-g.map_lower(figFxs.annotate_reg)
-plt.savefig(os.path.join("..", "figures", "combined", "BIS_sub_corr.pdf"))
-
 
 ############# plot demographic data #########
 for i, expname in enumerate(["passive", "active", "combined"]):	
@@ -86,6 +54,11 @@ for i, expname in enumerate(["passive", "active", "combined"]):
 			this_hdrdata = hdrdata_[i]
 		else:
 			this_hdrdata = hdrdata
+		fig, ax = plt.subplots()
+		tmp = this_hdrdata["gender"].value_counts()
+		fig, ax = plt.subplots()
+		ax.pie(tmp.values, labels = tmp.index, autopct='%.0f%%')
+		fig.savefig(os.path.join("..", "figures", expname, "gender_pie.pdf"))
 		fig, ax = plt.subplots()
 		tmp = this_hdrdata["gender"].value_counts()
 		fig, ax = plt.subplots()
@@ -113,7 +86,6 @@ for i, expname in enumerate(["passive", "active", "combined"]):
 		g = sns.FacetGrid(data = df, col = "gender", hue = "gender")
 		g.map(plt.hist, var)
 		g.savefig(os.path.join("..", "figures", expname, var + "_gender_hist.pdf"))
-
 
 
 #################### effects of demographic variables on selfreport ########
