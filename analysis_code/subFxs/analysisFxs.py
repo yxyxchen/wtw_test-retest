@@ -1061,26 +1061,6 @@ def group_sim_dist(simdata_, empdata):
         dist_vals.append(dist)
     return dist_vals
 
-def plot_group_WTW(WTW_, TaskTime, ax, **kwargs):
-    """Plot group-level WTW timecourse 
-    """
-    # fig, ax = plt.subplots()
-    df = pd.DataFrame({
-            "mu": np.apply_along_axis(np.mean, 0, WTW_),
-            "se": np.apply_along_axis(calc_se, 0, WTW_),
-            "TaskTime": TaskTime
-        })
-    # code.interact(local = dict(globals(), **locals()))
-    df = df.assign(ymin = df.mu - df.se, ymax = df.mu + df.se)
-    df.plot("TaskTime", "mu", color = "black", ax = ax, label = '_nolegend_', **kwargs)
-    ax.fill_between(df.TaskTime, df.ymin, df.ymax, facecolor='grey', edgecolor = "none",alpha = 0.4, interpolate=True, linewidth = 2)
-    ax.set_xlabel("")
-    ax.set_ylabel("WTW (s)")
-    ax.set_xlabel("Task time (s)")
-    ax.vlines(expParas.blocksec, 0, expParas.tMax, color = "red", linestyles = "dotted") # I might want to change it later
-    ax.get_legend().remove()
-    ax.set_ylim(3, 12)
-    # plt.savefig(savepath)
 
 def plot_group_AUC(stats, ax):
     ax.scatter(stats.loc[stats['condition'] == 'LP', 'auc'], stats.loc[stats['condition'] == 'HP', 'auc'], color = 'grey')
@@ -1090,33 +1070,6 @@ def plot_group_AUC(stats, ax):
     ax.set_xlabel("LP AUC (s)")
     ax.set_ylabel("HP AUC (s)")
 
-def plot_group_KMSC(Psurv_block1_, Psurv_block2_, Time, ax, **kwargs):
-    """ Plot group-level survival curves 
-    """
-    # fig, ax = plt.subplots()
-    df1 = pd.DataFrame({
-            "mu": np.apply_along_axis(np.mean, 0, Psurv_block1_),
-            "se": np.apply_along_axis(calc_se, 0, Psurv_block1_),
-            "Time": Time
-        })
-    df1 = df1.assign(ymin = lambda df: df.mu - df.se, ymax = lambda df: df.mu + df.se)
-    df2 = pd.DataFrame({
-            "mu": np.apply_along_axis(np.mean, 0, Psurv_block2_),
-            "se": np.apply_along_axis(calc_se, 0, Psurv_block2_),
-            "Time": Time
-        })
-    df2 = df2.assign(ymin = lambda df: df.mu - df.se, ymax = lambda df: df.mu + df.se)
-
-    df1.plot("Time", "mu", color = expParas.conditionColors['LP'], ax = ax, linewidth=3, **kwargs)
-    ax.fill_between(df1.Time, df1.ymin, df1.ymax, facecolor= expParas.conditionColors['LP'], edgecolor = "none",alpha = 0.25, interpolate=True)
-    df2.plot("Time", "mu", color = expParas.conditionColors['HP'], ax = ax, linewidth=3, **kwargs)
-    ax.fill_between(df2.Time, df2.ymin, df2.ymax, facecolor= expParas.conditionColors['HP'], edgecolor = "none",alpha = 0.25, interpolate=True)
-    ax.set_xlabel("Elapsed time (s)")
-    ax.set_ylabel("Survival rate (%)")
-    ax.set_ylim((0, 1))
-    ax.set_xlim((0, expParas.tMax))
-    ax.get_legend().remove()
-    # plt.savefig(savepath)
 
 ####### hazard plot
 def psurv2hazard(t, s):

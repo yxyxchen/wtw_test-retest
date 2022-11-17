@@ -36,7 +36,7 @@ from scipy.stats import mannwhitneyu
 plt.style.use('classic')
 sns.set(font_scale = 2)
 sns.set_style("white")
-condition_palette = ["#762a83", "#1b7837"]
+demo_vars = ["gender", "age", "education", "race", "language"]
 
 # passive version
 hdrdata_ = []
@@ -45,20 +45,37 @@ for expname in ["passive", "active"]:
 	hdrdata_sess2, trialdata_sess2_ = loadFxs.group_quality_check(expname, 2, plot_quality_check = True)
 	hdrdata_.append(hdrdata_sess2)
 
-selfdf = pd.concat(selfdf_, axis = 0).reset_index()
+hdrdata = pd.concat(hdrdata_, axis = 0).reset_index()
+
+# print summary statistics
+for i, expname in enumerate(["passive", "active", "combined"]):	
+	if i < 2:
+		this_hdrdata = hdrdata_[i]
+	else:
+		this_hdrdata = hdrdata
+	# summary statistics 
+	tmp = this_hdrdata[["gender", "race", "language"]].melt().value_counts()
+	tmp = tmp / (this_hdrdata.shape[0] + 1)
+	tmp.rename("counts").reset_index().sort_values(by = ["variable", "counts"], ascending = False)
+	this_hdrdata[["age", "education"]].describe()
 
 ############# plot demographic data #########
 for i, expname in enumerate(["passive", "active", "combined"]):	
-	for var, label in zip(["age", "education"], ["Age", "Education year"]):
-		if i < 2:
-			this_hdrdata = hdrdata_[i]
-		else:
-			this_hdrdata = hdrdata
+	if i < 2:
+		this_hdrdata = hdrdata_[i]
+	else:
+		this_hdrdata = hdrdata
+	# interaction between age and education 
+	fig, ax = plt.subplots()
+	ax.scatter(this_hdrdata["age"], this_hdrdata["education"])
+	fig.savefig(os.path.join("..", "figures", expname, "age_education.pdf"))
+	for var in ["gender", "race", "language"]:
 		fig, ax = plt.subplots()
-		tmp = this_hdrdata["gender"].value_counts()
+		tmp = this_hdrdata[var].value_counts()
 		fig, ax = plt.subplots()
 		ax.pie(tmp.values, labels = tmp.index, autopct='%.0f%%')
-		fig.savefig(os.path.join("..", "figures", expname, "gender_pie.pdf"))
+		fig.savefig(os.path.join("..", "figures", expname, var + "_pie.pdf"))
+	for var, label in zip(["age", "education"], ["Age", "Years of education"]):
 		fig, ax = plt.subplots()
 		tmp = this_hdrdata["gender"].value_counts()
 		fig, ax = plt.subplots()
@@ -87,67 +104,6 @@ for i, expname in enumerate(["passive", "active", "combined"]):
 		g.map(plt.hist, var)
 		g.savefig(os.path.join("..", "figures", expname, var + "_gender_hist.pdf"))
 
-
-#################### effects of demographic variables on selfreport ########
-plt.style.use('classic')
-sns.set(font_scale = 1)
-sns.set_style("white")
-df = selfdf.merge(hdrdata, on = "id")
-tmp = df.melt(id_vars = ["id", "age", "gender"], value_vars = [ "BIS", "UPPS", "survey_impulsivity", "discount_logk"])
-g = sns.FacetGrid(data = tmp, col = "variable", sharey = False, col_order = [ "BIS", "UPPS", "survey_impulsivity", "discount_logk"])
-g.map(sns.regplot, "age", "value", line_kws = {'color':'red'}, scatter_kws = {"color": "grey", "edgecolor": "black"})
-g.map(figFxs.annotate_reg, "age", "value")
-g.savefig(os.path.join("..", "figures", "combined", "age_selfreport_corr.pdf"))
-
-
-df = selfdf.merge(hdrdata, on = "id")
-df = df[np.isin(df["gender"], ["Female", "Male"])]
-df = df[df["age"] < 50]
-tmp = df.melt(id_vars = ["id", "age", "gender"], value_vars = [ "BIS", "UPPS", "survey_impulsivity", "discount_logk"])
-g = sns.FacetGrid(data = tmp, row = "gender", col = "variable", sharex = False, sharey = False, col_order = [ "BIS", "UPPS", "survey_impulsivity", "discount_logk"], margin_titles = True)
-g.map(sns.regplot, "age", "value", line_kws = {'color':'red'}, scatter_kws = {"color": "grey", "edgecolor": "black"})
-g.map(figFxs.annotate_reg, "age", "value")
-g.set_titles(col_template="{col_name}", row_template="{row_name}")
-g.savefig(os.path.join("..", "figures", "combined", "age_gender_selfreport_corr_limited.pdf"))
-
-
-df = selfdf.merge(hdrdata, on = "id")
-df = df[df["age"] < 50]
-tmp = df.melt(id_vars = ["id", "age", "gender"], value_vars = [ "BIS", "UPPS", "survey_impulsivity", "discount_logk"])
-g = sns.FacetGrid(data = tmp, col = "variable", sharey = False, col_order = [ "BIS", "UPPS", "survey_impulsivity", "discount_logk"])
-g.map(sns.regplot, "age", "value", line_kws = {'color':'red'}, scatter_kws = {"color": "grey", "edgecolor": "black"})
-g.map(figFxs.annotate_reg, "age", "value")
-g.set_titles(col_template="{col_name}", row_template="{row_name}")
-g.savefig(os.path.join("..", "figures", "combined", "age_selfreport_corr_limited.pdf"))
-
-
-# with gender 
-df = selfdf.merge(hdrdata, on = "id")
-df = df[np.isin(df["gender"], ["Female", "Male"])]
-df = df[df["age"] < 50]
-tmp = df.melt(id_vars = ["id", "age", "gender"], value_vars = [ "BIS", "UPPS", "survey_impulsivity", "discount_logk"])
-g = sns.FacetGrid(data = tmp, col = "variable", row = "gender", sharey = False, col_order = [ "BIS", "UPPS", "survey_impulsivity", "discount_logk"], margin_titles=True )
-g.map(sns.regplot, "age", "value", line_kws = {'color':'red'}, scatter_kws = {"color": "grey", "edgecolor": "black"})
-g.map(figFxs.annotate_reg, "age", "value")
-g.set_titles(col_template="{col_name}", row_template="{row_name}")
-g.savefig(os.path.join("..", "figures", expname, "age_gender_selfreport_corr_limited.pdf"))
-
-
-######
-df = selfdf.merge(hdrdata, on = "id")
-df = df[np.isin(df["gender"], ["Female", "Male"])]
-df[df.select_dtypes('number').columns] = df.select_dtypes('number').apply(lambda x:scipy.stats.zscore(x, nan_policy = "omit")) 
-predictors = ["gender", "age", "age*gender"]
-yvals = [ "BIS", "UPPS", "survey_impulsivity", "SS", "PU", "NU", "PM", "PS", "Motor", "Nonplanning", "Attentional", "discount_logk"]
-coef = []
-for yval in yvals:
-	results = smf.ols(yval + " ~ age + gender + education", data = df).fit()
-	# coef.append(["%.3f( "%x + "p=%.4f"%y + " )" for x, y in zip(results.params[1:].values, results.pvalues[1:].values)])
-	coef.append(["%.3f( "%x + "p=" + figFxs.tosig(y) + " )" for x, y in zip(results.params[1:].values, results.pvalues[1:].values)])
-
-coef_report = pd.DataFrame(coef).rename(index = dict(zip(np.arange(len(yvals)), yvals)), columns = dict(zip(np.arange(len(results.params.index)-1), results.params.index[1:])))
-coef_report
-coef_report.loc[["BIS", "UPPS", "discount_logk"],:]
 
 
 

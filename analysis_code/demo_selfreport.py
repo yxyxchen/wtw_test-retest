@@ -50,6 +50,7 @@ for expname in ["passive", "active"]:
 		s2_selfdf = loadFxs.parse_group_selfreport(expname, 2, isplot = False)
 		s1_selfdf = s1_selfdf[np.isin(s1_selfdf["id"], s2_selfdf["id"])]
 		selfdf = analysisFxs.agg_across_sessions(s1_selfdf, s2_selfdf)
+
 	else:
 		selfdf = loadFxs.parse_group_selfreport(expname, 1, isplot = False)
 	selfdf_.append(selfdf)

@@ -169,9 +169,58 @@ def plot_group_emp_rep_diff(modelname, rep_sess1, rep_sess2, emp_sess1, emp_sess
         ax.set_ylabel('Observed AUC - Generated AUC (s)')
         ax.axhline(0)
 
+
+def plot_group_KMSC(Psurv_block1_, Psurv_block2_, Time, ax, **kwargs):
+    """ Plot group-level survival curves 
+    """
+    # fig, ax = plt.subplots()
+    df1 = pd.DataFrame({
+            "mu": np.apply_along_axis(np.mean, 0, Psurv_block1_),
+            "se": np.apply_along_axis(analysisFxs.calc_se, 0, Psurv_block1_),
+            "Time": Time
+        })
+    df1 = df1.assign(ymin = lambda df: df.mu - df.se, ymax = lambda df: df.mu + df.se)
+    df2 = pd.DataFrame({
+            "mu": np.apply_along_axis(np.mean, 0, Psurv_block2_),
+            "se": np.apply_along_axis(analysisFxs.calc_se, 0, Psurv_block2_),
+            "Time": Time
+        })
+    df2 = df2.assign(ymin = lambda df: df.mu - df.se, ymax = lambda df: df.mu + df.se)
+
+    df1.plot("Time", "mu", color = expParas.conditionColors['LP'], ax = ax, linewidth=3, **kwargs)
+    ax.fill_between(df1.Time, df1.ymin, df1.ymax, facecolor= expParas.conditionColors['LP'], edgecolor = "none",alpha = 0.25, interpolate=True)
+    df2.plot("Time", "mu", color = expParas.conditionColors['HP'], ax = ax, linewidth=3, **kwargs)
+    ax.fill_between(df2.Time, df2.ymin, df2.ymax, facecolor= expParas.conditionColors['HP'], edgecolor = "none",alpha = 0.25, interpolate=True)
+    ax.set_xlabel("Elapsed time (s)")
+    ax.set_ylabel("Survival rate")
+    ax.set_ylim((0, 1))
+    ax.set_xlim((0, expParas.tMax))
+    ax.get_legend().remove()
+    # plt.savefig(savepath)
+
 def plot_group_KMSC_both(s1_Psurv_b1_, s1_Psurv_b2_, s2_Psurv_b1_, s2_Psurv_b2_, hdrdata_sess1, hdrdata_sess2, ax):
-    analysisFxs.plot_group_KMSC(s1_Psurv_b1_[np.isin(hdrdata_sess1['id'], hdrdata_sess2['id'])], s1_Psurv_b2_[np.isin(hdrdata_sess1['id'], hdrdata_sess2['id'])], expParas.Time, ax)
-    analysisFxs.plot_group_KMSC(s2_Psurv_b1_, s2_Psurv_b2_, expParas.Time, ax, linestyle = '--')
+    plot_group_KMSC(s1_Psurv_b1_[np.isin(hdrdata_sess1['id'], hdrdata_sess2['id'])], s1_Psurv_b2_[np.isin(hdrdata_sess1['id'], hdrdata_sess2['id'])], expParas.Time, ax)
+    plot_group_KMSC(s2_Psurv_b1_, s2_Psurv_b2_, expParas.Time, ax, linestyle = '--')
+
+def plot_group_WTW(WTW_, TaskTime, ax, **kwargs):
+    """Plot group-level WTW timecourse 
+    """
+    # fig, ax = plt.subplots()
+    df = pd.DataFrame({
+            "mu": np.apply_along_axis(np.mean, 0, WTW_),
+            "se": np.apply_along_axis(analysisFxs.calc_se, 0, WTW_),
+            "TaskTime": TaskTime
+        })
+    # code.interact(local = dict(globals(), **locals()))
+    df = df.assign(ymin = df.mu - df.se, ymax = df.mu + df.se)
+    df.plot("TaskTime", "mu", color = "black", ax = ax, label = '_nolegend_', **kwargs)
+    ax.fill_between(df.TaskTime, df.ymin, df.ymax, facecolor='grey', edgecolor = "none",alpha = 0.4, interpolate=True, linewidth = 2)
+    ax.set_xlabel("")
+    ax.set_ylabel("WTW (s)")
+    ax.set_xlabel("Task time (min)")
+    ax.vlines(expParas.blocksec/60, 0, expParas.tMax, color = "red", linestyles = "dotted") # I might want to change it later
+    ax.get_legend().remove()
+    ax.set_ylim(3, 12)
 
 def plot_group_WTW_both(sess1_WTW_, sess2_WTW_, hdrdata_sess1, hdrdata_sess2, ax):
     # code.interact(local = dict(locals(), **globals()))
@@ -181,18 +230,23 @@ def plot_group_WTW_both(sess1_WTW_, sess2_WTW_, hdrdata_sess1, hdrdata_sess2, ax
 
     # calc p values
     # observed_t_, permutated_abs_t_max_, p_ = analysisFxs.my_paired_multiple_permuation(sess1_WTW_, sess2_WTW_, lambda x, y: ttest_rel(x, y)[0], n_perm = 100)
-    p_ = [stats.wilcoxon(sess1_WTW_[:,i], sess2_WTW_[:,i])[1] for i in range(sess1_WTW_.shape[1])]
-    import statsmodels.stats.multitest as multitest
-    _, p_corrected =  multitest.fdrcorrection(p_)
-    sig_ = [11 if p < 0.005 else None for p in p_corrected]
+    # p_ = [stats.wilcoxon(sess1_WTW_[:,i], sess2_WTW_[:,i])[1] for i in range(sess1_WTW_.shape[1])]
+    # import statsmodels.stats.multitest as multitest
+    # _, p_corrected =  multitest.fdrcorrection(p_)
+    # sig_ = [11 if p < 0.005 else None for p in p_corrected]
 
     # fig, ax = plt.subplots()
     # random selection
     # idxs = np.random.choice(np.arange(sess1_WTW_.shape[0]), 50)
     # people are learning faster 
-    analysisFxs.plot_group_WTW(sess1_WTW_, expParas.TaskTime, ax)
-    analysisFxs.plot_group_WTW(sess2_WTW_, expParas.TaskTime, ax, linestyle = ':')
-    ax.plot(expParas.TaskTime, sig_, marker = ".", color = "red")
+    plot_group_WTW(sess1_WTW_, expParas.TaskTime / 60, ax)
+    plot_group_WTW(sess2_WTW_, expParas.TaskTime / 60, ax, linestyle = ':')
+    import matplotlib
+    lp_rect = matplotlib.patches.Rectangle((0,0), 10, 12, color = condition_palette[0], alpha = 0.5)
+    hp_rect = matplotlib.patches.Rectangle((10,0), 10, 12, color = condition_palette[1], alpha = 0.5)
+    ax.add_patch(lp_rect)
+    ax.add_patch(hp_rect)
+    # ax.plot(expParas.TaskTime, sig_, marker = ".", color = "red")
     # line1 = ax.get_lines()[0]
     # line1.set_color("black")
     # line2 = ax.get_lines()[1]
