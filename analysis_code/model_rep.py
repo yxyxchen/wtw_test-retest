@@ -97,6 +97,7 @@ paranames = modelFxs.getModelParas(modelname)
 npara = len(paranames)
 s1_paradf = loadFxs.load_parameter_estimates(expname, 1, hdrdata_sess1, modelname, fitMethod, stepsize)
 s2_paradf = loadFxs.load_parameter_estimates(expname, 2, hdrdata_sess2, modelname, fitMethod, stepsize)
+
 # s1_paradf_.append(s1_paradf)
 # s2_paradf_.append(s2_paradf)
 s1_stats_rep, s1_WTW_rep, s1_dist_vals_ = modelFxs.group_model_rep(trialdata_sess1_, s1_paradf, modelname, 'whole', stepsize, isTrct = True, plot_each = False)

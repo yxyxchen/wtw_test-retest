@@ -52,15 +52,16 @@ def pivot_by_condition(df):
     """
     # code.interact(local = dict(locals(), **globals()))
     if "ipi" in df:
-        columns = ['auc', 'std_wtw', "ipi"]
+        columns = ['auc', 'std_wtw', "ipi", "diff_auc", "diff_wtw"]
     else: 
-        columns = ['auc', 'std_wtw']
+        columns = ['auc', 'std_wtw', "diff_auc", "diff_wtw"]
     index = ['id']
     HP_df = df.loc[df['condition'] == 'HP', columns + index]
     LP_df = df.loc[df['condition'] == 'LP', columns + index]
     out_df = HP_df.merge(LP_df, left_on = index, right_on = index, suffixes = ['_HP', "_LP"])
     out_df['auc_delta'] = out_df['auc_HP'] - out_df['auc_LP']
     out_df['auc'] = (out_df['auc_HP'] + out_df['auc_LP']) / 2
+    out_df["init_wtw"] = df.loc[df['condition'] == 'LP', "init_wtw"].values
     if "ipi" in df:
         out_df['ipi'] = (out_df['ipi_HP'] + out_df['ipi_LP']) / 2
     out_df['std_wtw'] = (out_df['std_wtw_HP']**2 / 2 + out_df['std_wtw_LP']**2 / 2)**0.5
@@ -868,10 +869,12 @@ def ind_MF(trialdata, key, isTrct = True, plot_RT = False, plot_trial = False, p
         if 'mean_ipi' in blockdata:
             tmp = {"id": key[0], "sess": key[1], "key": str(key), "block": i + 1, "auc": block_auc,  "std_wtw": block_std_wtw, \
             "auc_rh": block_auc_rh, "std_wtw_rh": block_std_wtw_rh, "ipi": ipi, \
+            "diff_auc": sub_aucs[3] - sub_aucs[0], "diff_wtw": end_wtw - init_wtw, \
             "init_wtw": init_wtw, "end_wtw": end_wtw, "sell_RT_median": sell_RT_median, "sell_RT_mean": sell_RT_mean, "sell_RT_se": sell_RT_se, "condition": condition}
         else:
             tmp = {"id": key[0], "sess": key[1], "key": str(key), "block": i + 1, "auc": block_auc,  "std_wtw": block_std_wtw, \
             "auc_rh": block_auc_rh, "std_wtw_rh": block_std_wtw_rh,\
+            "diff_auc": sub_aucs[3] - sub_aucs[0], "diff_wtw": end_wtw - init_wtw, \
             "init_wtw": init_wtw, "end_wtw": end_wtw, "sell_RT_median": sell_RT_median, "sell_RT_mean": sell_RT_mean, "sell_RT_se": sell_RT_se, "condition": condition}
         tmp.update(dict(zip(['auc' + str((i + 1)) for i in range(n_subblock)], sub_aucs)))
         tmp.update(dict(zip(['std_wtw' + str((i + 1)) for i in range(n_subblock)], sub_std_wtws)))
