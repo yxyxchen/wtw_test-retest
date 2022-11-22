@@ -4,6 +4,7 @@ from subFxs import expParas
 import code
 import pandas as pd
 import re
+import math
 ###################### Helper Functions ###################
 def RL_initialize(ts, paras):
 	""" A helper function to initialize action values and reward rate estimate for R-Learning models
@@ -172,7 +173,9 @@ def ind_fit_sim(modelname, paras, condition_, blockIdx_, scheduledDelay_, schedu
 
 	# initialize value functions
 	ts = np.arange(0, max(expParas.tMaxs), stepsize) 
-	if modelname[:2] == 'QL':
+	if modelname == "QL2reset_ind":
+		Qwaits, Qquit = QL_ind_initialize(ts, paras)
+	elif modelname[:2] == 'QL':
 		Qwaits, Qquit = QL_initialize(ts, paras)
 	elif modelname[:2] == 'RL':
 		Qwaits, Qquit, reward_rate = RL_initialize(ts, paras)
@@ -181,6 +184,13 @@ def ind_fit_sim(modelname, paras, condition_, blockIdx_, scheduledDelay_, schedu
 	trialEarnings_ = np.zeros(nTrial)
 	timeWaited_ = np.zeros(nTrial)
 	sellTime_ = np.zeros(nTrial)
+	Qwaits_ = np.zeros((len(ts), 10)) # record action values at 10 time points 
+	Qquit_ = np.zeros(10)
+	current_record_point = 0
+	n_lp_trial = np.sum(condition_ == "LP")
+	lp_record_unit = math.floor(n_lp_trial / 5)
+	n_hp_trial = np.sum(condition_ == "HP")
+	hp_record_unit = math.floor(n_hp_trial / 5)
 
 	# trakc time within a trial
 	for tIdx in range(nTrial):
@@ -230,6 +240,17 @@ def ind_fit_sim(modelname, paras, condition_, blockIdx_, scheduledDelay_, schedu
 
 			t += stepsize
 
+		# record action values at key timepoints 
+		if blockIdx_[tIdx] == 1:
+			if tIdx % lp_record_unit == (lp_record_unit -1):
+				Qwaits_[:, current_record_point] = Qwaits
+				Qquit_[current_record_point] = Qquit
+				current_record_point += 1	
+		elif blockIdx_[tIdx] == 2:
+			if (tIdx - n_lp_trial) % hp_record_unit == (hp_record_unit -1):
+				Qwaits_[:, current_record_point] = Qwaits
+				Qquit_[current_record_point] = Qquit
+				current_record_point += 1	
 		# update elapsedTime
 		elapsedTime = elapsedTime + timeWaited + empirical_iti
 
@@ -243,7 +264,8 @@ def ind_fit_sim(modelname, paras, condition_, blockIdx_, scheduledDelay_, schedu
 			Qwaits, Qquit, reward_rate = RL1_learn(Qwaits, Qquit, reward_rate, ts, observed_timeWaited_[tIdx], observed_trialEarnings_[tIdx], paras, empirical_iti = expParas.iti)
 		elif modelname[:3] == 'RL2':
 			Qwaits, Qquit, reward_rate = RL2_learn(Qwaits, Qquit, reward_rate, ts, observed_timeWaited_[tIdx], observed_trialEarnings_[tIdx], paras, empirical_iti = expParas.iti)
-		
+
+
 	# # find the duration of each block
 	# blocks = np.unique(blockIdx_)
 	# blockdurations = [np.max(sellTime_[blockIdx_ == i]) for i in blocks]
@@ -258,7 +280,7 @@ def ind_fit_sim(modelname, paras, condition_, blockIdx_, scheduledDelay_, schedu
 		"trialEarnings": trialEarnings_,
 		"sellTime": sellTime_
 	})
-	return outputs
+	return outputs, Qwaits_, Qquit_
 
 def ind_sim(modelname, paras, condition_, blockIdx_, scheduledDelay_, scheduledReward_, stepsize, empirical_iti = expParas.iti):
 	# check whether whether these inputs are not series. series might have wierd indices

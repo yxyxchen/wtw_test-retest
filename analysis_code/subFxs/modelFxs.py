@@ -53,6 +53,27 @@ def check_stan_diagnosis(fit_summary):
     else:
         return True
 
+
+##################### 
+def ind_model_fit_rep(modelname, paras, trialdata, key, stepsize, plot_each):
+    # make sure to use values so that it is not affected by indices
+    scheduledDelays = trialdata['scheduledDelay'].values
+    scheduledRewards = np.full(scheduledDelays.shape, expParas.tokenValue)
+    conditions = trialdata['condition'].values
+    blockIdxs = trialdata['blockIdx'].values
+    trialEarnings_ = trialdata['trialEarnings'].values
+    timeWaited_ = trialdata['timeWaited'].values
+
+
+    simdata, Qwaits_, Qquit_ =  simFxs.ind_fit_sim(modelname, paras, conditions, blockIdxs, scheduledDelays, scheduledRewards, stepsize)
+
+    # I can plot comparison here honestly
+    if plot_each:
+        emp_stats, emp_objs = analysisFxs.ind_MF(trialdata, key, isTrct = True, plot_RT = False, plot_trial = False, plot_KMSC = False, plot_WTW = False)
+        fig, ax = plt.subplots()
+        ax.plot(expParas.TaskTime, emp_objs['WTW'], label = 'Observed')
+        ax.plot(expParas.TaskTime, WTW, label = 'Simulated')
+    return stats, Psurv_block1, Psurv_block2, WTW, dist_vals 
 #################### functions to replicate choice data using individually fitted parameters and analyze them##########
 def ind_model_rep(modelname, paras, trialdata, key, nsim, stepsize, plot_each):
     # make sure to use values so that it is not affected by indices
