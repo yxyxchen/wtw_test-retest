@@ -89,9 +89,14 @@ def ind_model_rep(modelname, paras, trialdata, key, nsim, stepsize, plot_each):
 
     # loop over simulations 
     simdata_ = []
+    value_df_ = []
     for i in range(nsim):
-        simdata =  simFxs.ind_sim(modelname, paras, conditions, blockIdxs, scheduledDelays, scheduledRewards, stepsize)
+        simdata, _, _, value_df =  simFxs.ind_sim(modelname, paras, conditions, blockIdxs, scheduledDelays, scheduledRewards, stepsize)
         simdata_.append(simdata)
+        value_df_.append(value_df)
+    # code.interact(local = dict(globals(), **locals()))
+    tmp = pd.concat(value_df_)
+    value_df = tmp.groupby(["time", "record_time", "condition"]).agg({"decision_value":np.mean, "relative_value":np.mean}).reset_index()
 
     # analyze simulated datasets
     stats_, Psurv_block1_, Psurv_block2_, WTW_ = analysisFxs.group_sim_MF(simdata_, trialdata)
@@ -102,8 +107,6 @@ def ind_model_rep(modelname, paras, trialdata, key, nsim, stepsize, plot_each):
     Psurv_block2 = np.nanmean(Psurv_block2_, axis = 0)
     WTW = np.nanmean(WTW_, axis = 0)
 
-    # code.interact(local = dict(globals(), **locals()))
-
     # return distance 
     dist_vals = analysisFxs.group_sim_dist(simdata_, trialdata)
 
@@ -113,7 +116,7 @@ def ind_model_rep(modelname, paras, trialdata, key, nsim, stepsize, plot_each):
         fig, ax = plt.subplots()
         ax.plot(expParas.TaskTime, emp_objs['WTW'], label = 'Observed')
         ax.plot(expParas.TaskTime, WTW, label = 'Simulated')
-    return stats, Psurv_block1, Psurv_block2, WTW, dist_vals
+    return stats, Psurv_block1, Psurv_block2, WTW, dist_vals, value_df 
 
 
 
@@ -163,7 +166,7 @@ def group_model_rep(trialdata_, paradf, modelname, fitMethod, stepsize, isTrct =
         # replicate original behaviors
         paras = dict(zip(paranames, paravals))
         if plot_each:
-            stats, _, _, WTW, dist_vals = ind_model_rep(modelname, paras, trialdata, key, 10, stepsize, plot_each = True)
+            stats, _, _, WTW, dist_vals, _ = ind_model_rep(modelname, paras, trialdata, key, 10, stepsize, plot_each = True)
             plt.show()
             input("Press Enter to continue or ESC to exit...")
             plt.clf()

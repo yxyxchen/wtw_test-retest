@@ -40,7 +40,7 @@ transformed parameters{
   real <lower=0, upper=0.3> alpha = Phi_approx(raw_alpha) * 0.3; 
   real <lower=0, upper=1> alphaU = min([alpha * Phi_approx(raw_nu) * 10, 1]'); 
   real <lower=0, upper=10> nu = alphaU / alpha;
-  real <lower=0, upper=120> tau = Phi_approx(raw_tau) * 120; 
+  real <lower=0, upper=42> tau = Phi_approx(raw_tau) * 42; 
   real <lower=0.5, upper=1> gamma = Phi_approx(raw_gamma)* 0.5 + 0.5;  
   real <lower=0, upper=15> eta = Phi_approx(raw_eta) * 15; 
 
@@ -61,7 +61,7 @@ transformed parameters{
   // the initial waiting value delines with elapsed time 
   // and the eta parameter determines at which step it falls below V0
   for(i in 1 : nWaitOrQuit){
-    Qwaits[i] = - tWaits[i] * 0.1 / tau + eta / tau + V0;
+    Qwaits[i] = - tWaits[i] * 0.1 + eta + V0;
   }
   
   // record initial action values
@@ -103,7 +103,7 @@ transformed parameters{
     // reset
     V0 = V0_ini; 
     for(i in 1 : nWaitOrQuit){
-      Qwaits[i] = - tWaits[i] * 0.1 / tau + eta / tau + V0;
+      Qwaits[i] = - tWaits[i] * 0.1 + eta + V0;
     }
     Qwaits_[,N_block1 + 1] = Qwaits;
     V0_[N_block1 + 1] = V0; 

@@ -266,10 +266,15 @@ def ind_fit_sim(modelname, paras, condition_, blockIdx_, scheduledDelay_, schedu
 			Qwaits, Qquit, reward_rate = RL2_learn(Qwaits, Qquit, reward_rate, ts, observed_timeWaited_[tIdx], observed_trialEarnings_[tIdx], paras, empirical_iti = expParas.iti)
 
 
-	# # find the duration of each block
-	# blocks = np.unique(blockIdx_)
-	# blockdurations = [np.max(sellTime_[blockIdx_ == i]) for i in blocks]
-	# accumSellTime_ = sellTime_ + 
+	# make value df
+	rv_ = Qwaits_ - np.tile(Qquit_,len(ts)).reshape(len(ts),10)
+	value_df = pd.DataFrame({
+		"time": np.tile(ts, 10),
+		"record_time": np.tile(np.repeat((np.arange(5)+1) * 2, len(ts)), 2),
+		"decision_value": rv_.transpose().reshape(-1) * paras["tau"],
+		"relative_value": rv_.transpose().reshape(-1), 
+		"condition" : np.repeat(np.repeat(("LP", "HP"), 5), len(ts))
+		}) 
 
 	outputs = pd.DataFrame({
 		"totalTrialIdx": np.arange(nTrial),
@@ -280,7 +285,7 @@ def ind_fit_sim(modelname, paras, condition_, blockIdx_, scheduledDelay_, schedu
 		"trialEarnings": trialEarnings_,
 		"sellTime": sellTime_
 	})
-	return outputs, Qwaits_, Qquit_
+	return outputs, Qwaits_, Qquit_, value_df
 
 def ind_sim(modelname, paras, condition_, blockIdx_, scheduledDelay_, scheduledReward_, stepsize, empirical_iti = expParas.iti):
 	# check whether whether these inputs are not series. series might have wierd indices
@@ -308,6 +313,13 @@ def ind_sim(modelname, paras, condition_, blockIdx_, scheduledDelay_, scheduledR
 	trialEarnings_ = np.zeros(nTrial)
 	timeWaited_ = np.zeros(nTrial)
 	sellTime_ = np.zeros(nTrial)
+	Qwaits_ = np.zeros((len(ts), 10)) # record action values at 10 time points 
+	Qquit_ = np.zeros(10)
+	current_record_point = 0
+	n_lp_trial = np.sum(condition_ == "LP")
+	lp_record_unit = math.floor(n_lp_trial / 5)
+	n_hp_trial = np.sum(condition_ == "HP")
+	hp_record_unit = math.floor(n_hp_trial / 5)
 
 	# trakc time within a trial
 	for tIdx in range(nTrial):
@@ -357,6 +369,17 @@ def ind_sim(modelname, paras, condition_, blockIdx_, scheduledDelay_, scheduledR
 
 			t += stepsize
 
+		# record action values at key timepoints 
+		if blockIdx_[tIdx] == 1:
+			if tIdx % lp_record_unit == (lp_record_unit -1):
+				Qwaits_[:, current_record_point] = Qwaits
+				Qquit_[current_record_point] = Qquit
+				current_record_point += 1	
+		elif blockIdx_[tIdx] == 2:
+			if (tIdx - n_lp_trial) % hp_record_unit == (hp_record_unit -1):
+				Qwaits_[:, current_record_point] = Qwaits
+				Qquit_[current_record_point] = Qquit
+				current_record_point += 1	
 		# update elapsedTime
 		elapsedTime = elapsedTime + timeWaited + empirical_iti
 
@@ -371,10 +394,16 @@ def ind_sim(modelname, paras, condition_, blockIdx_, scheduledDelay_, scheduledR
 		elif modelname[:3] == 'RL2':
 			Qwaits, Qquit, reward_rate = RL2_learn(Qwaits, Qquit, reward_rate, ts, timeWaited, trialEarnings, paras, empirical_iti = expParas.iti)
 		
-	# # find the duration of each block
-	# blocks = np.unique(blockIdx_)
-	# blockdurations = [np.max(sellTime_[blockIdx_ == i]) for i in blocks]
-	# accumSellTime_ = sellTime_ + 
+
+	# make value df
+	rv_ = Qwaits_ - np.tile(Qquit_,len(ts)).reshape(len(ts),10)
+	value_df = pd.DataFrame({
+		"time": np.tile(ts, 10),
+		"record_time": np.tile(np.repeat((np.arange(5)+1) * 2, len(ts)), 2),
+		"decision_value": rv_.transpose().reshape(-1) * paras["tau"],
+		"relative_value": rv_.transpose().reshape(-1), 
+		"condition" : np.repeat(np.repeat(("LP", "HP"), 5), len(ts))
+		})
 
 	outputs = pd.DataFrame({
 		"totalTrialIdx": np.arange(nTrial),
@@ -385,7 +414,7 @@ def ind_sim(modelname, paras, condition_, blockIdx_, scheduledDelay_, scheduledR
 		"trialEarnings": trialEarnings_,
 		"sellTime": sellTime_
 	})
-	return outputs
+	return outputs, Qwaits_, Qquit_, value_df
 
 
 
