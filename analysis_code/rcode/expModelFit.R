@@ -132,7 +132,7 @@ if (sys.nframe() == 0){
 }
 expname = "passive"
 sess = 2
-modelName = "QL2reset_slope"
+modelName = "QL2reset_slope_simple"
 isFirstFit = TRUE
 fit_method = "whole"
 batchIdx = NULL

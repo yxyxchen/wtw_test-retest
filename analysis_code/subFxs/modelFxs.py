@@ -171,7 +171,7 @@ def group_model_rep(trialdata_, paradf, modelname, fitMethod, stepsize, isTrct =
             input("Press Enter to continue or ESC to exit...")
             plt.clf()
         else:
-            stats, _, _, WTW, dist_vals = ind_model_rep(modelname, paras, trialdata, key, 10, stepsize, plot_each = False)
+            stats, _, _, WTW, dist_vals, _ = ind_model_rep(modelname, paras, trialdata, key, 10, stepsize, plot_each = False)
         stats['id'] = np.full(2, key[0])
         stats['sess'] = np.full(2, key[1])
         stats['key'] = np.full(2, str(key))

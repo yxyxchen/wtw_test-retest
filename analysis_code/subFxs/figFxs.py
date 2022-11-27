@@ -297,11 +297,12 @@ def log_transform_parameter(paradf, selected_paranames):
     # log transforms 
     # code.interact(local = dict(locals(), **globals()))
     for paraname in selected_paranames:
+        print(paraname)
         if paraname in paradf:
             paradf[paraname] = np.log(paradf[paraname])
             # paradf.drop(paraname, axis = 1, inplace = True)
-            paradf.rename(columns = {paraname : 'log_' + paraname}, inplace = True)
-
+            paradf = paradf.rename(columns = {paraname : 'log_' + paraname})
+    return paradf
 
 def plot_parameter_reliability(modelname, paradf_sess1, paradf_sess2, subtitles):
     # log transform parameter data
@@ -352,13 +353,19 @@ def plot_parameter_distribution(modelname, paradf_sess1, paradf_sess2, **kwargs)
     # merge sess1 and sess2 data
     tmp = pd.concat([paradf_sess1, paradf_sess2])
     plotdf = tmp.melt(id_vars = ['id', 'sess'], value_vars = paranames)
+    plotdf["sess"] = ["Session 1" if x == 1 else "Session 2" for x in plotdf["sess"]]
+    plotdf["variable"] = [r'$\%s$'%x for x in plotdf["variable"]]
     plt.style.use('classic')
     sns.set(font_scale=1.5)
     sns.set_style("white")
-    g = sns.FacetGrid(plotdf, col= "variable", row = 'sess', sharex = 'col')
+    g = sns.FacetGrid(plotdf, col= "variable", row = 'sess', sharex = 'col', margin_titles = True)
     g.map(sns.histplot, "value", bins = 10, **kwargs) # this works, but low flexibility
     for (row_key, col_key), ax in g.axes_dict.items():
-        ax.set_title(r'SESS%d, $\%s$'%(row_key, col_key), fontdict= { 'fontsize': 24, 'weight':'bold'})
+        # ax.set_title(r'SESS%d, $\%s$'%(row_key, col_key), fontdict= { 'fontsize': 24, 'weight':'bold'})
+        median_val = np.median(plotdf.loc[np.logical_and(plotdf["sess"] == row_key, plotdf["variable"] == col_key), "value"])
+        ax.axvline(median_val, color = "red")
+        ax.text(median_val, 40, "%.2f"%median_val, color = "red")
+    g.set_titles(col_template="{col_name}", row_template="{row_name}")
     return g
 
 def plot_parameter_density(modelname, paradf_sess1, paradf_sess2, **kwargs):
