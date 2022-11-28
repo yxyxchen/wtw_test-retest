@@ -32,46 +32,71 @@ plt.style.use('classic')
 sns.set(font_scale = 1)
 sns.set_style("white")
 condition_palette = ["#762a83", "#1b7837"]
-
-
-
 expname = 'passive'
 
 # load data 
 hdrdata_sess1, trialdata_sess1_ = loadFxs.group_quality_check(expname, 1, plot_quality_check = False)
 hdrdata_sess2, trialdata_sess2_ = loadFxs.group_quality_check(expname, 2, plot_quality_check = False)
 
+
 ## only exclude valid participants 
 hdrdata_sess1 = hdrdata_sess1[np.isin(hdrdata_sess1["id"], hdrdata_sess2["id"])]
 trialdata_sess1_ = {x: y for x,y in trialdata_sess1_.items() if x[0] in hdrdata_sess2["id"].values}
+
+
 ###
 s1_stats, s1_Psurv_b1_, s1_Psurv_b2_, s1_WTW_emp = analysisFxs.group_MF(trialdata_sess1_, plot_each = False)   
 s2_stats, s2_Psurv_b1_, s2_Psurv_b2_, s2_WTW_emp = analysisFxs.group_MF(trialdata_sess2_, plot_each = False)   
 
 
-# modelnames = ['QL2reset_FL3']
-modelname = 'QL2reset'
-fitMethod = "whole"
-stepsize = 0.5
+
 subtitles = [r'$\mathbf{log(\alpha)}$', r'$\mathbf{log(\nu)}$', r'$\mathbf{\tau}$', r'$\mathbf{\gamma}$', r'$\mathbf{log(\eta)}$']
 paranames = modelFxs.getModelParas(modelname)
 npara = len(paranames)
-s1_paradf = loadFxs.load_parameter_estimates(expname, 1, hdrdata_sess1, modelname, fitMethod, stepsize)
-s2_paradf = loadFxs.load_parameter_estimates(expname, 2, hdrdata_sess2, modelname, fitMethod, stepsize)
-s1_stats_rep, s1_WTW_rep, s1_dist_vals_ = modelFxs.group_model_rep(trialdata_sess1_, s1_paradf, modelname, 'whole', stepsize, isTrct = True, plot_each = False)
-s2_stats_rep, s2_WTW_rep, s2_dist_vals_ = modelFxs.group_model_rep(trialdata_sess2_, s2_paradf, modelname, 'whole', stepsize, isTrct = True, plot_each = False)
-s1_stats_rep.to_csv(os.path.join('..', 'analysis_results', expname, 'taskstats', 'rep_%s_sess1_%s_stepsize%.2f.csv'%(modelname, fitMethod, stepsize)), index = None)
-s2_stats_rep.to_csv(os.path.join('..', 'analysis_results', expname, 'taskstats', 'rep_%s_sess2_%s_stepsize%.2f.csv'%(modelname, fitMethod, stepsize)), index = None)
-sns.set(font_scale = 1.5)
-sns.set_style("white")
-figFxs.plot_group_emp_rep_wtw(modelname, s1_WTW_rep, s2_WTW_rep, s1_WTW_emp, s2_WTW_emp, hdrdata_sess1, hdrdata_sess2, s1_paradf, s2_paradf)
-plt.tight_layout()
-plt.gcf().set_size_inches(12, 6)
-plt.savefig(os.path.join("..", "figures", expname, "emp_rep_%s_wtw_%s_stepsize%.2f.pdf"%(modelname, fitMethod, stepsize)))
-figFxs.plot_group_emp_rep(modelname, s1_stats_rep, s2_stats_rep, s1_stats, s2_stats)
-plt.gcf().set_size_inches(10, 6)
-plt.savefig(os.path.join("..", "figures", expname, "emp_rep_%s_%s_stepsize%.2f.pdf"%(modelname, fitMethod, stepsize)))
 
+
+modelnames = ['QL2reset', 'QL2reset_slope']
+fitMethod = "whole"
+stepsize = 0.5
+
+s1_WTW_rep_ = []
+s2_WTW_rep_ = []
+s1_paradf_ = []
+s2_paradf_ = []
+for modelname in modelnames:
+    s1_paradf = loadFxs.load_parameter_estimates(expname, 1, hdrdata_sess1, modelname, fitMethod, stepsize)
+    s2_paradf = loadFxs.load_parameter_estimates(expname, 2, hdrdata_sess2, modelname, fitMethod, stepsize)
+    s1_paradf["model"] = modelname
+    s2_paradf["model"] = modelname
+    s1_paradf_.append(s1_paradf)
+    s2_paradf_.append(s2_paradf)
+    s1_stats_rep, s1_WTW_rep, s1_dist_vals_ = modelFxs.group_model_rep(trialdata_sess1_, s1_paradf, modelname, 'whole', stepsize, isTrct = True, plot_each = False)
+    s2_stats_rep, s2_WTW_rep, s2_dist_vals_ = modelFxs.group_model_rep(trialdata_sess2_, s2_paradf, modelname, 'whole', stepsize, isTrct = True, plot_each = False)
+    s1_stats_rep.to_csv(os.path.join('..', 'analysis_results', expname, 'taskstats', 'rep_%s_sess1_%s_stepsize%.2f.csv'%(modelname, fitMethod, stepsize)), index = None)
+    s2_stats_rep.to_csv(os.path.join('..', 'analysis_results', expname, 'taskstats', 'rep_%s_sess2_%s_stepsize%.2f.csv'%(modelname, fitMethod, stepsize)), index = None)
+    s1_WTW_rep_.append(s1_WTW_rep)
+    s2_WTW_rep_.append(s2_WTW_rep)
+
+######## model fit ######### 
+## include common ids across all models 
+figFxs.plot_group_emp_rep_wtw_multi(s1_WTW_rep_, s2_WTW_rep_, s1_WTW_emp, s2_WTW_emp, hdrdata_sess1, hdrdata_sess2, s1_paradf_, s2_paradf_, modelnames)
+
+
+######### compare WAIC ##############
+s1_common_ids = list(set.intersection(*[set(x['id']) for x in s1_paradf_]))
+s1_waic = pd.concat([x[np.isin(x["id"], s1_common_ids)] for x in s1_paradf_])
+s2_common_ids = list(set.intersection(*[set(x['id']) for x in s2_paradf_]))
+s2_waic = pd.concat([x[np.isin(x["id"], s2_common_ids)] for x in s2_paradf_])
+waic_df = pd.concat()
+
+sns.barplot(data = s1_waic, x = "model", y = "waic")
+s1_waic.groupby("model").agg({"waic":[np.median, lambda x: np.std(x) / np.sqrt(len(x))]})
+
+
+sns.barplot(data = s2_waic, x = "model", y = "waic")
+s2_waic.groupby("model").agg({"waic":[np.mean, lambda x: np.std(x) / np.sqrt(len(x))]})
+
+################ 
 
 
 #### parameter reliabiliy ########

@@ -31,6 +31,7 @@ def loaddata(expname, sess):
     print("Exclude %d participants who quit midway"%sum(hdrdata.quit_midway))
     print("\n")
     hdrdata = hdrdata.loc[np.logical_not(hdrdata.quit_midway)].reset_index(drop=True)
+    hdrdata["key"] = [(x,y) for x,y in zip(hdrdata["id"], hdrdata["sess"])]
 
     nsub = hdrdata.shape[0]
     trialdata_  = {}

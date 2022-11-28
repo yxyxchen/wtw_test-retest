@@ -49,6 +49,8 @@ def var2label(var):
 
 vars = ['auc', 'std_wtw', 'auc_delta']
 labels = ["AUC (s)", r"$\sigma_\mathrm{wtw}$ (s)", r'$\Delta$ AUC (s)']
+
+################
 for expname in ['active', 'passive']:
     s1_selfdf = loadFxs.parse_group_selfreport(expname, 1, isplot = False)
     hdrdata_sess1, trialdata_sess1_ = loadFxs.group_quality_check(expname, 1, plot_quality_check = True)
