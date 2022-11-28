@@ -53,7 +53,7 @@ def tosig(x, marginal = False):
     return y
 
 ######## 
-def plot_group_emp_rep_wtw(modelname, s1_WTW_rep, s2_WTW_rep, s1_WTW_emp, s2_WTW_emp, hdrdata_sess1, hdrdata_sess2, s1_paradf, s2_paradf):
+def plot_group_emp_rep_wtw(s1_WTW_rep, s2_WTW_rep, s1_WTW_emp, s2_WTW_emp, hdrdata_sess1, hdrdata_sess2, s1_paradf, s2_paradf):
     # how do I truncate the ending part of data?
     s1_WTW_emp = s1_WTW_emp[np.isin(hdrdata_sess1.id, s1_paradf.id), ]
     s1_ave_emp = s1_WTW_emp.mean(axis = 0)
@@ -83,7 +83,7 @@ def plot_group_emp_rep_wtw(modelname, s1_WTW_rep, s2_WTW_rep, s1_WTW_emp, s2_WTW
         ax.axvline(expParas.blocksec/60, color = "grey", linestyle = "dashed")
     return g
 
-def plot_group_emp_rep_wtw_multi(modelname, s1_WTW_rep_, s2_WTW_rep_, s1_WTW_emp, s2_WTW_emp, hdrdata_sess1, hdrdata_sess2, s1_paradf_, s2_paradf_, methods, estimation = "mean"):
+def plot_group_emp_rep_wtw_multi(s1_WTW_rep_, s2_WTW_rep_, s1_WTW_emp, s2_WTW_emp, hdrdata_sess1, hdrdata_sess2, s1_paradf_, s2_paradf_, methods, estimation = "mean"):
     # 
     from functools import reduce
     s1_ids = reduce(np.intersect1d, [paradf.id for paradf in s1_paradf_])
@@ -126,12 +126,13 @@ def plot_group_emp_rep_wtw_multi(modelname, s1_WTW_rep_, s2_WTW_rep_, s1_WTW_emp
         "sess": np.concatenate([np.repeat(["SESS1", "SESS2"], len(expParas.TaskTime)), np.repeat(["SESS1", "SESS2"], len(expParas.TaskTime) * nmethod)])
         })
 
-    palette = {"Observed":"tab:black",
-           "QL2":"tab:pink", 
-           "QL2_reset":"tab:red"}
+    # palette = {"Observed":"tab:black",
+    #        "QL2":"tab:pink", 
+    #        "QL2_reset":"tab:red"}
+    palette = ["black"] + sns.color_palette("tab10")[:nmethod]
 
-    g = sns.FacetGrid(plotdf, col= "sess", hue = 'type', sharex = True, sharey = True)
-    g.map(sns.lineplot, "time", "wtw", palette  = palette)
+    g = sns.FacetGrid(plotdf, col= "sess", hue = 'type', sharex = True, sharey = True, palette  = sns.color_palette(palette, len(palette)))
+    g.map(sns.lineplot, "time", "wtw")
     g.set(ylim=(3, 10), ylabel = "WTW (s)", xlabel = "Task time (min)")
     plt.legend(labels=["Observed"] + methods)
     axs = g.axes_dict.values()
@@ -140,7 +141,7 @@ def plot_group_emp_rep_wtw_multi(modelname, s1_WTW_rep_, s2_WTW_rep_, s1_WTW_emp
         ax.axvline(expParas.blocksec/60, color = "grey", linestyle = "dashed")
     return g
 
-def plot_group_emp_rep(modelname, rep_sess1, rep_sess2, emp_sess1, emp_sess2):
+def plot_group_emp_rep(rep_sess1, rep_sess2, emp_sess1, emp_sess2):
     # plot AUC against AUC
     # code.interact(local = dict(locals(), **globals()))
     rep = pd.concat([rep_sess1[['auc', 'id', 'condition', 'sess']], rep_sess2[['auc', 'id', 'condition', 'sess']]])
@@ -155,7 +156,7 @@ def plot_group_emp_rep(modelname, rep_sess1, rep_sess2, emp_sess1, emp_sess2):
         ax.set_aspect("equal")
         ax.plot([0, expParas.tMax], [0, expParas.tMax], ls = '--', color = 'grey', zorder = 10)
 
-def plot_group_emp_rep_diff(modelname, rep_sess1, rep_sess2, emp_sess1, emp_sess2):
+def plot_group_emp_rep_diff(rep_sess1, rep_sess2, emp_sess1, emp_sess2):
     # plot AUC against AUC
     # code.interact(local = dict(locals(), **globals()))
     rep = pd.concat([rep_sess1[['auc', 'id', 'condition', 'sess']], rep_sess2[['auc', 'id', 'condition', 'sess']]])

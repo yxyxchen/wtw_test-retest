@@ -43,16 +43,17 @@ def getModelGroupParas(modelname):
     """
     if modelname == "QL2reset_HM_simple":
         return ['alpha', 'tau', 'eta']
+    elif modelname == "QL2reset_slope_simple":
+        return ['alpha', "nu", 'tau', 'eta']
     else:
-        return ['alpha', 'nu', 'tau', 'eta', 'beta']
+        return ['alpha', 'nu', 'tau', "gamma", 'eta']
 
-   
+def 
 def check_stan_diagnosis(fit_summary):
     if any(fit_summary['n_divergent'] > 0) or any(fit_summary['Rhat'] > 1.05) or any(fit_summary['n_eff'] < 400):
         return False
     else:
         return True
-
 
 ##################### 
 def ind_model_fit_rep(modelname, paras, trialdata, key, stepsize, plot_each):

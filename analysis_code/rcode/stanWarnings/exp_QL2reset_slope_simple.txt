@@ -1,2 +1,1 @@
 
-Finish QL2reset_slope_simple ../../analysis_results/passive/modelfit/whole/stepsize0.50/QL2reset_slope_simple/s1001_sess2 !

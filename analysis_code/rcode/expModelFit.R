@@ -130,9 +130,9 @@ if (sys.nframe() == 0){
     expModelFit(args[1], as.numeric(args[2]), args[3], as.logical(args[4]), args[5], as.numeric(args[6]), as.numeric(args[7]))
   }
 }
-expname = "passive"
-sess = 2
-modelName = "QL2reset_slope_simple"
+expname = "timing"
+sess = 1
+modelName = "QL2reset_slope"
 isFirstFit = TRUE
 fit_method = "whole"
 batchIdx = NULL

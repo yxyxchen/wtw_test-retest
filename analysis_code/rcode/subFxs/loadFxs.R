@@ -19,40 +19,78 @@ loadAllData = function(expname, sess){
   # load experiment paras
   # load('expParas.RData')
   
-  # load hdrData
-  hdrData = read.csv(file.path("..", 'data', expname, sprintf('hdrdata_sess%d.csv', sess)), comment = "#")
-  hdrData = hdrData[hdrData$quit_midway == 'False',]
-  
-  # exclude low quality data
-  if(sess == 1){
-    tmp = read.csv(file.path("..", "..", "analysis_results", expname, "excluded", "excluded_participants_sess1.csv"))
-    excluded_ids = tmp$id
-  }else if(sess == 2){
-    tmp = read.csv(file.path("..", "..", "analysis_results", expname, "excluded", "excluded_participants_sess2.csv"))
-    excluded_ids = tmp$id
+  if(expname %in% c("passive", "active")){
+    # load hdrData
+    hdrData = read.csv(file.path("..", 'data', expname, sprintf('hdrdata_sess%d.csv', sess)), comment = "#")
+    hdrData = hdrData[hdrData$quit_midway == 'False',]
+    
+    # exclude low quality data
+    if(sess == 1){
+      tmp = read.csv(file.path("..", "..", "analysis_results", expname, "excluded", "excluded_participants_sess1.csv"))
+      excluded_ids = tmp$id
+    }else if(sess == 2){
+      tmp = read.csv(file.path("..", "..", "analysis_results", expname, "excluded", "excluded_participants_sess2.csv"))
+      excluded_ids = tmp$id
+    }
+    hdrData = hdrData[!(hdrData$id %in% excluded_ids),]
+    
+    # load trialData
+    trialData = list()
+    nSub = nrow(hdrData)
+    for (sIdx in 1:nSub) {
+      id = hdrData$id[sIdx]
+      trialdata = read.csv(file.path("..", 'data', expname, sprintf("task-%s-sess%d.csv", id, sess)), header = T)
+      trialdata['scheduledWait'] = trialdata['scheduledDelay']
+      trialdata['trialNum'] = trialdata['trialIdx']
+      trialdata["trialIdx"] = NULL
+      trialdata["scheduledDelay"] = NULL
+      trialdata['blockNum'] = 1 + as.numeric(trialdata['condition'] == 'HP')
+      # trialData[[id]] = trialdata
+      trialData[[as.character(id)]] = trialdata #changes
+    }
   }
-  hdrData = hdrData[!(hdrData$id %in% excluded_ids),]
-  
-  # load trialData
-  trialData = list()
-  nSub = nrow(hdrData)
-  for (sIdx in 1:nSub) {
-    id = hdrData$id[sIdx]
-    trialdata = read.csv(file.path("..", 'data', expname, sprintf("task-%s-sess%d.csv", id, sess)), header = T)
-    trialdata['scheduledWait'] = trialdata['scheduledDelay']
-    trialdata['trialNum'] = trialdata['trialIdx']
-    trialdata["trialIdx"] = NULL
-    trialdata["scheduledDelay"] = NULL
-    trialdata['blockNum'] = 1 + as.numeric(trialdata['condition'] == 'HP')
-    # trialData[[id]] = trialdata
-    trialData[[as.character(id)]] = trialdata #changes
+
+  if(expname == "timing"){
+    library("gtools")
+    # get the filename for each participant 
+    fileNames = list.files(path= "../timing_fixed_data", pattern=('wtw-timing-fixed_[0-9]{3}_[0-9].txt'))
+    fileNames = mixedsort(sort(fileNames))
+    nSub = length(fileNames)
+    if(any(duplicated(fileNames))){
+      print("duplicated files!")
+      break
+    }else{
+      sprintf("load data for %d participants", nSub) 
+    }
+    
+    # initialize output variables
+    hdrData = matrix(ncol = 1, nrow = nSub) # hdrData only contains ids 
+    colnames(hdrData) = "id"
+    trialData = list()
+    trialDataNames = c('blockNum', 'trialNum', 'trialStartTime', 'nKeyPresses', 'scheduledWait',
+                       'rewardTime', 'timeWaited', 'sellTime', 'trialEarnings','totalEarnings')
+    
+    # loop over participants
+    for(i in 1 : nSub){
+      fileName = fileNames[i]
+      id = substr(fileName, 18,20)
+      hdrData[i,1] = id
+      thisTrialData = read.csv(sprintf("%s/%s", "../timing_fixed_data", fileName), col.names = trialDataNames, header = F)
+      thisTrialData = within(thisTrialData, {condition = ifelse(blockNum == 1, "LP", "HP")})
+      trialData[[id]] = thisTrialData
   }
   
+  # return outputs
+  hdrData = as.data.frame(hdrData, stringsAsFactors = F)
+  outputs= list(
+    hdrData=hdrData,
+    trialData=trialData)
+  }
+
   # return outputs
   outputs = list(hdrData=hdrData, trialData=trialData)
   return(outputs)
 } 
-
 
 loadExpPara = function(paraNames, dirName, sess){
   # number of paraNames 

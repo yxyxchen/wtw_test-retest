@@ -133,4 +133,6 @@ for chosen_para in ["eta", "alpha", "tau"]:
     sns.lineplot(data = wtwdf, x = "time", y = "wtw", hue = chosen_para, ax = ax)
     fig.savefig(os.path.join("..", "figures", "combined", "sim_%s_%s_wtw.pdf"%(modelname, chosen_para)))
 
-
+stats, Psurv_block1, Psurv_block2, WTW, dist_vals, value_df = modelFxs.ind_model_rep(modelname, paras, trialdata, key, 10, stepsize, False)
+g = sns.FacetGrid(data = value_df, col = "condition", hue = "record_time")
+g.map(plt.plot, "time", "relative_value")
