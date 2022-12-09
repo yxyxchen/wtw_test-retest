@@ -50,10 +50,11 @@ s2_stats, s2_Psurv_b1_, s2_Psurv_b2_, s2_WTW_emp = analysisFxs.group_MF(trialdat
 
 
 # modelnames = ['QL2reset_FL3']
-modelname = 'QL2reset'
+modelname = 'QL2reset_slope'
 fitMethod = "whole"
 stepsize = 0.5
-subtitles = [r'$\mathbf{log(\alpha)}$', r'$\mathbf{log(\nu)}$', r'$\mathbf{\tau}$', r'$\mathbf{\gamma}$', r'$\mathbf{log(\eta)}$']
+
+# subtitles = [r'$\mathbf{log(\alpha)}$', r'$\mathbf{log(\nu)}$', r'$\mathbf{\tau}$', r'$\mathbf{\gamma}$', r'$\mathbf{log(\eta)}$']
 paranames = modelFxs.getModelParas(modelname)
 npara = len(paranames)
 
@@ -79,6 +80,7 @@ plt.savefig(os.path.join("..", "figures", expname, "emp_rep_%s_%s_stepsize%.2f.p
 subtitles = [r'$\mathbf{log(\alpha)}$', r'$\mathbf{log(\nu)}$', r'$\mathbf{\tau}$', r'$\mathbf{\gamma}$', r'$\mathbf{log(\eta)}$']
 paranames = modelFxs.getModelParas(modelname)
 npara = len(paranames)
+
 
 ######## plot parameter distributions ########
 figFxs.plot_parameter_distribution(modelname, s1_paradf.iloc[:,:-1], s2_paradf.iloc[:,:-1], color = "grey", edgecolor = "black")

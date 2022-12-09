@@ -12,7 +12,6 @@ import statsmodels.api as sm
 import statsmodels.formula.api as smf
 from scipy.interpolate import interp1d
 import code
-# my customized modules
 import subFxs
 from subFxs import analysisFxs
 from subFxs import expParas

@@ -31,14 +31,85 @@ import scipy
 import statsmodels.formula.api as smf
 from plotnine import ggplot, aes, facet_grid, labs, geom_point, geom_errorbar, geom_text, position_dodge, scale_fill_manual, labs, theme_classic, ggsave, geom_bar
 from scipy.stats import mannwhitneyu
+import statsmodels.formula.api as smf
 
 # plot styles
 plt.style.use('classic')
 sns.set(font_scale = 2)
 sns.set_style("white")
 condition_palette = ["#762a83", "#1b7837"]
+UPPS_subscales = ["NU", "PU", "PM", "PS", "SS"]
+BIS_l1_subscales = ["Attentional", "Motor", "Nonplanning"]
+BIS_l2_subscales = ["attention", "cogstable", "motor", "perseverance", "selfcontrol", "cogcomplex"]
 
-# passive version
+
+
+def forward_selected(data, response):
+    """Linear model designed by forward selection.
+
+    Parameters:
+    -----------
+    data : pandas DataFrame with all possible predictors and response
+
+    response: string, name of response column in data
+
+    Returns:
+    --------
+    model: an "optimal" fitted statsmodels linear model
+           with an intercept
+           selected by forward selection
+           evaluated by adjusted R-squared
+    """
+    remaining = set(data.columns)
+    remaining.remove(response)
+    selected = []
+    current_score, best_new_score = 0.0, 0.0
+    while remaining and current_score == best_new_score:
+        scores_with_candidates = []
+        for candidate in remaining:
+            formula = "{} ~ {} + 1".format(response,
+                                           ' + '.join(selected + [candidate]))
+            score = smf.ols(formula, data).fit().rsquared_adj
+            scores_with_candidates.append((score, candidate))
+        scores_with_candidates.sort()
+        best_new_score, best_candidate = scores_with_candidates.pop()
+        if current_score < best_new_score:
+            remaining.remove(best_candidate)
+            selected.append(best_candidate)
+            current_score = best_new_score
+    formula = "{} ~ {} + 1".format(response,
+                                   ' + '.join(selected))
+    model = smf.ols(formula, data).fit()
+    return model
+
+def full_selected(data, response):
+	best_score = 0.0
+	predictors = ["age", "gender", "education", "age + gender", "age + education", "education + gender",\
+	"age * gender", "age * education", "education * gender", "age * gender + education", "age * education + gender", \
+	"education * age + gender", "age * gender + age * education", "gender * education + gender * age", "education * age + education * gender", \
+	"education * age * gender"]
+	score_ = []
+	model_ = []
+	for predictor in predictors:
+		model = smf.ols(response + '~' + predictor, data).fit()
+		score_.append(model.rsquared_adj)
+		model_.append(model)
+		if model.rsquared_adj > best_score:
+			best_score = model.rsquared_adj
+	return [x for x in score_ if x == best_score], [y for x, y in zip(score_, model_) if x == best_score], score_
+
+
+best_score_ = []
+best_model_ = []
+all_scores_ = []
+for self_var in self_vars:
+	best_score, best_model, all_scores = full_selected(df[[self_var, "gender", "age", "education"]], self_var)
+	best_score_.append(best_score)
+	best_model_.append(best_model)
+	all_scores_.append(all_scores)
+
+
+# load selfreport and demographic data
 hdrdata_ = []
 selfdf_ = []
 for expname in ["passive", "active"]:	
@@ -50,7 +121,6 @@ for expname in ["passive", "active"]:
 		s2_selfdf = loadFxs.parse_group_selfreport(expname, 2, isplot = False)
 		s1_selfdf = s1_selfdf[np.isin(s1_selfdf["id"], s2_selfdf["id"])]
 		selfdf = analysisFxs.agg_across_sessions(s1_selfdf, s2_selfdf)
-
 	else:
 		selfdf = loadFxs.parse_group_selfreport(expname, 1, isplot = False)
 	selfdf_.append(selfdf)
@@ -58,102 +128,38 @@ for expname in ["passive", "active"]:
 selfdf = pd.concat(selfdf_, axis = 0).reset_index()
 hdrdata = pd.concat(hdrdata_, axis = 0).reset_index()
 
-#################### plot correlations among selfreport datas
-g = sns.pairplot(selfdf[["UPPS", "BIS", "discount_logk"]], kind = "reg", diag_kws = {"color": "grey", "edgecolor": "black"},\
-	plot_kws ={'line_kws':{'color':'red'}, "scatter_kws": {"color": "grey", "edgecolor": "black"}})
-g.map_lower(figFxs.annotate_reg)
-plt.savefig(os.path.join("..", "figures", "combined", "impulsivity_corr.pdf"))
 
-g = sns.pairplot(selfdf[["NU", "PU", "PM", "PS", "SS"]], kind = "reg", diag_kws = {"color": "grey", "edgecolor": "black"},\
-	plot_kws ={'line_kws':{'color':'red'}, "scatter_kws": {"color": "grey", "edgecolor": "black"}})
-g.map_lower(figFxs.annotate_reg)
-plt.savefig(os.path.join("..", "figures", "combined", "UPPS_corr.pdf"))
+################ simple effects ###########
+# plot 
+self_vars = [ "BIS", "UPPS", "discount_logk"] + UPPS_subscales + BIS_l1_subscales + BIS_l2_subscales
+demo_vars = ["age", "education"]
 
-g = sns.pairplot(selfdf[["Motor", "Nonplanning", "Attentional"]], kind = "reg", diag_kws = {"color": "grey", "edgecolor": "black"},\
-	plot_kws ={'line_kws':{'color':'red'}, "scatter_kws": {"color": "grey", "edgecolor": "black"}})
-g.map_lower(figFxs.annotate_reg)
-plt.savefig(os.path.join("..", "figures", "combined", "BIS_corr.pdf"))
+for var in demo_vars:
+	plt.style.use('classic')
+	sns.set(font_scale = 1)
+	sns.set_style("white")
+	df = selfdf.merge(hdrdata, on = "id")
+	tmp = df.melt(id_vars = ["id", var, "gender"], value_vars = self_vars )
+	g = sns.FacetGrid(data = tmp, col = "variable", sharey = False, col_order = self_vars )
+	g.map(sns.regplot, var, "value", line_kws = {'color':'red'}, scatter_kws = {"color": "grey", "edgecolor": "black"})
+	g.map(figFxs.annotate_reg, var, "value")
+	g.savefig(os.path.join("..", "figures", "combined", var + "_selfreport_corr.pdf"))
 
-g = sns.pairplot(selfdf[['motor', "perseverance", "cogstable", "selfcontrol", "attention", "cogcomplex"]], kind = "reg", diag_kws = {"color": "grey", "edgecolor": "black"},\
-	plot_kws ={'line_kws':{'color':'red'}, "scatter_kws": {"color": "grey", "edgecolor": "black"}})
-g.map_lower(figFxs.annotate_reg)
-plt.savefig(os.path.join("..", "figures", "combined", "BIS_sub_corr.pdf"))
-
-
-############# plot demographic data #########
-for i, expname in enumerate(["passive", "active", "combined"]):	
-	for var, label in zip(["age", "education"], ["Age", "Education year"]):
-		if i < 2:
-			this_hdrdata = hdrdata_[i]
-		else:
-			this_hdrdata = hdrdata
-		fig, ax = plt.subplots()
-		tmp = this_hdrdata["gender"].value_counts()
-		fig, ax = plt.subplots()
-		ax.pie(tmp.values, labels = tmp.index, autopct='%.0f%%')
-		fig.savefig(os.path.join("..", "figures", expname, "gender_pie.pdf"))
-		fig, ax = plt.subplots()
-		ax.hist(this_hdrdata[var], color = "grey", edgecolor = "black")
-		ax.set_xlabel(label)
-		ax.set_ylabel("Frequency")
-		fig.tight_layout()
-		fig.savefig(os.path.join("..", "figures", expname, var + "_hist.pdf"))
-		df = this_hdrdata[np.isin(this_hdrdata["gender"],["Female", "Male"])]
-		fig, ax = plt.subplots()
-		sns.violinplot(data = df, x = "gender", y = var, ax = ax)
-		sns.boxplot(data = df, x='gender', y = var, saturation=0.5, width=0.4, boxprops={'zorder': 2}, ax=ax)
-		ax.set_xlabel("")
-		sig = figFxs.tosig(mannwhitneyu(df.loc[df["gender"] == "Female", var], df.loc[df["gender"] == "Male", var]).pvalue)
-		if var == "age":
-			ax.plot([0, 0, 1, 1], [80, 84, 84, 80], lw=1.5)
-			plt.text((0+1)*.5, 79, sig, ha='center', va='bottom')
-		else:
-			ax.plot([0, 0, 1, 1], [23, 24, 24, 23], lw=1.5)
-			plt.text((0+1)*.5, 23, sig, ha='center', va='bottom')		
-		fig.savefig(os.path.join("..", "figures", expname, var + "_gender_barplot.pdf"))
-		g = sns.FacetGrid(data = df, col = "gender", hue = "gender")
-		g.map(plt.hist, var)
-		g.savefig(os.path.join("..", "figures", expname, var + "_gender_hist.pdf"))
-
-
-
-#################### effects of demographic variables on selfreport ########
-plt.style.use('classic')
-sns.set(font_scale = 1)
-sns.set_style("white")
+# get p value and r value map
 df = selfdf.merge(hdrdata, on = "id")
-tmp = df.melt(id_vars = ["id", "age", "gender"], value_vars = [ "BIS", "UPPS", "survey_impulsivity", "discount_logk"])
-g = sns.FacetGrid(data = tmp, col = "variable", sharey = False, col_order = [ "BIS", "UPPS", "survey_impulsivity", "discount_logk"])
-g.map(sns.regplot, "age", "value", line_kws = {'color':'red'}, scatter_kws = {"color": "grey", "edgecolor": "black"})
-g.map(figFxs.annotate_reg, "age", "value")
-g.savefig(os.path.join("..", "figures", "combined", "age_selfreport_corr.pdf"))
+r_df = pd.DataFrame(columns = self_vars, index = demo_vars)
+p_df = pd.DataFrame(columns = self_vars, index = demo_vars)
+for self_var, demo_var in itertools.product(self_vars, demo_vars):
+	res = spearmanr(df[self_var], df[demo_var], nan_policy = "omit")
+	r_df.loc[demo_var, self_var] = res[0]
+	p_df.loc[demo_var, self_var] = res[1]
 
 
-df = selfdf.merge(hdrdata, on = "id")
-df = df[np.isin(df["gender"], ["Female", "Male"])]
-df = df[df["age"] < 50]
-tmp = df.melt(id_vars = ["id", "age", "gender"], value_vars = [ "BIS", "UPPS", "survey_impulsivity", "discount_logk"])
-g = sns.FacetGrid(data = tmp, row = "gender", col = "variable", sharex = False, sharey = False, col_order = [ "BIS", "UPPS", "survey_impulsivity", "discount_logk"], margin_titles = True)
-g.map(sns.regplot, "age", "value", line_kws = {'color':'red'}, scatter_kws = {"color": "grey", "edgecolor": "black"})
-g.map(figFxs.annotate_reg, "age", "value")
-g.set_titles(col_template="{col_name}", row_template="{row_name}")
-g.savefig(os.path.join("..", "figures", "combined", "age_gender_selfreport_corr_limited.pdf"))
 
-
-df = selfdf.merge(hdrdata, on = "id")
-df = df[df["age"] < 50]
-tmp = df.melt(id_vars = ["id", "age", "gender"], value_vars = [ "BIS", "UPPS", "survey_impulsivity", "discount_logk"])
-g = sns.FacetGrid(data = tmp, col = "variable", sharey = False, col_order = [ "BIS", "UPPS", "survey_impulsivity", "discount_logk"])
-g.map(sns.regplot, "age", "value", line_kws = {'color':'red'}, scatter_kws = {"color": "grey", "edgecolor": "black"})
-g.map(figFxs.annotate_reg, "age", "value")
-g.set_titles(col_template="{col_name}", row_template="{row_name}")
-g.savefig(os.path.join("..", "figures", "combined", "age_selfreport_corr_limited.pdf"))
-
-
+####### earlier results 
 # with gender 
 df = selfdf.merge(hdrdata, on = "id")
 df = df[np.isin(df["gender"], ["Female", "Male"])]
-df = df[df["age"] < 50]
 tmp = df.melt(id_vars = ["id", "age", "gender"], value_vars = [ "BIS", "UPPS", "survey_impulsivity", "discount_logk"])
 g = sns.FacetGrid(data = tmp, col = "variable", row = "gender", sharey = False, col_order = [ "BIS", "UPPS", "survey_impulsivity", "discount_logk"], margin_titles=True )
 g.map(sns.regplot, "age", "value", line_kws = {'color':'red'}, scatter_kws = {"color": "grey", "edgecolor": "black"})
@@ -162,9 +168,24 @@ g.set_titles(col_template="{col_name}", row_template="{row_name}")
 g.savefig(os.path.join("..", "figures", expname, "age_gender_selfreport_corr_limited.pdf"))
 
 
-######
+########
 df = selfdf.merge(hdrdata, on = "id")
 df = df[np.isin(df["gender"], ["Female", "Male"])]
+df["age"] = df["age"] - np.mean(df["age"])
+df["education"] = df["education"] - np.mean(df["education"])
+res_ = []
+for self_var in self_vars:
+	res_.append(forward_selected(df[[self_var, "gender", "age", "education"]], self_var).summary())
+
+
+full_res_ = []
+for self_var in self_vars:
+	full_res = smf.ols(self_var + " ~ age * gender * education", data = df[[self_var, "gender", "age", "education"]]).fit()
+	full_res_.append(full_res)
+
+score_, model_ = full_selected(df[[self_var, "gender", "age", "education"]], self_var)
+
+
 df[df.select_dtypes('number').columns] = df.select_dtypes('number').apply(lambda x:scipy.stats.zscore(x, nan_policy = "omit")) 
 predictors = ["gender", "age", "age*gender"]
 yvals = [ "BIS", "UPPS", "survey_impulsivity", "SS", "PU", "NU", "PM", "PS", "Motor", "Nonplanning", "Attentional", "discount_logk"]

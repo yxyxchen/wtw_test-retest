@@ -29,7 +29,9 @@ import concurrent.futures
 def getModelParas(modelname):
     """Function to return parameter names of a given model
     """
-    if modelname[:3] == 'QL1':
+    if modelname == "QL2reset_slope_simple":
+        return ["alpha", "nu", "tau", "eta"]
+    elif modelname[:3] == 'QL1':
         return ['alpha', 'tau', 'gamma', 'eta']
     elif modelname[:3] == 'QL2':
         return ['alpha', 'nu', 'tau', 'gamma', 'eta']
@@ -48,7 +50,6 @@ def getModelGroupParas(modelname):
     else:
         return ['alpha', 'nu', 'tau', "gamma", 'eta']
 
-def 
 def check_stan_diagnosis(fit_summary):
     if any(fit_summary['n_divergent'] > 0) or any(fit_summary['Rhat'] > 1.05) or any(fit_summary['n_eff'] < 400):
         return False
@@ -137,22 +138,6 @@ def group_model_rep(trialdata_, paradf, modelname, fitMethod, stepsize, isTrct =
     # loop over participants
     for key, trialdata in trialdata_.items():
         print(key)
-        # code.interact(local = dict(locals(), **globals()))
-        # try:
-        #     fit_summary = pd.read_csv(os.path.join('..', 'analysis_results', expname, 'modelfit', modelname, '%s_sess%s_summary.txt'%key), header = None)
-        # except:
-        #     print("the file for %s, sess%d not found"%key)
-        #     continue
-        # fit_summary.index = paranames + ['totalLL']
-        # fit_summary.columns = ['mean', 'se_mean', 'sd', '2.5%', '25%', '50%', '75%', '97.5%', 'n_effe', 'Rhat', 'n_divergent']
-        # # yeah for this R version I need to add several more lines
-
-        # if not check_stan_diagnosis(fit_summary):
-        #     print(key, "not valid")
-        #     continue
-        # code.interact(local = dict(locals(), **globals()))
-        # # extract mean parameter estimates
-        # paravals = fit_summary['mean'].iloc[:-1]
         if key[0] in paradf['id'].values:
             # code.interact(local = dict(locals(), **globals()))
             paravals = paradf.loc[paradf['id'] == key[0], paranames].values[0]
@@ -166,6 +151,8 @@ def group_model_rep(trialdata_, paradf, modelname, fitMethod, stepsize, isTrct =
             trialdata = trialdata[trialdata.trialStartTime > 30]
         # replicate original behaviors
         paras = dict(zip(paranames, paravals))
+        if modelname == "QL2reset_slope_simple":
+            paras["gamma"] = 0.85
         if plot_each:
             stats, _, _, WTW, dist_vals, _ = ind_model_rep(modelname, paras, trialdata, key, 10, stepsize, plot_each = True)
             plt.show()
