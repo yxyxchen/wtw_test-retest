@@ -50,7 +50,7 @@ s2_stats, s2_Psurv_b1_, s2_Psurv_b2_, s2_WTW_emp = analysisFxs.group_MF(trialdat
 
 
 # modelnames = ['QL2reset_FL3']
-modelname = 'QL2reset_slope'
+modelname = 'QL2reset_slope_simple'
 fitMethod = "whole"
 stepsize = 0.5
 
@@ -123,6 +123,8 @@ structure_noise_df = pd.DataFrame({
     })
 
 structure_noise_summary_df = structure_noise_df.groupby(["pair", "sess"]).agg({"r":np.median}).reset_index()
+
+structure_noise_summary_df = structure_noise_df.groupby(["pair", "sess"]).agg({"r":np.mean}).reset_index()
 
 plt.style.use('classic')
 sns.set(font_scale = 1)

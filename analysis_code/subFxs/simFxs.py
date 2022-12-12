@@ -205,7 +205,7 @@ def ind_fit_sim(modelname, paras, condition_, blockIdx_, scheduledDelay_, schedu
 			if re.search('reset', modelname):
 				if modelname == "QL2reset_ind":
 					Qwaits, Qquit = QL_ind_initialize(ts, paras)
-				elif modelname == "QL2reset_slope":
+				elif re.search('slope', modelname):
 					Qwaits, Qquit = QL_slope_initialize(ts, paras)
 				elif modelname[:2] == 'QL':
 					Qwaits, Qquit = QL_initialize(ts, paras)
@@ -330,7 +330,7 @@ def ind_sim(modelname, paras, condition_, blockIdx_, scheduledDelay_, scheduledR
 			if re.search('reset', modelname):
 				if modelname == "QL2reset_ind":
 					Qwaits, Qquit = QL_ind_initialize(ts, paras)
-				elif modelname == "QL2reset_slope":
+				elif re.search('slope', modelname):
 					Qwaits, Qquit = QL_slope_initialize(ts, paras)
 				elif modelname[:2] == 'QL':
 					Qwaits, Qquit = QL_initialize(ts, paras)

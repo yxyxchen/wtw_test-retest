@@ -29,7 +29,7 @@ import concurrent.futures
 def getModelParas(modelname):
     """Function to return parameter names of a given model
     """
-    if modelname == "QL2reset_slope_simple":
+    if modelname == "QL2reset_slope_simple" or modelname == "QL2_slope_simple" :
         return ["alpha", "nu", "tau", "eta"]
     elif modelname[:3] == 'QL1':
         return ['alpha', 'tau', 'gamma', 'eta']
@@ -151,7 +151,7 @@ def group_model_rep(trialdata_, paradf, modelname, fitMethod, stepsize, isTrct =
             trialdata = trialdata[trialdata.trialStartTime > 30]
         # replicate original behaviors
         paras = dict(zip(paranames, paravals))
-        if modelname == "QL2reset_slope_simple":
+        if modelname == "QL2reset_slope_simple" or modelname == "QL2_slope_simple":
             paras["gamma"] = 0.85
         if plot_each:
             stats, _, _, WTW, dist_vals, _ = ind_model_rep(modelname, paras, trialdata, key, 10, stepsize, plot_each = True)
