@@ -99,15 +99,6 @@ def full_selected(data, response):
 	return [x for x in score_ if x == best_score], [y for x, y in zip(score_, model_) if x == best_score], score_
 
 
-best_score_ = []
-best_model_ = []
-all_scores_ = []
-for self_var in self_vars:
-	best_score, best_model, all_scores = full_selected(df[[self_var, "gender", "age", "education"]], self_var)
-	best_score_.append(best_score)
-	best_model_.append(best_model)
-	all_scores_.append(all_scores)
-
 
 # load selfreport and demographic data
 hdrdata_ = []
@@ -186,18 +177,14 @@ for self_var in self_vars:
 score_, model_ = full_selected(df[[self_var, "gender", "age", "education"]], self_var)
 
 
-df[df.select_dtypes('number').columns] = df.select_dtypes('number').apply(lambda x:scipy.stats.zscore(x, nan_policy = "omit")) 
-predictors = ["gender", "age", "age*gender"]
-yvals = [ "BIS", "UPPS", "survey_impulsivity", "SS", "PU", "NU", "PM", "PS", "Motor", "Nonplanning", "Attentional", "discount_logk"]
-coef = []
-for yval in yvals:
-	results = smf.ols(yval + " ~ age + gender + education", data = df).fit()
-	# coef.append(["%.3f( "%x + "p=%.4f"%y + " )" for x, y in zip(results.params[1:].values, results.pvalues[1:].values)])
-	coef.append(["%.3f( "%x + "p=" + figFxs.tosig(y) + " )" for x, y in zip(results.params[1:].values, results.pvalues[1:].values)])
-
-coef_report = pd.DataFrame(coef).rename(index = dict(zip(np.arange(len(yvals)), yvals)), columns = dict(zip(np.arange(len(results.params.index)-1), results.params.index[1:])))
-coef_report
-coef_report.loc[["BIS", "UPPS", "discount_logk"],:]
+best_score_ = []
+best_model_ = []
+all_scores_ = []
+for self_var in self_vars:
+	best_score, best_model, all_scores = full_selected(df[[self_var, "gender", "age", "education"]], self_var)
+	best_score_.append(best_score)
+	best_model_.append(best_model)
+	all_scores_.append(all_scores)
 
 
 
