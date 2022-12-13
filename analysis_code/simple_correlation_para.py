@@ -44,7 +44,7 @@ BIS_l2_subscales = ["attention", "cogstable", "motor", "perseverance", "selfcont
 
 # passive version
 statsdf_ = []
-selfdf_ = [] 
+paradf_ = [] 
 for expname in ["active", "passive"]:
 	hdrdata_sess1, trialdata_sess1_ = loadFxs.group_quality_check(expname, 1, plot_quality_check = True)
 	hdrdata_sess2, trialdata_sess2_ = loadFxs.group_quality_check(expname, 2, plot_quality_check = True)
@@ -52,14 +52,6 @@ for expname in ["active", "passive"]:
 	hdrdata_sess1 = hdrdata_sess1[np.isin(hdrdata_sess1["id"], hdrdata_sess2["id"])]
 	trialdata_sess1_ = {x: y for x,y in trialdata_sess1_.items() if x[0] in hdrdata_sess2["id"].values}
 	############ conduct behavioral analysis ######
-	s1_stats, s1_Psurv_b1_, s1_Psurv_b2_, s1_WTW_ = analysisFxs.group_MF(trialdata_sess1_, plot_each = False)   
-	s2_stats, s2_Psurv_b1_, s2_Psurv_b2_, s2_WTW_ = analysisFxs.group_MF(trialdata_sess2_, plot_each = False)   
-	s1_df = analysisFxs.pivot_by_condition(s1_stats)
-	s2_df = analysisFxs.pivot_by_condition(s2_stats)
-	statsdf = analysisFxs.agg_across_sessions(s1_df, s2_df)
-	statsdf_.append(statsdf)
-	# self
-	####################### analyze only selfreport data ####################
 	if expname == "passive":
 		s1_selfdf = loadFxs.parse_group_selfreport(expname, 1, isplot = False)
 		s2_selfdf = loadFxs.parse_group_selfreport(expname, 2, isplot = False)
@@ -70,32 +62,44 @@ for expname in ["active", "passive"]:
 		s1_selfdf = selfdf
 	selfdf["exp"] = expname
 	selfdf_.append(selfdf)
+	s1_paradf = loadFxs.load_parameter_estimates(expname, 1, hdrdata_sess1, modelname, fitMethod, stepsize)
+	s2_paradf = loadFxs.load_parameter_estimates(expname, 2, hdrdata_sess2, modelname, fitMethod, stepsize)
+	paradf = analysisFxs.agg_across_sessions(s1_paradf, s2_paradf)
+	paradf["exp"] = expname
+	paradf_.append(paradf)
 
-selfdf = pd.concat(selfdf_)
-statsdf = pd.concat(statsdf_)
-df = statsdf.merge(selfdf, on = "id")
+paradf = pd.concat(paradf_)
+df = paradf.merge(selfdf, on = ["id", "exp"])
 df.loc[:, df.dtypes == "float64"] = df.select_dtypes("number") - df.select_dtypes("number").apply(np.mean, axis = 0)
 df["exp"] = pd.Categorical(df["exp"], categories = ["passive", "active"], ordered = True)
 
 
+paranames = modelFxs.getModelParas(modelname)
 self_vars = ["BIS", "UPPS", "discount_logk"] + BIS_l2_subscales + UPPS_subscales
-task_vars = ["auc", "auc_delta", "std_wtw"]
+npara = len(paranames)
 nselfvar = len(self_vars)
-ntaskvar = len(task_vars)
 # record whether there is an interaction of exp 
-cb_p_df = pd.DataFrame(np.zeros((ntaskvar, nselfvar)), index = task_vars, columns = self_vars)
-ps_p_df = pd.DataFrame(np.zeros((ntaskvar, nselfvar)), index = task_vars, columns = self_vars)
-ac_p_df = pd.DataFrame(np.zeros((ntaskvar, nselfvar)), index = task_vars, columns = self_vars)
-cb_r_df = pd.DataFrame(np.zeros((ntaskvar, nselfvar)), index = task_vars, columns = self_vars)
-ps_r_df = pd.DataFrame(np.zeros((ntaskvar, nselfvar)), index = task_vars, columns = self_vars)
-ac_r_df = pd.DataFrame(np.zeros((ntaskvar, nselfvar)), index = task_vars, columns = self_vars)
-interaction_pvals = pd.DataFrame(np.zeros((ntaskvar, nselfvar)), index = task_vars, columns = self_vars)
-for self_var, task_var in itertools.product(self_vars, task_vars):
-	fit = smf.ols(self_var +  " ~ %s * exp" % task_var, data = df).fit()
-	interaction_pvals.loc[task_var, self_var] = fit.pvalues[3]
-	cb_r_df.loc[task_var, self_var],cb_p_df.loc[task_var, self_var]  = spearmanr(df[self_var], df[task_var], nan_policy = "omit")
-	ps_r_df.loc[task_var, self_var],ps_p_df.loc[task_var, self_var] = spearmanr(df.loc[df["exp"]=="passive", self_var], df.loc[df["exp"]=="passive", task_var], nan_policy = "omit")
-	ac_r_df.loc[task_var, self_var],ac_p_df.loc[task_var, self_var]  = spearmanr(df.loc[df["exp"]=="active", self_var], df.loc[df["exp"]=="active", task_var], nan_policy = "omit")
+cb_p_df = pd.DataFrame(np.zeros((nselfvar, npara)), index = self_vars, columns = paranames)
+ps_p_df = pd.DataFrame(np.zeros((nselfvar, npara)), index = self_vars, columns = paranames)
+ac_p_df = pd.DataFrame(np.zeros((nselfvar, npara)), index = self_vars, columns = paranames)
+cb_r_df = pd.DataFrame(np.zeros((nselfvar, npara)), index = self_vars, columns = paranames)
+ps_r_df = pd.DataFrame(np.zeros((nselfvar, npara)), index = self_vars, columns = paranames)
+ac_r_df = pd.DataFrame(np.zeros((nselfvar, npara)), index = self_vars, columns = paranames)
+interaction_pvals = pd.DataFrame(np.zeros((nselfvar, npara)), index = self_vars, columns = paranames)
+for para, self_var in itertools.product(paranames, self_vars):
+	fit = smf.ols(para +  " ~ %s * exp" % self_var, data = df).fit()
+	interaction_pvals.loc[self_var, para] = fit.pvalues[3]
+	cb_r_df.loc[self_var, para],cb_p_df.loc[self_var, para]  = spearmanr(df[para], df[self_var], nan_policy = "omit")
+	ps_r_df.loc[self_var, para],ps_p_df.loc[self_var, para] = spearmanr(df.loc[df["exp"]=="passive", para], df.loc[df["exp"]=="passive", self_var], nan_policy = "omit")
+	ac_r_df.loc[self_var, para],ac_p_df.loc[self_var, para]  = spearmanr(df.loc[df["exp"]=="active", para], df.loc[df["exp"]=="active", self_var], nan_policy = "omit")
+
+for para, self_var in itertools.product(paranames, self_vars):
+	fit = smf.ols(para +  " ~ %s * exp" % self_var, data = df).fit()
+	interaction_pvals.loc[self_var, para] = fit.pvalues[3]
+	filter = ~np.isnan(df[self_var]).values
+	cb_r_df.loc[self_var, para],cb_p_df.loc[self_var, para]  = pearsonr(df.loc[filter, para], df.loc[filter, self_var])
+	ps_r_df.loc[self_var, para],ps_p_df.loc[self_var, para] = pearsonr(df.loc[np.logical_and(df["exp"]=="passive", filter), para], df.loc[np.logical_and(df["exp"]=="passive", filter), self_var])
+	ac_r_df.loc[self_var, para],ac_p_df.loc[self_var, para]  = pearsonr(df.loc[np.logical_and(df["exp"]=="active", filter), para], df.loc[np.logical_and(df["exp"]=="active", filter), self_var])
 
 
 cb_p_df[interaction_pvals < 0.05] = np.nan
@@ -109,20 +113,20 @@ n_perm = 500
 ps_max_abs_r_dist = []
 ac_max_abs_r_dist = []
 for i in np.arange(n_perm):
-	for task_var in task_vars:
-		df.loc[df["exp"] == "passive", "rd_" + task_var] = np.random.permutation(df.loc[df["exp"] == "passive", task_var])
-		df.loc[df["exp"] == "active", "rd_" + task_var] = np.random.permutation(df.loc[df["exp"] == "active", task_var])
-	r_, _ = analysisFxs.calc_prod_correlations(df[df["exp"] == 'passive'], ["rd_" + x for x in task_vars], self_vars)
+	for para in paranames:
+		df.loc[df["exp"] == "passive", "rd_" + para] = np.random.permutation(df.loc[df["exp"] == "passive", para])
+		df.loc[df["exp"] == "active", "rd_" + para] = np.random.permutation(df.loc[df["exp"] == "active", para])
+	r_, _ = analysisFxs.calc_prod_correlations(df[df["exp"] == 'passive'], ["rd_" + x for x in paranames], self_vars)
 	ps_max_abs_r_dist.append(np.max(np.abs(r_.values)))
-	r_, _ = analysisFxs.calc_prod_correlations(df[df["exp"] == 'active'], ["rd_" + x for x in task_vars], self_vars)
+	r_, _ = analysisFxs.calc_prod_correlations(df[df["exp"] == 'active'], ["rd_" + x for x in paranames], self_vars)
 	ac_max_abs_r_dist.append(np.max(np.abs(r_.values)))
 
 n_perm = 500
 cb_max_abs_r_dist = []
 for i in np.arange(n_perm):
-	for task_var in task_vars:
-		df["rd_" + task_var] = np.random.permutation(df[task_var])
-	r_, _ = analysisFxs.calc_prod_correlations(df, ["rd_" + x for x in task_vars], self_vars)
+	for para in paranames:
+		df["rd_" + para] = np.random.permutation(df[para])
+	r_, _ = analysisFxs.calc_prod_correlations(df, ["rd_" + x for x in paranames], self_vars)
 	cb_max_abs_r_dist.append(np.max(np.abs(r_.values)))
 
 

@@ -3,6 +3,7 @@ library("stringr")
 getParaNames = function(modelName){
   # if(modelName == "QL1reset_FL3") paraNames = c("alpha", "tau", "gamma", "eta1", "eta2")
   if(modelName %in% c("QL1reset_slope_simple", "QL1_slope_simple")) paraNames = c("alpha", "tau", "eta")
+  else if(modelName == "QL2reset_slope_two") paraNames = c("alpha", "alphaU", "tau", "gamma", "eta")
   else if(modelName %in% c("QL2reset_slope_simple", "QL2_slope_simple")) paraNames = c("alpha", "nu", "tau", "eta")
   else if(substr(modelName, 1, 3) == "QL1") paraNames = c("alpha", "tau", "gamma", "eta")
   # else if(modelName == "QL2reset_FL3") paraNames = c("alpha", "nu", "tau", "gamma", "eta1", "eta2")

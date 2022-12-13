@@ -50,7 +50,7 @@ s2_stats, s2_Psurv_b1_, s2_Psurv_b2_, s2_WTW_emp = analysisFxs.group_MF(trialdat
 
 
 # modelnames = ['QL2reset_FL3']
-modelname = 'QL2reset_slope_simple'
+modelname = 'QL2reset_slope'
 fitMethod = "whole"
 stepsize = 0.5
 
@@ -87,6 +87,8 @@ figFxs.plot_parameter_distribution(modelname, s1_paradf.iloc[:,:-1], s2_paradf.i
 plt.gcf().set_size_inches(5 * npara, 5 * 2)
 plt.savefig(os.path.join("..", 'figures', expname, "%s_%s_stepsize%.2f_para_dist.pdf"%(modelname, fitMethod, stepsize)))
 
+# maybe log transform first?
+figFxs.plot_parameter_reliability(modelname, s1_paradf.iloc[:,:-1], s2_paradf.iloc[:,:-1], subtitles)
 
 ########## bootstrapped structural noise ########
 r_ = []
@@ -177,7 +179,9 @@ g.map(plt.hist, "cv")
 
 ####### among participant correlations ####
 # maybe I want to log transform first ....
-log_paradf = pd.concat([figFxs.log_transform_parameter(s1_paradf, ["alpha", "nu", "tau", "eta"]), figFxs.log_transform_parameter(s2_paradf, ["alpha", "nu", "tau", "eta"])])
+s1_paradf = loadFxs.load_parameter_estimates(expname, 1, hdrdata_sess1, modelname, fitMethod, stepsize)
+s2_paradf = loadFxs.load_parameter_estimates(expname, 2, hdrdata_sess2, modelname, fitMethod, stepsize)
+log_paradf = pd.concat([figFxs.log_transform_parameter(s1_paradf, ["alpha", "tau", "eta"]), figFxs.log_transform_parameter(s2_paradf, ["alpha", "tau", "eta"])])
 g = sns.pairplot(data = log_paradf.iloc[:,:npara], kind = "reg", diag_kind = "None", corner = True,\
     diag_kws = {"color": "grey", "edgecolor": "black"}, plot_kws ={'line_kws':{'color':'red'}, "scatter_kws": {"color": "grey", "edgecolor": "black"}})
 g.map_lower(figFxs.annotate_reg)
