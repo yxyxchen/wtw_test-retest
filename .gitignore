@@ -3,6 +3,7 @@
 analysis_results/passive/modelrep/
 analysis_results/active/modelrep/
 keypress_data/
+analysis_results/timing/modelfit/
 analysis_results/passive/backup/
 analysis_results/active/backup/
 analysis_results/passive/modelfit_hm/
