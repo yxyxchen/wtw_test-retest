@@ -38,7 +38,7 @@ parameters {
 transformed parameters{
   // scale raw parameters into real parameters
   real <lower=0, upper=1> alpha = Phi_approx(raw_alpha) * 1; 
-  real <lower=0, upper=1> alphaU = Phi_approx(raw_alpha) * 1; 
+  real <lower=0, upper=1> alphaU = Phi_approx(raw_alphaU) * 1; 
   real <lower=0, upper=42> tau = Phi_approx(raw_tau) * 42; 
   real <lower=0.5, upper=1> gamma = Phi_approx(raw_gamma)* 0.5 + 0.5;  
   real <lower=0, upper=15> eta = Phi_approx(raw_eta) * 15; 

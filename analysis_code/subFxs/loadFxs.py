@@ -144,7 +144,7 @@ def group_quality_check(expname, sess, plot_quality_check = False):
     # filter excluded data 
     hdrdata = hdrdata.loc[~np.isin(hdrdata.id, excluded.id), :]
     hdrdata.reset_index(drop=True, inplace  = True)
-    hdrdata = hdrdata.merge(consentdata[["id", "age", "gender", "education", "language", "race"]], on = "id")
+    hdrdata = hdrdata.merge(consentdata[["id", "age", "gender", "education", "language", "race", "consent_date"]], on = "id")
     hdrdata["seq"] = ["seq1" if x in ["A", "C"] else "seq2" for x in hdrdata["cb"]]
     hdrdata["color"] = ["color1" if x in ["A", "B"] else "color2" for x in hdrdata["cb"]]
 
@@ -248,7 +248,6 @@ def parse_group_selfreport(expname, sess, isplot):
     # read the input file
     selfreportfile = os.path.join(datadir, expname, 'selfreport_sess%d.csv'%sess)
     selfreport = pd.read_csv(selfreportfile)
-
     # score all other questionaires except MCQ
     selfdata = pd.DataFrame()
     for i, row in selfreport.iterrows():
@@ -269,8 +268,9 @@ def parse_group_selfreport(expname, sess, isplot):
         mcqdata = mcqdata.loc[k_filter,:] 
         selfdata = selfdata.merge(mcqdata[['GMK', 'SubjID']], how = 'outer', right_on = 'SubjID', left_on = 'id').drop("SubjID", axis = 1)
     selfdata.reset_index(inplace = True, drop = True)
-    selfdata = selfdata.rename(columns = {"GMK":"discount_k"})
-    selfdata["discount_logk"] = np.log(selfdata["discount_k"])
+    if expname != "active" or sess != 2:
+        selfdata = selfdata.rename(columns = {"GMK":"discount_k"})
+        selfdata["discount_logk"] = np.log(selfdata["discount_k"])
     selfdata["survey_impulsivity"] = scipy.stats.zscore(selfdata["UPPS"], nan_policy = "omit") + scipy.stats.zscore(selfdata["BIS"], nan_policy = "omit")
     return selfdata 
 

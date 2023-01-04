@@ -31,6 +31,8 @@ def getModelParas(modelname):
     """
     if modelname == "QL2reset_slope_simple" or modelname == "QL2_slope_simple" :
         return ["alpha", "nu", "tau", "eta"]
+    elif modelname == 'QL2reset_slope_two':
+        return ["alpha", "alphaU", "tau", "gamma", "eta"]
     elif modelname[:3] == 'QL1':
         return ['alpha', 'tau', 'gamma', 'eta']
     elif modelname[:3] == 'QL2':

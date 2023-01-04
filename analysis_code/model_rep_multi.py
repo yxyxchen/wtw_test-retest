@@ -48,7 +48,7 @@ s2_stats, s2_Psurv_b1_, s2_Psurv_b2_, s2_WTW_emp = analysisFxs.group_MF(trialdat
 
 
 
-modelnames = ['QL2reset', 'QL2reset_slope']
+modelnames = ['QL2reset', 'QL2reset_slope', 'QL2reset_slope_two']
 fitMethod = "whole"
 stepsize = 0.5
 

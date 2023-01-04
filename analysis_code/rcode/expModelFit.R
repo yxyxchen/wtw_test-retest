@@ -16,6 +16,8 @@ expModelFit = function(expname, sess, modelName, isFirstFit, fit_method, stepSec
 
   # make directions 
   outputDir = sprintf("../../analysis_results/%s/modelfit/%s/stepsize%.2f/%s", expname,  fit_method, stepSec, modelName)
+  dir.create(sprintf("../../analysis_results/%s", expname))
+  dir.create(sprintf("../../analysis_results/%s/modelfit", expname))
   dir.create(sprintf("../../analysis_results/%s/modelfit/%s", expname, fit_method))
   dir.create(sprintf("../../analysis_results/%s/modelfit/%s/stepsize%.2f", expname, fit_method, stepSec))
   dir.create(outputDir)
@@ -130,9 +132,9 @@ if (sys.nframe() == 0){
     expModelFit(args[1], as.numeric(args[2]), args[3], as.logical(args[4]), args[5], as.numeric(args[6]), as.numeric(args[7]))
   }
 }
-expname = "passive"
+expname = "timing"
 sess = 1
-modelName = "QL2reset_slope_log"
+modelName = "QL2reset_slope_two"
 isFirstFit = TRUE
 fit_method = "whole"
 batchIdx = NULL
