@@ -42,8 +42,12 @@ trialdata_sess1_ = {x: y for x,y in trialdata_sess1_.items() if x[0] in hdrdata_
 
 
 #################
-s1_stats, s1_Psurv_b1_, s1_Psurv_b2_, s1_WTW_ = analysisFxs.group_MF(trialdata_sess1_, plot_each = False)  
-s2_stats, s2_Psurv_b1_, s2_Psurv_b2_, s2_WTW_ = analysisFxs.group_MF(trialdata_sess2_, plot_each = False)  
+_, _, _, s1_WTW_ = analysisFxs.group_MF(trialdata_sess1_, plot_each = False, isTrct = False)  
+_,_,_, s2_WTW_ = analysisFxs.group_MF(trialdata_sess2_, plot_each = False, isTrct = False)
+
+
+s1_stats, s1_Psurv_b1_, s1_Psurv_b2_, _ = analysisFxs.group_MF(trialdata_sess2_, plot_each = False)    
+s2_stats, s2_Psurv_b1_, s2_Psurv_b2_, _ = analysisFxs.group_MF(trialdata_sess2_, plot_each = False)  
 
 plt.style.use('classic')
 sns.set(font_scale = 2)

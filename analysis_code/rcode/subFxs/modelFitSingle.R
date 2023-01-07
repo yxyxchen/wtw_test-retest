@@ -7,7 +7,7 @@
   # config: a list containing the Rstab configuration 
   # outputFile: filename to save the data
 
-modelFitSingle = function(id, thisTrialData, modelName, paraNames, model, config, outputFile, stepSec = 0.5){
+modelFitSingle = function(expname, id, thisTrialData, modelName, paraNames, model, config, outputFile, stepSec = 0.5){
     # load experiment constants 
     load('expParas.RData')
     
@@ -21,8 +21,11 @@ modelFitSingle = function(id, thisTrialData, modelName, paraNames, model, config
     
     # analysis constants 
     # stepSec = 0.5  # duration of one time step
-    iti = 1.5  # duration of iti # I need to change the ITI 
-    
+    if(expname == "timing"){
+      iti = 2
+    }else if(expname == "active" | expname == "passive"){
+      iti = 1.5  # duration of iti 
+    }
     # prepare inputs for fitting the model
     ## ensure timeWaited = the actual delay on rewarded trials
     thisTrialData = within(thisTrialData, {timeWaited[trialEarnings!= 0] = scheduledWait[trialEarnings!= 0]})
@@ -51,10 +54,19 @@ modelFitSingle = function(id, thisTrialData, modelName, paraNames, model, config
       nMadeActions = nMadeActions
     )
     if(substr(modelName, 1, 2) == 'QL'){
-      V0_ini = 0.27782194519542547  / (1 - 0.85) # unit: cents
+      if(expname == "timing"){
+        V0_ini = 1.0393409500000002  / (1 - 0.85) # unit: cents
+      }else if(expname == "active" | expname == "passive")
+      {
+        V0_ini = 0.27782194519542547  / (1 - 0.85) # unit: cents
+      }
       inputs$V0_ini = V0_ini
     }else{
-      rewardRate_ini = 0.27782194519542547 # unit: cents per second 
+      if(expname == "timing"){
+        rewardRate_ini = 1.0393409500000002 # unit: cents per second 
+      }else if(expname == "active" | expname == "passive"){
+        rewardRate_ini = 0.27782194519542547 # unit: cents per second 
+      }
       inputs$rewardRate_ini = rewardRate_ini
     }
    

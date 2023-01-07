@@ -5,6 +5,7 @@ nBlock = 2
 blockMin = 10 # block duration in mins
 blockSec = blockMin * 60 # block duration in secs
 tokenValue = 2 # value of the matured token
+iti = 1.5
 
 # save 
 save("conditions" = conditions,

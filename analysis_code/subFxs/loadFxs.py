@@ -23,61 +23,83 @@ import scipy
 datadir = "data"
 
 ############################## load task data ##################################
-def loaddata(expname, sess):
+def loaddata(expname, sess = 1):
     """load hdrdata and trialdata from given folders 
     """
-    hdrdata  = pd.read_csv(os.path.join(datadir, expname, "hdrdata_sess%d.csv"%sess))
-    print("Load %d files"%hdrdata.shape[0])
-    print("Exclude %d participants who quit midway"%sum(hdrdata.quit_midway))
-    print("\n")
-    hdrdata = hdrdata.loc[np.logical_not(hdrdata.quit_midway)].reset_index(drop=True)
-    hdrdata["key"] = [(x,y) for x,y in zip(hdrdata["id"], hdrdata["sess"])]
+    if expname == "passive" or expname == "active":
+        hdrdata  = pd.read_csv(os.path.join(datadir, expname, "hdrdata_sess%d.csv"%sess))
+        print("Load %d files"%hdrdata.shape[0])
+        print("Exclude %d participants who quit midway"%sum(hdrdata.quit_midway))
+        print("\n")
+        hdrdata = hdrdata.loc[np.logical_not(hdrdata.quit_midway)].reset_index(drop=True)
+        hdrdata["key"] = [(x,y) for x,y in zip(hdrdata["id"], hdrdata["sess"])]
 
-    nsub = hdrdata.shape[0]
-    trialdata_  = {}
-    # code.interact(local = dict(locals(), **globals()))
-    for i in range(nsub):
-        thisid = hdrdata.id.iloc[i]
-        trialdata = pd.read_csv(os.path.join(datadir, expname, "task-" + thisid + "-sess%d.csv"%sess))
-        
-        # add blockIdx
-        trialdata['blockIdx'] = [1 if x == "LP" else 2 for x in trialdata['condition']]
+        nsub = hdrdata.shape[0]
+        trialdata_  = {}
+        # code.interact(local = dict(locals(), **globals()))
+        for i in range(nsub):
+            thisid = hdrdata.id.iloc[i]
+            trialdata = pd.read_csv(os.path.join(datadir, expname, "task-" + thisid + "-sess%d.csv"%sess))
+            # add blockIdx
+            trialdata['blockIdx'] = [1 if x == "LP" else 2 for x in trialdata['condition']]
+            # add totalTrialIdx
+            ntrial_firstblock = int(trialdata.trialIdx[trialdata.condition == "LP"].max())
+            trialdata['totalTrialIdx'] = trialdata['trialIdx'] + np.equal(trialdata['condition'], "HP") * ntrial_firstblock
+            # add accumSellTime
+            trialdata['accumSellTime'] = trialdata['sellTime'] + (trialdata['blockIdx'] - 1) * expParas.blocksec 
+            # use the scheduledWait as timeWaited on rewarded trials
+            trialdata.loc[trialdata.trialEarnings != 0, 'timeWaited'] = trialdata.loc[trialdata.trialEarnings != 0, 'scheduledDelay']
+            # load keypress data
+            if expname == "active":
+                try:
+                    data = pd.read_csv("../keypress_data/keypress-%s-sess%d.csv"%(thisid, sess))
+                    data['ipi'] = np.concatenate([data['timestamp'][1:], [0]]) - data['timestamp']
+                    data.loc[data.groupby(['bkIdx', 'trialIdx'])['timestamp'].idxmax(), 'ipi'] = np.nan
+                    data['condition'] = ['LP' if x == 1 else 'HP' for x in data['bkIdx']]
+                    # let's get trialwise data 
+                    tmp = data.groupby(['condition', 'trialIdx'])['keypressIdx'].max().reset_index()
+                    tmp.columns = ['condition', 'trialIdx', 'nKeypress']
+                    trialdata = trialdata.merge(tmp, on = ['condition', 'trialIdx'], how = "left")
+                    tmp = data.groupby(['condition', 'trialIdx'])['ipi'].mean().reset_index()
+                    tmp.columns = ['condition', 'trialIdx', 'mean_ipi']
+                    trialdata = trialdata.merge(tmp, on = ['condition', 'trialIdx'], how = "left")
+                    tmp = data.groupby(['condition', 'trialIdx']).agg({'ipi': np.median}).reset_index()
+                    tmp.columns = ['condition', 'trialIdx', 'median_ipi']
+                    trialdata = trialdata.merge(tmp, on = ['condition', 'trialIdx'], how = "left") # because no timestamp is recorded on some trials 
+                except Exception as e:
+                    # raise e
+                    print(thisid)
+                    code.interact(local = dict(locals(), **globals()))
+            # fill in 
+            trialdata_[(hdrdata.id.iloc[i], hdrdata.sess.iloc[i])] =  trialdata
+    else:
+        fileNames = glob.glob(os.path.join("timing_fixed_data/*.txt"))
+        nSub = len(fileNames)
+        id_vals = []
+        trialdata_  = {}   
+        trialDataNames = ['blockIdx', 'trialIdx', 'trialStartTime', 'nKeyPresses', 'scheduledDelay',
+                           'rewardedTime', 'timeWaited', 'sellTime', 'trialEarnings','totalEarnings']
 
-        # add totalTrialIdx
-        ntrial_firstblock = int(trialdata.trialIdx[trialdata.condition == "LP"].max())
-        trialdata['totalTrialIdx'] = trialdata['trialIdx'] + np.equal(trialdata['condition'], "HP") * ntrial_firstblock
+        for i in np.arange(nSub):
+            fileName = fileNames[i]
+            id = fileName.split("/")[1][17:20]
+            id_vals.append(id)
+            thisTrialData = pd.read_csv(fileName, header = None, names = trialDataNames)
+            # add condition
+            thisTrialData['condition'] = ["LP" if x == 1 else "HP" for x in thisTrialData['blockIdx']]
+            # add totalTrialIdx
+            ntrial_firstblock = int(thisTrialData.trialIdx[thisTrialData.condition == "LP"].max())
+            thisTrialData['totalTrialIdx'] = thisTrialData['trialIdx'] + np.equal(thisTrialData['condition'], "HP") * ntrial_firstblock
+            # add accumSellTime
+            thisTrialData['accumSellTime'] = thisTrialData['sellTime'] + (thisTrialData['blockIdx'] - 1) * expParas.blocksec 
+            # use the scheduledWait as timeWaited on rewarded trials
+            thisTrialData.loc[thisTrialData.trialEarnings != 0, 'timeWaited'] = thisTrialData.loc[thisTrialData.trialEarnings != 0, 'scheduledDelay']
+            # add RT
+            thisTrialData['RT'] = thisTrialData['sellTime'] - thisTrialData["rewardedTime"]
+            trialdata_[(id, 1)] = thisTrialData
 
-        # add accumSellTime
-        trialdata['accumSellTime'] = trialdata['sellTime'] + (trialdata['blockIdx'] - 1) * expParas.blocksec 
-
-        # use the scheduledWait as timeWaited on rewarded trials
-        trialdata.loc[trialdata.trialEarnings != 0, 'timeWaited'] = trialdata.loc[trialdata.trialEarnings != 0, 'scheduledDelay']
-
-        # load keypress data
-        if expname == "active":
-            try:
-                data = pd.read_csv("../keypress_data/keypress-%s-sess%d.csv"%(thisid, sess))
-                data['ipi'] = np.concatenate([data['timestamp'][1:], [0]]) - data['timestamp']
-                data.loc[data.groupby(['bkIdx', 'trialIdx'])['timestamp'].idxmax(), 'ipi'] = np.nan
-                data['condition'] = ['LP' if x == 1 else 'HP' for x in data['bkIdx']]
-                # let's get trialwise data 
-                tmp = data.groupby(['condition', 'trialIdx'])['keypressIdx'].max().reset_index()
-                tmp.columns = ['condition', 'trialIdx', 'nKeypress']
-                trialdata = trialdata.merge(tmp, on = ['condition', 'trialIdx'], how = "left")
-                tmp = data.groupby(['condition', 'trialIdx'])['ipi'].mean().reset_index()
-                tmp.columns = ['condition', 'trialIdx', 'mean_ipi']
-                trialdata = trialdata.merge(tmp, on = ['condition', 'trialIdx'], how = "left")
-                tmp = data.groupby(['condition', 'trialIdx']).agg({'ipi': np.median}).reset_index()
-                tmp.columns = ['condition', 'trialIdx', 'median_ipi']
-                trialdata = trialdata.merge(tmp, on = ['condition', 'trialIdx'], how = "left") # because no timestamp is recorded on some trials 
-            except Exception as e:
-                # raise e
-                print(thisid)
-                code.interact(local = dict(locals(), **globals()))
-
-        # fill in 
-        trialdata_[(hdrdata.id.iloc[i], hdrdata.sess.iloc[i])] =  trialdata
-
+        hdrdata = pd.DataFrame({"id": id_vals})
+            
     return hdrdata, trialdata_
 
 ################# check quality of task data #################

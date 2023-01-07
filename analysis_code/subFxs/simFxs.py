@@ -71,14 +71,20 @@ def QL2_learn(Qwaits, Qquit, ts, timeWaited, trialEarnings, paras, stepsize = 0.
 	if trialEarnings > 0:
 		Qwaits[update_filter] = Qwaits[update_filter] + paras['alpha'] * (Gts[update_filter] - Qwaits[update_filter])
 	else:
-		Qwaits[update_filter] = Qwaits[update_filter] + paras['alpha'] * paras['nu'] * (Gts[update_filter] - Qwaits[update_filter])
+		if 'alphaU' in paras:
+			Qwaits[update_filter] = Qwaits[update_filter] + paras['alphaU'] * (Gts[update_filter] - Qwaits[update_filter])
+		else:	
+			Qwaits[update_filter] = Qwaits[update_filter] + paras['alpha'] * paras['nu'] * (Gts[update_filter] - Qwaits[update_filter])
 
 	# update Qquit
 	Gt = np.exp(np.log(paras['gamma']) * (timeWaited - (-empirical_iti))) * (trialEarnings + Qquit)
 	if trialEarnings > 0:
 		Qquit = Qquit + paras['alpha'] * (Gt - Qquit)
 	else:
-		Qquit = Qquit + paras['alpha'] *  paras['nu'] * (Gt - Qquit)
+		if 'alphaU' in paras:
+			Qquit = Qquit + paras['alphaU'] * (Gt - Qquit)
+		else:
+			Qquit = Qquit + paras['alpha'] *  paras['nu'] * (Gt - Qquit)
 	return Qwaits, Qquit
 
 def QL1_learn(Qwaits, Qquit, ts, timeWaited, trialEarnings, paras, stepsize = 0.5, empirical_iti = expParas.iti):
@@ -319,82 +325,80 @@ def ind_sim(modelname, paras, condition_, blockIdx_, scheduledDelay_, scheduledR
 	lp_record_unit = math.floor(n_lp_trial / 5)
 	n_hp_trial = np.sum(condition_ == "HP")
 	hp_record_unit = math.floor(n_hp_trial / 5)
-
+	
 	# trakc time within a trial
-	for tIdx in range(nTrial):
-		# reset elapsedTime at the beginning of each block
-		if tIdx == 0 or blockIdx_[tIdx - 1] != blockIdx_[tIdx]:
-			elapsedTime = 0
-
-		if tIdx == 0 or blockIdx_[tIdx - 1] != blockIdx_[tIdx]:
-			if re.search('reset', modelname):
-				if modelname == "QL2reset_ind":
-					Qwaits, Qquit = QL_ind_initialize(ts, paras)
-				elif re.search('slope', modelname):
+	try:
+		for tIdx in range(nTrial):
+			# reset elapsedTime at the beginning of each block
+			if tIdx == 0 or blockIdx_[tIdx - 1] != blockIdx_[tIdx]:
+				elapsedTime = 0
+			if tIdx == 0:
+				if re.search('slope', modelname):
 					Qwaits, Qquit = QL_slope_initialize(ts, paras)
 				elif modelname[:2] == 'QL':
 					Qwaits, Qquit = QL_initialize(ts, paras)
 				elif modelname[:2] == 'RL':
 					Qwaits, Qquit, reward_rate = RL_initialize(ts, paras)
+			elif blockIdx_[tIdx - 1] != blockIdx_[tIdx]:
+				if re.search('reset', modelname):
+					if re.search('slope', modelname):
+						Qwaits, Qquit = QL_slope_initialize(ts, paras)
+					elif modelname[:2] == 'QL':
+						Qwaits, Qquit = QL_initialize(ts, paras)
+					elif modelname[:2] == 'RL':
+						Qwaits, Qquit, reward_rate = RL_initialize(ts, paras)
 
-		t = 0
-		exit_status = False
-
-		# save trialwise input variables
-		scheduledDelay = scheduledDelay_[tIdx]
-		scheduledReward = scheduledReward_[tIdx]
-
-		# decide whether to wait or quit
-		while t < max(expParas.tMaxs):
-			# make a choice based on the softmax decision rule 
-			action =  softmax_dec(Qwaits[ts == t], Qquit, paras)
-			
-			# whether to exit this trial and save data 
-			if (action == 'wait' and t + stepsize >= scheduledDelay):
-				trialEarnings = scheduledReward
-				timeWaited = scheduledDelay
-				exit_status = True
-
-			if action == 'quit':
-				trialEarnings = 0
-				timeWaited = t + 0.5 * stepsize
-				exit_status = True
-
-			# save trial-wise outputs if exists
-			if exit_status:
-				sellTime = elapsedTime + timeWaited 
-				trialEarnings_[tIdx] = trialEarnings
-				timeWaited_[tIdx] = timeWaited
-				sellTime_[tIdx] = sellTime
-				break 
-
-			t += stepsize
-
-		# record action values at key timepoints 
-		if blockIdx_[tIdx] == 1:
-			if tIdx % lp_record_unit == (lp_record_unit -1):
-				Qwaits_[:, current_record_point] = Qwaits
-				Qquit_[current_record_point] = Qquit
-				current_record_point += 1	
-		elif blockIdx_[tIdx] == 2:
-			if (tIdx - n_lp_trial) % hp_record_unit == (hp_record_unit -1):
-				Qwaits_[:, current_record_point] = Qwaits
-				Qquit_[current_record_point] = Qquit
-				current_record_point += 1	
-		# update elapsedTime
-		elapsedTime = elapsedTime + timeWaited + empirical_iti
-
-		# update value functions
-		if modelname[:3] == 'QL1':
-			# code.interact(local = dict(locals(), **globals()))
-			Qwaits, Qquit = QL1_learn(Qwaits, Qquit, ts, timeWaited, trialEarnings, paras, empirical_iti = expParas.iti)
-		elif modelname[:3] == "QL2":
-			Qwaits, Qquit = QL2_learn(Qwaits, Qquit, ts, timeWaited, trialEarnings, paras, empirical_iti = expParas.iti)
-		elif modelname[:3] == 'RL1':
-			Qwaits, Qquit, reward_rate = RL1_learn(Qwaits, Qquit, reward_rate, ts, timeWaited, trialEarnings, paras, empirical_iti = expParas.iti)
-		elif modelname[:3] == 'RL2':
-			Qwaits, Qquit, reward_rate = RL2_learn(Qwaits, Qquit, reward_rate, ts, timeWaited, trialEarnings, paras, empirical_iti = expParas.iti)
-		
+			t = 0
+			exit_status = False
+			# save trialwise input variables
+			scheduledDelay = scheduledDelay_[tIdx]
+			scheduledReward = scheduledReward_[tIdx]
+			# decide whether to wait or quit
+			while t < max(expParas.tMaxs):
+				# make a choice based on the softmax decision rule 
+				action =  softmax_dec(Qwaits[ts == t], Qquit, paras)
+				# whether to exit this trial and save data 
+				if (action == 'wait' and t + stepsize >= scheduledDelay):
+					trialEarnings = scheduledReward
+					timeWaited = scheduledDelay
+					exit_status = True
+				if action == 'quit':
+					trialEarnings = 0
+					timeWaited = t + 0.5 * stepsize
+					exit_status = True
+				# save trial-wise outputs if exists
+				if exit_status:
+					sellTime = elapsedTime + timeWaited 
+					trialEarnings_[tIdx] = trialEarnings
+					timeWaited_[tIdx] = timeWaited
+					sellTime_[tIdx] = sellTime
+					break 
+				t += stepsize
+			# record action values at key timepoints 
+			if blockIdx_[tIdx] == 1:
+				if tIdx % lp_record_unit == (lp_record_unit -1):
+					Qwaits_[:, current_record_point] = Qwaits
+					Qquit_[current_record_point] = Qquit
+					current_record_point += 1	
+			elif blockIdx_[tIdx] == 2:
+				if (tIdx - n_lp_trial) % hp_record_unit == (hp_record_unit -1):
+					Qwaits_[:, current_record_point] = Qwaits
+					Qquit_[current_record_point] = Qquit
+					current_record_point += 1	
+			# update elapsedTime
+			elapsedTime = elapsedTime + timeWaited + empirical_iti
+			# update value functions
+			if modelname[:3] == 'QL1':
+				# code.interact(local = dict(locals(), **globals()))
+				Qwaits, Qquit = QL1_learn(Qwaits, Qquit, ts, timeWaited, trialEarnings, paras, empirical_iti = expParas.iti)
+			elif modelname[:3] == "QL2":
+				Qwaits, Qquit = QL2_learn(Qwaits, Qquit, ts, timeWaited, trialEarnings, paras, empirical_iti = expParas.iti)
+			elif modelname[:3] == 'RL1':
+				Qwaits, Qquit, reward_rate = RL1_learn(Qwaits, Qquit, reward_rate, ts, timeWaited, trialEarnings, paras, empirical_iti = expParas.iti)
+			elif modelname[:3] == 'RL2':
+				Qwaits, Qquit, reward_rate = RL2_learn(Qwaits, Qquit, reward_rate, ts, timeWaited, trialEarnings, paras, empirical_iti = expParas.iti)
+	except:
+		code.interact(local = dict(locals(), **globals()))
 
 	# make value df
 	rv_ = Qwaits_ - np.tile(Qquit_,len(ts)).reshape(len(ts),10)

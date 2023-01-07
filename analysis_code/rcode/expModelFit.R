@@ -1,6 +1,10 @@
 expModelFit = function(expname, sess, modelName, isFirstFit, fit_method, stepSec = 0.5, batchIdx = NULL, parallel = F){
   # load experiment parameters
-  load("expParas.RData")
+  if(expname == "timing"){
+    load("expParas_timing.RData")
+  }else{
+    load("expParas.RData")
+  }
 
   # load sub-functions and packages
   library("dplyr"); library("tidyr")
@@ -119,7 +123,7 @@ expModelFit = function(expname, sess, modelName, isFirstFit, fit_method, stepSec
   }
 
   # fit the model for all participants
-  modelFitGroup(sess, modelName, trialData, stepSec, config, outputDir, parallel = parallel, isTrct = T)
+  modelFitGroup(expname, sess, modelName, trialData, stepSec, config, outputDir, parallel = parallel, isTrct = T)
 }
 
 ############## main script ##############

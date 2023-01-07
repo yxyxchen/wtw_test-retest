@@ -84,6 +84,7 @@ scaler = sklearn.preprocessing.StandardScaler
 a = preprocessing.StandardScaler()
 a.fit(df.select_dtypes("number"))
 df.loc[:, df.dtypes == "float64"]= a.transform(df.select_dtypes("number"))
+
 df["exp"] = pd.Categorical(df["exp"], categories = ["passive", "active"], ordered = True)
 
 df = df[~np.isnan(df['discount_logk'])]

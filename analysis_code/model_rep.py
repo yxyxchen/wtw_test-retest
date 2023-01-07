@@ -50,7 +50,7 @@ s2_stats, s2_Psurv_b1_, s2_Psurv_b2_, s2_WTW_emp = analysisFxs.group_MF(trialdat
 
 
 # modelnames = ['QL2reset_FL3']
-modelname = 'QL2reset_slope_two'
+modelname = 'QL2reset'
 fitMethod = "whole"
 stepsize = 0.5
 
@@ -58,24 +58,55 @@ stepsize = 0.5
 paranames = modelFxs.getModelParas(modelname)
 npara = len(paranames)
 
-# 
+# replicate task data 
 s1_paradf = loadFxs.load_parameter_estimates(expname, 1, hdrdata_sess1, modelname, fitMethod, stepsize)
 s2_paradf = loadFxs.load_parameter_estimates(expname, 2, hdrdata_sess2, modelname, fitMethod, stepsize)
 s1_stats_rep, s1_WTW_rep, s1_dist_vals_ = modelFxs.group_model_rep(trialdata_sess1_, s1_paradf, modelname, 'whole', stepsize, isTrct = True, plot_each = False)
 s2_stats_rep, s2_WTW_rep, s2_dist_vals_ = modelFxs.group_model_rep(trialdata_sess2_, s2_paradf, modelname, 'whole', stepsize, isTrct = True, plot_each = False)
 s1_stats_rep.to_csv(os.path.join('..', 'analysis_results', expname, 'taskstats', 'rep_%s_sess1_%s_stepsize%.2f.csv'%(modelname, fitMethod, stepsize)), index = None)
 s2_stats_rep.to_csv(os.path.join('..', 'analysis_results', expname, 'taskstats', 'rep_%s_sess2_%s_stepsize%.2f.csv'%(modelname, fitMethod, stepsize)), index = None)
+
+# plot WTW 
 sns.set(font_scale = 1.5)
 sns.set_style("white")
-figFxs.plot_group_emp_rep_wtw(s1_WTW_rep, s2_WTW_rep, s1_WTW_emp, s2_WTW_emp, hdrdata_sess1, hdrdata_sess2, s1_paradf, s2_paradf)
+g = figFxs.plot_group_emp_rep_wtw(s1_WTW_rep, s2_WTW_rep, s1_WTW_emp, s2_WTW_emp, hdrdata_sess1, hdrdata_sess2, s1_paradf, s2_paradf)
 plt.tight_layout()
 plt.gcf().set_size_inches(12, 6)
-plt.savefig(os.path.join("..", "figures", expname, "emp_rep_%s_wtw_%s_stepsize%.2f.pdf"%(modelname, fitMethod, stepsize)))
-figFxs.plot_group_emp_rep(s1_stats_rep, s2_stats_rep, s1_stats, s2_stats)
-plt.gcf().set_size_inches(10, 6)
-plt.savefig(os.path.join("..", "figures", expname, "emp_rep_%s_%s_stepsize%.2f.pdf"%(modelname, fitMethod, stepsize)))
+g.savefig(os.path.join("..", "figures", expname, "emp_rep_%s_wtw_%s_stepsize%.2f.pdf"%(modelname, fitMethod, stepsize)))
+# plot task measures separately for both conditions
+vars = ['auc', 'std_wtw']
+labels = ['AUC', 'std_wtw']
+for var, label in zip(vars, labels):
+    g = figFxs.plot_group_emp_rep(s1_stats_rep, s2_stats_rep, s1_stats, s2_stats, "std_wtw", "std_wtw")
+    plt.gcf().set_size_inches(10, 6)
+    plt.savefig(os.path.join("..", "figures", expname, "emp_rep_%s_%s_%s_stepsize%.2f.pdf"%(modelname, fitMethod, var, stepsize)))
+
+# plot task measures, combining both sessions and both conditions 
+s1_df_emp, s2_df_emp = analysisFxs.pivot_by_condition(s1_stats), analysisFxs.pivot_by_condition(s2_stats)
+emp_df = analysisFxs.agg_across_sessions(s1_df_emp, s2_df_emp)
+s1_df_rep, s2_df_rep = analysisFxs.pivot_by_condition(s1_stats_rep), analysisFxs.pivot_by_condition(s2_stats_rep)
+rep_df = analysisFxs.agg_across_sessions(s1_df_rep, s2_df_rep)
+plotdf = emp_df.merge(rep_df, on = "id", suffixes = ["_emp", "_rep"])
+vars = ['auc', 'std_wtw', "auc_delta"]
+labels = ['AUC (s)', r'$\sigma_{wtw}$ (s)', r"$\Delta$ AUC (s)"]
+fig, axes = plt.subplots(1, 3)
+for (var, label), ax in zip(zip(vars, labels), axes.flatten()):
+    sns.regplot(x = var + '_emp', y = var + '_rep', data = plotdf, scatter_kws={"color": "grey", "s": 40, "alpha":0.7, "edgecolor":'black'}, line_kws={"color": "black", "linestyle":"--"}, ax = ax)
+    ax.set_xlabel("Observed")
+    ax.set_ylabel("Model-generated")
+    ax.set_title(label)
+
+fig.tight_layout()
+fig.set_size_inches(14, 4)
+fig.savefig(os.path.join("..", "figures", expname, "cb_emp_rep_%s_%s.pdf"%(modelname, var)))
+
+# let me get a report 
+_, _, _, _, _, report = analysisFxs.calc_zip_reliability(plotdf, [(x,y) for x, y in zip([x + "_emp" for x in vars], [x + "_rep" for x in vars])])
+report['rsquared'] = report['pearson_rho']**2
+report.round(3)
 
 
+# I need to combine both conditions
 #### parameter reliabiliy ########
 subtitles = [r'$\mathbf{log(\alpha)}$', r'$\mathbf{log(\nu)}$', r'$\mathbf{\tau}$', r'$\mathbf{\gamma}$', r'$\mathbf{log(\eta)}$']
 paranames = modelFxs.getModelParas(modelname)

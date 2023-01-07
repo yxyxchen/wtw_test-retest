@@ -58,24 +58,33 @@ def plot_group_emp_rep_wtw(s1_WTW_rep, s2_WTW_rep, s1_WTW_emp, s2_WTW_emp, hdrda
     s1_WTW_emp = s1_WTW_emp[np.isin(hdrdata_sess1.id, s1_paradf.id), ]
     s1_ave_emp = s1_WTW_emp.mean(axis = 0)
     s1_ave_rep = s1_WTW_rep.mean(axis = 0)
+    s1_se_emp = np.std(s1_WTW_emp, axis = 0 ) / np.sqrt(s1_WTW_emp.shape[0])
+    s1_se_rep = np.std(s1_WTW_rep, axis = 0 ) / np.sqrt(s1_WTW_rep.shape[0])
+
     # s1_ave_emp = np.median(s1_WTW_emp, axis = 0)
     # s1_ave_rep = np.median(s1_WTW_rep, axis = 0)
 
     s2_WTW_emp = s2_WTW_emp[np.isin(hdrdata_sess2.id, s2_paradf.id), ]
     s2_ave_emp = s2_WTW_emp.mean(axis = 0)
     s2_ave_rep = s2_WTW_rep.mean(axis = 0)
+    s2_se_emp = np.std(s2_WTW_emp, axis = 0 ) / np.sqrt(s2_WTW_emp.shape[0])
+    s2_se_rep = np.std(s2_WTW_rep, axis = 0 ) / np.sqrt(s2_WTW_rep.shape[0])
     # s2_ave_emp = np.median(s1_WTW_emp, axis = 0)
     # s2_ave_rep = np.median(s1_WTW_rep, axis = 0)
 
     plotdf = pd.DataFrame({
         "wtw": np.concatenate([s1_ave_emp, s1_ave_rep, s2_ave_emp, s2_ave_rep]),
+        "se": np.concatenate([s1_se_emp, s1_se_rep, s2_se_emp, s2_se_rep]),
         "type": np.tile(np.repeat(["emp", "rep"], len(expParas.TaskTime)), 2),
         "time": np.tile((expParas.TaskTime / 60), 4),
         "sess": np.repeat(["SESS1", "SESS2"], len(expParas.TaskTime) * 2)
         })
+    plotdf['ymin'] = plotdf['wtw'] - plotdf['se']
+    plotdf['ymax'] = plotdf['wtw'] + plotdf['se']
 
     g = sns.FacetGrid(plotdf, col= "sess", hue = 'type', sharex = True, sharey = True, palette = ["black", "red"])
     g.map(sns.lineplot, "time", "wtw")
+    g.map(plt.fill_between, "time", "ymin", "ymax", facecolor='grey', edgecolor = "none",alpha = 0.4, interpolate=True, linewidth = 2)
     g.set(ylim=(3, 10), ylabel = "WTW (s)", xlabel = "Task time (min)")
     axs = g.axes_dict.values()
     for i, ax in enumerate(axs):
@@ -141,21 +150,25 @@ def plot_group_emp_rep_wtw_multi(s1_WTW_rep_, s2_WTW_rep_, s1_WTW_emp, s2_WTW_em
         ax.axvline(expParas.blocksec/60, color = "grey", linestyle = "dashed")
     return g
 
-def plot_group_emp_rep(rep_sess1, rep_sess2, emp_sess1, emp_sess2):
-    # plot AUC against AUC
-    # code.interact(local = dict(locals(), **globals()))
-    rep = pd.concat([rep_sess1[['auc', 'id', 'condition', 'sess']], rep_sess2[['auc', 'id', 'condition', 'sess']]])
-    emp = pd.concat([emp_sess1[['auc', 'id', 'condition', 'sess']], emp_sess2[['auc', 'id', 'condition', 'sess']]])
+def plot_group_emp_rep(rep_sess1, rep_sess2, emp_sess1, emp_sess2, var = "auc", label = "AUC"):
+    rep = pd.concat([rep_sess1[[var, 'id', 'condition', 'sess']], rep_sess2[[var, 'id', 'condition', 'sess']]])
+    emp = pd.concat([emp_sess1[[var, 'id', 'condition', 'sess']], emp_sess2[[var, 'id', 'condition', 'sess']]])
     plotdf = rep.merge(emp, left_on = ('id', 'condition', 'sess'), right_on = ('id', 'condition', 'sess'), suffixes = ('_rep', '_emp'))
     g = sns.FacetGrid(plotdf, col= "sess", hue = 'condition', sharex = True, sharey = True, palette = condition_palette)
-    g.set(ylim=(-0.5, expParas.tMax + 0.5), xlim = (-0.5, expParas.tMax + 0.5))
-    g.map(sns.scatterplot, 'auc_emp', 'auc_rep', s = 50, marker = "+", alpha = 0.8)
+    if var == "auc":
+        g.set(ylim=(-0.5, expParas.tMax + 0.5), xlim = (-0.5, expParas.tMax + 0.5))
+    else:
+        g.set(ylim=(-0.5, 6 + 0.5), xlim = (-0.5, 6 + 0.5))
+    g.map(sns.scatterplot, var + '_emp', var + '_rep', s = 50, marker = "+", alpha = 0.8)
     for ax in g.axes.flat:
-        ax.set_xlabel('Observed AUC (s)')
-        ax.set_ylabel('Generated AUC (s)')
+        ax.set_xlabel('Observed %s (s)'%label)
+        ax.set_ylabel('Generated %s(s)'%label)
         ax.set_aspect("equal")
-        ax.plot([0, expParas.tMax], [0, expParas.tMax], ls = '--', color = 'grey', zorder = 10)
-
+        if var == "auc":
+            ax.plot([0, expParas.tMax], [0, expParas.tMax], ls = '--', color = 'grey', zorder = 10)
+        else:
+            ax.plot([0, 6], [0, 6], ls = '--', color = 'grey', zorder = 10)
+    return g
 def plot_group_emp_rep_diff(rep_sess1, rep_sess2, emp_sess1, emp_sess2):
     # plot AUC against AUC
     # code.interact(local = dict(locals(), **globals()))
