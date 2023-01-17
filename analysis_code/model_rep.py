@@ -26,6 +26,7 @@ from subFxs import loadFxs
 from subFxs import figFxs
 from subFxs import analysisFxs
 from datetime import datetime as dt
+import pickle
 
 # plot styles
 plt.style.use('classic')
@@ -34,7 +35,7 @@ sns.set_style("white")
 condition_palette = ["#762a83", "#1b7837"]
 
 
-expname = 'passive'
+expname = "active"
 
 # load data 
 hdrdata_sess1, trialdata_sess1_ = loadFxs.group_quality_check(expname, 1, plot_quality_check = False)
@@ -48,23 +49,28 @@ trialdata_sess1_ = {x: y for x,y in trialdata_sess1_.items() if x[0] in hdrdata_
 s1_stats, s1_Psurv_b1_, s1_Psurv_b2_, s1_WTW_emp = analysisFxs.group_MF(trialdata_sess1_, plot_each = False)   
 s2_stats, s2_Psurv_b1_, s2_Psurv_b2_, s2_WTW_emp = analysisFxs.group_MF(trialdata_sess2_, plot_each = False)   
 
+for modelname in ['QL2reset_slope_two']:
+# modelname = 'QL2reset_slope'
+    fitMethod = "whole"
+    stepsize = 0.5
+    # subtitles = [r'$\mathbf{log(\alpha)}$', r'$\mathbf{log(\nu)}$', r'$\mathbf{\tau}$', r'$\mathbf{\gamma}$', r'$\mathbf{log(\eta)}$']
+    paranames = modelFxs.getModelParas(modelname)
+    npara = len(paranames)
+    # replicate task data 
+    s1_paradf = loadFxs.load_parameter_estimates(expname, 1, hdrdata_sess1, modelname, fitMethod, stepsize)
+    s2_paradf = loadFxs.load_parameter_estimates(expname, 2, hdrdata_sess2, modelname, fitMethod, stepsize)
+    # if it is the first time 
+    s1_stats_rep, s1_WTW_rep, s1_dist_vals_ = modelFxs.group_model_rep(trialdata_sess1_, s1_paradf, modelname, 'whole', stepsize, isTrct = True, plot_each = False)
+    s2_stats_rep, s2_WTW_rep, s2_dist_vals_ = modelFxs.group_model_rep(trialdata_sess2_, s2_paradf, modelname, 'whole', stepsize, isTrct = True, plot_each = False)
+    s1_stats_rep.to_csv(os.path.join('..', 'analysis_results', expname, 'taskstats', 'rep_%s_sess1_%s_stepsize%.2f.csv'%(modelname, fitMethod, stepsize)), index = None)
+    s2_stats_rep.to_csv(os.path.join('..', 'analysis_results', expname, 'taskstats', 'rep_%s_sess2_%s_stepsize%.2f.csv'%(modelname, fitMethod, stepsize)), index = None)
+    dbfile = open(os.path.join('..', 'analysis_results', expname, 'taskstats', 'rep_%s_%s_stepsize%.2f'%(modelname, fitMethod, stepsize)), "wb")
+    dbobj = {
+        "s1_WTW_rep": s1_WTW_rep,
+        "s2_WTW_rep": s2_WTW_rep
+    }
+    pickle.dump(dbobj, dbfile)
 
-# modelnames = ['QL2reset_FL3']
-modelname = 'QL2reset'
-fitMethod = "whole"
-stepsize = 0.5
-
-# subtitles = [r'$\mathbf{log(\alpha)}$', r'$\mathbf{log(\nu)}$', r'$\mathbf{\tau}$', r'$\mathbf{\gamma}$', r'$\mathbf{log(\eta)}$']
-paranames = modelFxs.getModelParas(modelname)
-npara = len(paranames)
-
-# replicate task data 
-s1_paradf = loadFxs.load_parameter_estimates(expname, 1, hdrdata_sess1, modelname, fitMethod, stepsize)
-s2_paradf = loadFxs.load_parameter_estimates(expname, 2, hdrdata_sess2, modelname, fitMethod, stepsize)
-s1_stats_rep, s1_WTW_rep, s1_dist_vals_ = modelFxs.group_model_rep(trialdata_sess1_, s1_paradf, modelname, 'whole', stepsize, isTrct = True, plot_each = False)
-s2_stats_rep, s2_WTW_rep, s2_dist_vals_ = modelFxs.group_model_rep(trialdata_sess2_, s2_paradf, modelname, 'whole', stepsize, isTrct = True, plot_each = False)
-s1_stats_rep.to_csv(os.path.join('..', 'analysis_results', expname, 'taskstats', 'rep_%s_sess1_%s_stepsize%.2f.csv'%(modelname, fitMethod, stepsize)), index = None)
-s2_stats_rep.to_csv(os.path.join('..', 'analysis_results', expname, 'taskstats', 'rep_%s_sess2_%s_stepsize%.2f.csv'%(modelname, fitMethod, stepsize)), index = None)
 
 # plot WTW 
 sns.set(font_scale = 1.5)
@@ -203,9 +209,6 @@ for i, pair in enumerate(g.col_names):
     g.axes.flatten()[i].axvline(0, color = "black", linestyle = "dotted")
     g.axes.flatten()[i].text(median_val, 40, "%.2f"%median_val, color = "red")
 g.savefig(os.path.join("..", "figures", expname, "para_structure_corr_flattern_%s.pdf"%modelname))
-
-
-
 
 
 ############ estimation uncertainty #########

@@ -50,16 +50,34 @@ vars = ['auc', 'std_wtw', 'auc_delta']
 labels = ["AUC (s)", r"$\sigma_\mathrm{wtw}$ (s)", r'$\Delta$ AUC (s)']
 
 ################
-for expname in ['active', 'passive']:
-    hdrdata_sess1, trialdata_sess1_ = loadFxs.group_quality_check(expname, 1, plot_quality_check = True)
-    hdrdata_sess2, trialdata_sess2_ = loadFxs.group_quality_check(expname, 2, plot_quality_check = True)
-    # only include participants who completed two sessions
-    hdrdata_sess1 = hdrdata_sess1[np.isin(hdrdata_sess1["id"], hdrdata_sess2["id"])]
-    trialdata_sess1_ = {x: y for x,y in trialdata_sess1_.items() if x[0] in hdrdata_sess2["id"].values}
-    s1_stats, s1_Psurv_b1_, s1_Psurv_b2_, s1_WTW_ = analysisFxs.group_MF(trialdata_sess1_, plot_each = False)   
-    s2_stats, s2_Psurv_b1_, s2_Psurv_b2_, s2_WTW_ = analysisFxs.group_MF(trialdata_sess2_, plot_each = False)   
-    s1_df = analysisFxs.pivot_by_condition(s1_stats)
-    s2_df = analysisFxs.pivot_by_condition(s2_stats)
+s1_df_ = []
+s2_df_ = []
+s1_stats_ = []
+s2_stats_ = []
+trialdata_sess1_list = []
+trialdata_sess2_list = []
+for expname in ['active', 'passive', "combined"]:
+    if expname == "combined":
+        s1_df, s2_df, s1_stats, s2_stats = pd.concat(s1_df_), pd.concat(s2_df_), pd.concat(s1_stats_), pd.concat(s2_stats_)
+        trialdata_sess1_, trialdata_sess2_ = copy.copy(trialdata_sess1_list[0]), copy.copy(trialdata_sess2_list[0])
+        trialdata_sess1_.update(trialdata_sess1_list[1])
+        trialdata_sess2_.update(trialdata_sess2_list[1])
+    else:
+        hdrdata_sess1, trialdata_sess1_ = loadFxs.group_quality_check(expname, 1, plot_quality_check = True)
+        hdrdata_sess2, trialdata_sess2_ = loadFxs.group_quality_check(expname, 2, plot_quality_check = True)
+        # only include participants who completed two sessions
+        hdrdata_sess1 = hdrdata_sess1[np.isin(hdrdata_sess1["id"], hdrdata_sess2["id"])]
+        trialdata_sess1_ = {x: y for x,y in trialdata_sess1_.items() if x[0] in hdrdata_sess2["id"].values}
+        s1_stats, s1_Psurv_b1_, s1_Psurv_b2_, s1_WTW_ = analysisFxs.group_MF(trialdata_sess1_, plot_each = False)   
+        s2_stats, s2_Psurv_b1_, s2_Psurv_b2_, s2_WTW_ = analysisFxs.group_MF(trialdata_sess2_, plot_each = False)   
+        s1_df = analysisFxs.pivot_by_condition(s1_stats)
+        s2_df = analysisFxs.pivot_by_condition(s2_stats)
+        s1_df_.append(s1_df)
+        s2_df_.append(s2_df)
+        s1_stats_.append(s1_stats)
+        s2_stats_.append(s2_stats)
+        trialdata_sess1_list.append(trialdata_sess1_)
+        trialdata_sess2_list.append(trialdata_sess2_)
 
     # across-condition convergence
     tmp1 = s1_stats[["auc", "std_wtw", "id", "condition"]].melt(id_vars = ["id", "condition"], value_vars = ["auc", "std_wtw"])
@@ -77,6 +95,7 @@ for expname in ['active', 'passive']:
     g.set_titles(col_template = "{col_name}")
     g.set(xlabel = "HP block", ylabel = "LP block")
     g.savefig(os.path.join('..', 'figures', expname, 'across-condition_convergence.pdf'))
+    
     # summary statistics
     df = analysisFxs.vstack_sessions(s1_df, s2_df)
     df.groupby(["sess"]).agg({"auc":[np.median, scipy.stats.iqr, lambda x: np.median(x) - scipy.stats.iqr(x), lambda x: np.median(x) + scipy.stats.iqr(x)],\

@@ -100,7 +100,6 @@ def plot_group_emp_rep_wtw_multi(s1_WTW_rep_, s2_WTW_rep_, s1_WTW_emp, s2_WTW_em
 
     # average empirical wtw data
     s1_WTW_emp = s1_WTW_emp[np.isin(hdrdata_sess1.id, s1_ids), :]
-
     s2_WTW_emp = s2_WTW_emp[np.isin(hdrdata_sess2.id, s2_ids), :]
 
     if estimation == "mean":
@@ -110,10 +109,15 @@ def plot_group_emp_rep_wtw_multi(s1_WTW_rep_, s2_WTW_rep_, s1_WTW_emp, s2_WTW_em
         s1_ave_emp = np.median(s1_WTW_emp, axis = 0)
         s2_ave_emp = np.median(s2_WTW_emp, axis = 0)
 
+    s1_se_emp = np.std(s1_WTW_emp, axis = 0 ) / np.sqrt(s1_WTW_emp.shape[0])
+    s2_se_emp = np.std(s2_WTW_emp, axis = 0 ) / np.sqrt(s2_WTW_emp.shape[0])
+
     # average replicated wtw data 
     nmethod = len(methods)
     s1_ave_rep_ = []
     s2_ave_rep_ = []
+    s1_se_rep_ = []
+    s2_se_rep_ = []
     for i in np.arange(nmethod):
         s1_WTW_rep = s1_WTW_rep_[i]
         s2_WTW_rep = s2_WTW_rep_[i]
@@ -125,23 +129,30 @@ def plot_group_emp_rep_wtw_multi(s1_WTW_rep_, s2_WTW_rep_, s1_WTW_emp, s2_WTW_em
         else: 
             s1_ave_rep = np.median(s1_WTW_rep[np.isin(s1_paradf.id, s1_ids)], axis = 0)
             s2_ave_rep = np.median(s2_WTW_rep[np.isin(s2_paradf.id, s2_ids)], axis = 0)
+        s1_se_rep = np.std(s1_WTW_rep, axis = 0 ) / np.sqrt(s1_WTW_rep.shape[0])
+        s2_se_rep = np.std(s2_WTW_rep, axis = 0 ) / np.sqrt(s2_WTW_rep.shape[0])
         s1_ave_rep_.append(s1_ave_rep)
         s2_ave_rep_.append(s2_ave_rep)
+        s1_se_rep_.append(s1_se_rep)
+        s2_se_rep_.append(s2_se_rep)
+
+
 
     plotdf = pd.DataFrame({
         "wtw": np.concatenate([s1_ave_emp, s2_ave_emp, np.concatenate(s1_ave_rep_), np.concatenate(s2_ave_rep_)]),
+        "se": np.concatenate([s1_se_emp, s2_se_emp, np.concatenate(s1_se_rep_), np.concatenate(s2_se_rep_)]),
         "type": ['Observed'] * len(expParas.TaskTime) * 2 + list(np.repeat(methods, len(expParas.TaskTime))) + list(np.repeat(methods, len(expParas.TaskTime))),
-        "time": np.tile((expParas.TaskTime / 60).astype('int'), 2 + 2 * nmethod),
+        "time": np.tile((expParas.TaskTime / 60).astype('float'), 2 + 2 * nmethod),
         "sess": np.concatenate([np.repeat(["SESS1", "SESS2"], len(expParas.TaskTime)), np.repeat(["SESS1", "SESS2"], len(expParas.TaskTime) * nmethod)])
         })
+    plotdf['ymin'] = plotdf['wtw'] - plotdf['se']
+    plotdf['ymax'] = plotdf['wtw'] + plotdf['se']
 
-    # palette = {"Observed":"tab:black",
-    #        "QL2":"tab:pink", 
-    #        "QL2_reset":"tab:red"}
     palette = ["black"] + sns.color_palette("tab10")[:nmethod]
 
     g = sns.FacetGrid(plotdf, col= "sess", hue = 'type', sharex = True, sharey = True, palette  = sns.color_palette(palette, len(palette)))
     g.map(sns.lineplot, "time", "wtw")
+    g.map(plt.fill_between, "time", "ymin", "ymax", facecolor='grey', edgecolor = "none",alpha = 0.4, interpolate=True, linewidth = 2)
     g.set(ylim=(3, 10), ylabel = "WTW (s)", xlabel = "Task time (min)")
     plt.legend(labels=["Observed"] + methods)
     axs = g.axes_dict.values()
@@ -511,7 +522,7 @@ def annotate_reg(x, y, test = "spearman", ax = None, **kwargs):
     print(test)
     if test == "spearman":
         r, p = spearmanr(x, y)
-        ax.text(0.4, 0.1, "spearman's r = %.3f\n p = %.3f"%(r, p), size=12, color='red', transform=ax.transAxes)
+        ax.text(0.4, 0.1, "r = %.3f\n p = %.3f"%(r, p), size=12, color='red', transform=ax.transAxes)
     elif test == "pearson":
         r, p = pearsonr(x, y)
         ax.text(0.4, 0.1, "pearson's r = %.3f\n p = %.3f"%(r, p), size=12, color='red', transform=ax.transAxes)
