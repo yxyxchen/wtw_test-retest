@@ -26,8 +26,8 @@ from subFxs import normFxs
 from subFxs import loadFxs
 from subFxs import figFxs
 from subFxs import analysisFxs
-from datetime import datetime as dt
-import scipy 
+from datetime import datetime 
+import scipy  as sp
 import statsmodels.formula.api as smf
 from plotnine import ggplot, aes, facet_grid, labs, geom_point, geom_errorbar, geom_text, position_dodge, scale_fill_manual, labs, theme_classic, ggsave, geom_bar
 from scipy.stats import mannwhitneyu
@@ -46,7 +46,11 @@ for expname in ["passive", "active"]:
 	hdrdata_.append(hdrdata_sess2)
 
 hdrdata = pd.concat(hdrdata_, axis = 0).reset_index()
-
+hdrdata['education_level'] = ''
+hdrdata.loc[hdrdata['education'] < 12, 'education_level'] = "less"
+hdrdata.loc[hdrdata['education'] == 12, 'education_level'] = 'high school degree'
+hdrdata.loc[hdrdata['education'] == 16, 'education_level'] = "bachelor's degree"
+hdrdata.loc[hdrdata['education'] > 16, 'education_level'] = "more"
 # print summary statistics
 for i, expname in enumerate(["passive", "active", "combined"]):	
 	if i < 2:
@@ -54,8 +58,7 @@ for i, expname in enumerate(["passive", "active", "combined"]):
 	else:
 		this_hdrdata = hdrdata
 	# summary statistics 
-	tmp = this_hdrdata[["gender", "race", "language"]].melt().value_counts()
-	tmp = tmp / (this_hdrdata.shape[0] + 1)
+	tmp = this_hdrdata[["gender", "race", "language"]].melt().value_counts(normalize = False)
 	tmp.rename("counts").reset_index().sort_values(by = ["variable", "counts"], ascending = False)
 	this_hdrdata[["age", "education"]].describe()
 
@@ -105,7 +108,22 @@ for i, expname in enumerate(["passive", "active", "combined"]):
 		g.savefig(os.path.join("..", "figures", expname, var + "_gender_hist.pdf"))
 
 
-
-
+# calc inter-session intervals
+hdrdata_ = []
+selfdf_ = []
+for expname in ["passive", "active"]:	
+	hdrdata_sess1, trialdata_sess1_ = loadFxs.group_quality_check(expname, 1, plot_quality_check = True)
+	hdrdata_sess2, trialdata_sess2_ = loadFxs.group_quality_check(expname, 2, plot_quality_check = True)
+	hdrdata_sess1['consent_date'] = hdrdata_sess1['consent_date'].apply(lambda x: datetime.strptime(x, '%m/%d/%y %H:%M'))
+	hdrdata_sess2['consent_date'] = hdrdata_sess2['consent_date'].apply(lambda x: datetime.strptime(x, '%m/%d/%y %H:%M'))
+	hdrdata_sess1['consent_date'] = hdrdata_sess1['consent_date'].apply(lambda x: x.date())
+	hdrdata_sess2['consent_date'] = hdrdata_sess2['consent_date'].apply(lambda x: x.date())
+	hdrdata_sess1.set_index(hdrdata_sess1["id"])
+	hdrdata_sess2.set_index(hdrdata_sess2["id"])
+	intervals = hdrdata_sess2['consent_date'] - hdrdata_sess1['consent_date']
+	intervals = intervals[~np.isnan(intervals)]
+	days = [x.days for x in intervals]
+	np.median(days)
+	sp.stats.describe(days)
 
 

@@ -53,15 +53,18 @@ def pivot_by_condition(df):
     # code.interact(local = dict(locals(), **globals()))
     if "ipi" in df:
         columns = ['auc', 'std_wtw', "ipi", "diff_auc", "diff_wtw"]
-    else: 
+    elif 'diff_auc' in df: 
         columns = ['auc', 'std_wtw', "diff_auc", "diff_wtw"]
+    else:
+        columns = ['auc', 'std_wtw']
     index = ['id']
     HP_df = df.loc[df['condition'] == 'HP', columns + index]
     LP_df = df.loc[df['condition'] == 'LP', columns + index]
     out_df = HP_df.merge(LP_df, left_on = index, right_on = index, suffixes = ['_HP', "_LP"])
     out_df['auc_delta'] = out_df['auc_HP'] - out_df['auc_LP']
     out_df['auc'] = (out_df['auc_HP'] + out_df['auc_LP']) / 2
-    out_df["init_wtw"] = df.loc[df['condition'] == 'LP', "init_wtw"].values
+    if 'init_wtw' in df:
+        out_df["init_wtw"] = df.loc[df['condition'] == 'LP', "init_wtw"].values
     if "ipi" in df:
         out_df['ipi'] = (out_df['ipi_HP'] + out_df['ipi_LP']) / 2
     out_df['std_wtw'] = (out_df['std_wtw_HP']**2 / 2 + out_df['std_wtw_LP']**2 / 2)**0.5
@@ -768,11 +771,11 @@ def desc_RT(trialdata):
     #         })
     #     ready_RT_median, ready_RT_mean, ready_RT_se = out.ready_RT
 
-    out = trialdata.loc[trialdata.trialEarnings != 0, :].agg({
+    out = trialdata.loc[np.logical_and(trialdata.trialEarnings != 0, ~np.isnan(trialdata.RT)), :].agg({
             "RT": ["median", "mean"]
         })
     sell_RT_median,  sell_RT_mean = out.RT
-    sell_RT_se  = calc_se(trialdata.loc[trialdata.trialEarnings != 0, :].RT)
+    sell_RT_se  = calc_se(trialdata.loc[np.logical_and(trialdata.trialEarnings != 0, ~np.isnan(trialdata.RT)), :].RT)
     return sell_RT_median, sell_RT_mean, sell_RT_se
 ############################ individual level analysis functions ###############
 def ind_MF(trialdata, key, isTrct = True, plot_RT = False, plot_trial = False, plot_KMSC = False, plot_WTW = False, n_subblock = 4):
@@ -795,7 +798,11 @@ def ind_MF(trialdata, key, isTrct = True, plot_RT = False, plot_trial = False, p
     if plot_trial:
         trialplot_multiblock(trialdata)
 
-    # calc without truncating 
+    ################## calculate summary stats for each block ###############
+    if isTrct:
+        trialdata = trialdata[trialdata.sellTime <= expParas.blocksec - np.max(expParas.tMaxs)]
+
+    # 
     nBlock = len(np.unique(trialdata.blockIdx))
     wtw = []
     WTW = []
@@ -807,10 +814,6 @@ def ind_MF(trialdata, key, isTrct = True, plot_RT = False, plot_trial = False, p
         block_wtw, block_WTW, _ = wtwTS(blockdata['trialEarnings'].values, blockdata['timeWaited'].values, blockdata['sellTime'].values, expParas.tMax, expParas.BlockTime, False)
         wtw.append(block_wtw)
         WTW.append(block_WTW)
-
-    ################## calculate summary stats for each block ###############
-    if isTrct:
-        trialdata = trialdata[trialdata.sellTime <= expParas.blocksec - np.max(expParas.tMaxs)]
 
     ################## this part of code  can be modified for different experiments ##########
     # initialize the figure 
@@ -968,7 +971,7 @@ def ind_sim_MF(simdata, empdata, key, plot_trial = False, plot_KMSC = False, plo
     return stats, objs
 
 ########################## group-level analysis functions ##############
-def group_MF(trialdata_, plot_each = False, n_subblock = 4):
+def group_MF(trialdata_, plot_each = False, isTrct = True, n_subblock = 4):
     # check sample sizes 
     nsub = len(trialdata_)
     print("Analyze %d valid participants"%nsub)
@@ -986,12 +989,12 @@ def group_MF(trialdata_, plot_each = False, n_subblock = 4):
     idx = 0
     for key, trialdata in trialdata_.items():
         if plot_each:
-            stats, objs  = ind_MF(trialdata, key, plot_RT = False, plot_trial = True, plot_KMSC = False, plot_WTW = True, n_subblock = n_subblock)
+            stats, objs  = ind_MF(trialdata, key, isTrct = isTrct, plot_RT = False, plot_trial = True, plot_KMSC = False, plot_WTW = True, n_subblock = n_subblock)
             plt.show()
             input("Press Enter to continue...")
             plt.clf()
         else:
-            stats, objs  = ind_MF(trialdata, key, n_subblock = n_subblock)
+            stats, objs  = ind_MF(trialdata, key, isTrct = isTrct, n_subblock = n_subblock)
             stats_.append(stats)
         Psurv_block1_[idx, :] = objs['Psurv_block1']
         Psurv_block2_[idx, :] = objs['Psurv_block2']

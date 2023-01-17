@@ -13,7 +13,7 @@
 # max_treedepth: maximal depth of the trees that stan evaluates during each iteration
 # warningFile : file for saving warnings generated Rstan
 
-modelFitGroup = function(sess, modelName, trialData, stepSec, config, outputDir, parallel, isTrct = T){
+modelFitGroup = function(expname, sess, modelName, trialData, stepSec, config, outputDir, parallel, isTrct = T){
   # create the output directory 
   dir.create(outputDir)
  
@@ -58,6 +58,6 @@ modelFitGroup = function(sess, modelName, trialData, stepSec, config, outputDir,
         thisTrialData = thisTrialData[!(1 : nrow(thisTrialData)) %in% excludedTrials,]
       }
       outputFile = sprintf("%s/%s_sess%d", outputDir, id, sess)
-      modelFitSingle(id, thisTrialData, modelName, paraNames, model, config, outputFile, stepSec)
+      modelFitSingle(expname, id, thisTrialData, modelName, paraNames, model, config, outputFile, stepSec)
   }
 }

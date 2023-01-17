@@ -42,9 +42,12 @@ UPPS_subscales = ["NU", "PU", "PM", "PS", "SS"]
 BIS_l1_subscales = ["Attentional", "Motor", "Nonplanning"]
 BIS_l2_subscales = ["attention", "cogstable", "motor", "perseverance", "selfcontrol", "cogcomplex"]
 
+modelname = "QL2reset_slope_two_simple"
+fitMethod = "whole"
+stepsize = 0.5
 # passive version
-statsdf_ = []
 paradf_ = [] 
+selfdf_ = []
 for expname in ["active", "passive"]:
 	hdrdata_sess1, trialdata_sess1_ = loadFxs.group_quality_check(expname, 1, plot_quality_check = True)
 	hdrdata_sess2, trialdata_sess2_ = loadFxs.group_quality_check(expname, 2, plot_quality_check = True)
@@ -69,6 +72,7 @@ for expname in ["active", "passive"]:
 	paradf_.append(paradf)
 
 paradf = pd.concat(paradf_)
+selfdf = pd.concat(selfdf_)
 df = paradf.merge(selfdf, on = ["id", "exp"])
 df.loc[:, df.dtypes == "float64"] = df.select_dtypes("number") - df.select_dtypes("number").apply(np.mean, axis = 0)
 df["exp"] = pd.Categorical(df["exp"], categories = ["passive", "active"], ordered = True)
@@ -93,17 +97,9 @@ for para, self_var in itertools.product(paranames, self_vars):
 	ps_r_df.loc[self_var, para],ps_p_df.loc[self_var, para] = spearmanr(df.loc[df["exp"]=="passive", para], df.loc[df["exp"]=="passive", self_var], nan_policy = "omit")
 	ac_r_df.loc[self_var, para],ac_p_df.loc[self_var, para]  = spearmanr(df.loc[df["exp"]=="active", para], df.loc[df["exp"]=="active", self_var], nan_policy = "omit")
 
-for para, self_var in itertools.product(paranames, self_vars):
-	fit = smf.ols(para +  " ~ %s * exp" % self_var, data = df).fit()
-	interaction_pvals.loc[self_var, para] = fit.pvalues[3]
-	filter = ~np.isnan(df[self_var]).values
-	cb_r_df.loc[self_var, para],cb_p_df.loc[self_var, para]  = pearsonr(df.loc[filter, para], df.loc[filter, self_var])
-	ps_r_df.loc[self_var, para],ps_p_df.loc[self_var, para] = pearsonr(df.loc[np.logical_and(df["exp"]=="passive", filter), para], df.loc[np.logical_and(df["exp"]=="passive", filter), self_var])
-	ac_r_df.loc[self_var, para],ac_p_df.loc[self_var, para]  = pearsonr(df.loc[np.logical_and(df["exp"]=="active", filter), para], df.loc[np.logical_and(df["exp"]=="active", filter), self_var])
-
 
 cb_p_df[interaction_pvals < 0.05] = np.nan
-cb_p_df[interaction_pvals < 0.05]
+cb_p_df[cb_p_df > 0.01] = np.nan
 
 
 ##### permutation tests #######
@@ -121,6 +117,10 @@ for i in np.arange(n_perm):
 	r_, _ = analysisFxs.calc_prod_correlations(df[df["exp"] == 'active'], ["rd_" + x for x in paranames], self_vars)
 	ac_max_abs_r_dist.append(np.max(np.abs(r_.values)))
 
+
+np.mean(np.array(ps_max_abs_r_dist) > 0.2)
+np.mean(np.array(ac_max_abs_r_dist) > 0.2)
+
 n_perm = 500
 cb_max_abs_r_dist = []
 for i in np.arange(n_perm):
@@ -129,7 +129,7 @@ for i in np.arange(n_perm):
 	r_, _ = analysisFxs.calc_prod_correlations(df, ["rd_" + x for x in paranames], self_vars)
 	cb_max_abs_r_dist.append(np.max(np.abs(r_.values)))
 
-
+np.mean(np.array(cb_max_abs_r_dist) > 0.2)
 ################
 ac_res_df = pd.DataFrame({
 	""

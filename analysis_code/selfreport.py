@@ -43,9 +43,13 @@ selfreport_vars = ["BIS", "UPPS", "discount_logk", "Motor", "Nonplanning", "Atte
 selfreport_totalscores = ["BIS", "UPPS", "discount_logk"]
 
 expname = "passive"
+
+# load hdrdata 
+hdrdata, _ = loadFxs.group_quality_check(expname, 2, plot_quality_check = True)
 s1_selfdf = loadFxs.parse_group_selfreport(expname, 1, isplot = False)
 s2_selfdf = loadFxs.parse_group_selfreport(expname, 2, isplot = False)
-s1_selfdf = s1_selfdf[np.isin(s1_selfdf["id"], s2_selfdf["id"])]
+s1_selfdf = s1_selfdf[np.isin(s1_selfdf["id"], hdrdata["id"])]
+s2_selfdf = s2_selfdf[np.isin(s2_selfdf["id"], hdrdata["id"])] # I lacked a data here ...
 selfdf = analysisFxs.agg_across_sessions(s1_selfdf, s2_selfdf)
 # plot reliability 
 plt.style.use('classic')
@@ -65,6 +69,15 @@ g.set_titles(col_template="{col_name}")
 g.set(xlabel='Session 1', 
       ylabel='Session 2')
 g.savefig(os.path.join("..", "figures", expname, "selfreport_reliability.pdf"))
+
+# calculate reliability table, more i can do this tomorrow
+df = [s1_selfdf, s2_selfdf]
+UPPS_subscales = ["NU", "PU", "PM", "PS", "SS"]
+BIS_l1_subscales = ["Attentional", "Motor", "Nonplanning"]
+BIS_l2_subscales = ["attention", "cogstable", "motor", "perseverance", "selfcontrol", "cogcomplex"]
+
+_, _, _, _, _, report = analysisFxs.calc_zip_reliability(analysisFxs.hstack_sessions(s1_selfdf, s2_selfdf), [(x + '_sess1', x + '_sess2') for x in selfreport_totalscores + UPPS_subscales + BIS_l2_subscales])
+report.round(3).to_csv(os.path.join("..", "figures", expname, "selfreport_reliability.csv"))
 
 # plot practice effect
 df = analysisFxs.vstack_sessions(s1_selfdf.melt(id_vars = "id", value_vars = selfreport_totalscores), s2_selfdf.melt(id_vars = "id", value_vars = selfreport_totalscores))
@@ -89,12 +102,16 @@ selfdf_ = []
 for expname in ["passive", "active"]:	
 	####################### analyze only selfreport data ####################
 	if expname == "passive":
+		hdrdata, _ = loadFxs.group_quality_check(expname, 2, plot_quality_check = True)
 		s1_selfdf = loadFxs.parse_group_selfreport(expname, 1, isplot = False)
 		s2_selfdf = loadFxs.parse_group_selfreport(expname, 2, isplot = False)
-		s1_selfdf = s1_selfdf[np.isin(s1_selfdf["id"], s2_selfdf["id"])]
+		s1_selfdf = s1_selfdf[np.isin(s1_selfdf["id"], hdrdata["id"])]
+		s2_selfdf = s2_selfdf[np.isin(s2_selfdf["id"], hdrdata["id"])]
 		selfdf = analysisFxs.agg_across_sessions(s1_selfdf, s2_selfdf)
 	else:
+		hdrdata, _ = loadFxs.group_quality_check(expname, 2, plot_quality_check = True)
 		selfdf = loadFxs.parse_group_selfreport(expname, 1, isplot = False)
+		selfdf = selfdf[np.isin(selfdf["id"], hdrdata["id"])]
 	selfdf_.append(selfdf)
 
 selfdf = pd.concat(selfdf_, axis = 0).reset_index()

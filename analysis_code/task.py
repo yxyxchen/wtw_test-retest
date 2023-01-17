@@ -50,17 +50,35 @@ vars = ['auc', 'std_wtw', 'auc_delta']
 labels = ["AUC (s)", r"$\sigma_\mathrm{wtw}$ (s)", r'$\Delta$ AUC (s)']
 
 ################
-for expname in ['active', 'passive']:
-    s1_selfdf = loadFxs.parse_group_selfreport(expname, 1, isplot = False)
-    hdrdata_sess1, trialdata_sess1_ = loadFxs.group_quality_check(expname, 1, plot_quality_check = True)
-    hdrdata_sess2, trialdata_sess2_ = loadFxs.group_quality_check(expname, 2, plot_quality_check = True)
-    # only include participants who completed two sessions
-    hdrdata_sess1 = hdrdata_sess1[np.isin(hdrdata_sess1["id"], hdrdata_sess2["id"])]
-    trialdata_sess1_ = {x: y for x,y in trialdata_sess1_.items() if x[0] in hdrdata_sess2["id"].values}
-    s1_stats, s1_Psurv_b1_, s1_Psurv_b2_, s1_WTW_ = analysisFxs.group_MF(trialdata_sess1_, plot_each = False)   
-    s2_stats, s2_Psurv_b1_, s2_Psurv_b2_, s2_WTW_ = analysisFxs.group_MF(trialdata_sess2_, plot_each = False)   
-    s1_df = analysisFxs.pivot_by_condition(s1_stats)
-    s2_df = analysisFxs.pivot_by_condition(s2_stats)
+s1_df_ = []
+s2_df_ = []
+s1_stats_ = []
+s2_stats_ = []
+trialdata_sess1_list = []
+trialdata_sess2_list = []
+for expname in ['active', 'passive', "combined"]:
+    if expname == "combined":
+        s1_df, s2_df, s1_stats, s2_stats = pd.concat(s1_df_), pd.concat(s2_df_), pd.concat(s1_stats_), pd.concat(s2_stats_)
+        trialdata_sess1_, trialdata_sess2_ = copy.copy(trialdata_sess1_list[0]), copy.copy(trialdata_sess2_list[0])
+        trialdata_sess1_.update(trialdata_sess1_list[1])
+        trialdata_sess2_.update(trialdata_sess2_list[1])
+    else:
+        hdrdata_sess1, trialdata_sess1_ = loadFxs.group_quality_check(expname, 1, plot_quality_check = True)
+        hdrdata_sess2, trialdata_sess2_ = loadFxs.group_quality_check(expname, 2, plot_quality_check = True)
+        # only include participants who completed two sessions
+        hdrdata_sess1 = hdrdata_sess1[np.isin(hdrdata_sess1["id"], hdrdata_sess2["id"])]
+        trialdata_sess1_ = {x: y for x,y in trialdata_sess1_.items() if x[0] in hdrdata_sess2["id"].values}
+        s1_stats, s1_Psurv_b1_, s1_Psurv_b2_, s1_WTW_ = analysisFxs.group_MF(trialdata_sess1_, plot_each = False)   
+        s2_stats, s2_Psurv_b1_, s2_Psurv_b2_, s2_WTW_ = analysisFxs.group_MF(trialdata_sess2_, plot_each = False)   
+        s1_df = analysisFxs.pivot_by_condition(s1_stats)
+        s2_df = analysisFxs.pivot_by_condition(s2_stats)
+        s1_df_.append(s1_df)
+        s2_df_.append(s2_df)
+        s1_stats_.append(s1_stats)
+        s2_stats_.append(s2_stats)
+        trialdata_sess1_list.append(trialdata_sess1_)
+        trialdata_sess2_list.append(trialdata_sess2_)
+
     # across-condition convergence
     tmp1 = s1_stats[["auc", "std_wtw", "id", "condition"]].melt(id_vars = ["id", "condition"], value_vars = ["auc", "std_wtw"])
     tmp1 = tmp1[tmp1["condition"] == "HP"].drop(["condition"], axis = 1).merge(tmp1[tmp1["condition"] == "LP"].drop(["condition"], axis = 1), on = ["id", "variable"], suffixes = ["_HP", "_LP"])
@@ -77,11 +95,23 @@ for expname in ['active', 'passive']:
     g.set_titles(col_template = "{col_name}")
     g.set(xlabel = "HP block", ylabel = "LP block")
     g.savefig(os.path.join('..', 'figures', expname, 'across-condition_convergence.pdf'))
+    
     # summary statistics
     df = analysisFxs.vstack_sessions(s1_df, s2_df)
     df.groupby(["sess"]).agg({"auc":[np.median, scipy.stats.iqr, lambda x: np.median(x) - scipy.stats.iqr(x), lambda x: np.median(x) + scipy.stats.iqr(x)],\
         "std_wtw": [np.median, scipy.stats.iqr, lambda x: np.median(x) - scipy.stats.iqr(x), lambda x: np.median(x) + scipy.stats.iqr(x)],
         "auc_delta": [np.median, scipy.stats.iqr, lambda x: np.median(x) - scipy.stats.iqr(x), lambda x: np.median(x) + scipy.stats.iqr(x)]})
+    df.groupby(["sess"])['auc'].describe()
+    df.groupby(["sess"])['std_wtw'].describe()
+    df.groupby(["sess"])['auc_delta'].describe()
+
+
+    # reliability table
+    df = analysisFxs.hstack_sessions(s1_df, s2_df)
+    _, _, _, _, _, report = analysisFxs.calc_zip_reliability(df, [(x + '_sess1', x + '_sess2') for x in ["auc", "std_wtw", "auc_delta"]])
+
+    print(report.round(3))
+
     #reliability 
     vars = ["auc", "std_wtw", "auc_delta"]
     df = s1_df.melt(id_vars = "id", value_vars = vars).merge(s2_df.melt(id_vars = "id", value_vars = vars), on = ["id", "variable"], suffixes = ["_sess1", "_sess2"])
@@ -91,6 +121,7 @@ for expname in ['active', 'passive']:
     g.set_titles(col_template = "{col_name}")
     g.set(xlabel = "Session 1", ylabel = "Session 2")
     g.savefig(os.path.join('..', 'figures', expname, 'task_reliability.pdf'))
+
     # practice effect 
     s1_df["sess"] = "Session 1"
     s2_df["sess"] = "Session 2"
@@ -108,6 +139,7 @@ for expname in ['active', 'passive']:
     g.set_titles(col_template = "{col_name}")
     g.set(xlabel = "", ylabel = "")
     g.savefig(os.path.join('..', 'figures', expname, 'task_practice.pdf'))
+
 
     ######################## spilt half reliability #############
     df_ = []
@@ -135,12 +167,19 @@ for expname in ['active', 'passive']:
             ax.text(0.4, 0.3 - sess * 0.1, 'SESS%d r = %.3f\n'%(sess, spearman_rho), size=10, color = "red", transform = ax.transAxes)
     g.savefig(os.path.join('..', 'figures', expname, 'split_half.pdf'))
 
+    g = sns.FacetGrid(data = df, col = "variable", sharex = False, sharey = False)
+    g.map(figFxs.my_regplot, "value_odd", "value_even")
+    g.set_titles(col_template = "{col_name}")
+    g.set(xlabel = "Odd", ylabel = "Even")
+    g.savefig(os.path.join('..', 'figures', expname, 'split_half_session-combined.pdf'))
+
     ###### correlations among measures #########
     statsdf = analysisFxs.agg_across_sessions(s1_df, s2_df)
     statsdf = statsdf.rename(columns = dict(zip(vars, labels)))
     g = sns.pairplot(statsdf[labels], kind = "reg", diag_kws = {"color": "grey", "edgecolor": "black"},\
     plot_kws ={'line_kws':{'color':'red'}, "scatter_kws": {"color": "grey", "edgecolor": "black"}})
     g.map_lower(figFxs.annotate_reg)
+    g.savefig(os.path.join('..', 'figures', expname, 'among_measures.pdf'))
 ############ model parameter analysis ###########
 # expname = 'passive'
 # modelname = 'QL2reset_HM_short'

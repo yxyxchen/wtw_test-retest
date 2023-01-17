@@ -18,6 +18,7 @@ data {
 transformed data {
   // total number of decision points in all trials
   int nTotalAction = sum(nMadeActions);
+  real gamma = 0.85;
 }
 parameters {
   // parameters:
@@ -32,7 +33,6 @@ parameters {
   real raw_alpha;
   real raw_alphaU; 
   real raw_tau;
-  real raw_gamma;
   real raw_eta; 
 }
 transformed parameters{
@@ -40,7 +40,6 @@ transformed parameters{
   real <lower=0, upper=1> alpha = Phi_approx(raw_alpha) * 1; 
   real <lower=0, upper=1> alphaU = Phi_approx(raw_alphaU) * 1; 
   real <lower=0, upper=42> tau = Phi_approx(raw_tau) * 42; 
-  real <lower=0.5, upper=1> gamma = Phi_approx(raw_gamma)* 0.5 + 0.5;  
   real <lower=0, upper=15> eta = Phi_approx(raw_eta) * 15; 
 
   // declare variables 
@@ -144,7 +143,6 @@ model {
   raw_alpha ~ normal(0, 1);
   raw_alphaU ~ normal(0, 1);
   raw_tau ~ normal(0, 1);
-  raw_gamma ~ normal(0, 1);
   raw_eta ~ normal(0, 1);
   
   // loop over trials

@@ -68,8 +68,7 @@ transformed parameters{
   V0_[1] = V0;
  
   //loop over trials
-  if(N_block1 > 0){
-    for(tIdx in 1 : (N_block1 - 1)){
+    for(tIdx in 1 : (N - 1)){
       real T = Ts[tIdx]; // this trial ends on t = T
       int R = Rs[tIdx]; // payoff in this trial
       int lastDecPoint = nMadeActions[tIdx]; // last decision point in this trial
@@ -96,45 +95,6 @@ transformed parameters{
       Qwaits_[,tIdx+1] = Qwaits;
       V0_[tIdx+1] = V0;
     }
-  }
-  
-  if(N > N_block1){
-    // reset
-    V0 = V0_ini; 
-    for(i in 1 : nWaitOrQuit){
-      Qwaits[i] = - tWaits[i] * 0.1/ eta  + 1 + V0;
-    }
-    Qwaits_[,N_block1 + 1] = Qwaits;
-    V0_[N_block1 + 1] = V0; 
-    
-    for(tIdx in (1 + N_block1): (N - 1)){
-      real T = Ts[tIdx]; // this trial ends on t = T
-      int R = Rs[tIdx]; // payoff in this trial
-      int lastDecPoint = nMadeActions[tIdx]; // last decision point in this trial
-      real LR; 
-    
-      // determine the learning rate 
-      if(R > 0){
-        LR = alpha;
-      }else{
-        LR = alphaU;
-      }
-      // update Qwaits towards the discounted returns
-      for(i in 1 : lastDecPoint){
-        real t = tWaits[i]; // time for this decision points 
-        real Gt = exp(log(gamma) * (T - t)) * (R + V0);
-        Qwaits[i] = Qwaits[i] + LR * (Gt - Qwaits[i]);
-      }
-      
-      // update V0 towards the discounted returns 
-      G0 = exp(log(gamma) * (T - (-iti))) * (R + V0);
-      V0 = V0 + LR * (G0 - V0);
-      
-      // save action values
-      Qwaits_[,tIdx+1] = Qwaits;
-      V0_[tIdx+1] = V0;
-    }
-  }
 }
 model {
   // delcare variables 

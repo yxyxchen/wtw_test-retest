@@ -1,3 +1,4 @@
+
 ########################### import modules ############################
 import pandas as pd
 import numpy as np
@@ -31,6 +32,9 @@ import scipy
 import statsmodels.formula.api as smf
 from plotnine import ggplot, aes, facet_grid, labs, geom_point, geom_errorbar, geom_text, position_dodge, scale_fill_manual, labs, theme_classic, ggsave, geom_bar, scale_x_discrete
 from scipy.stats import mannwhitneyu
+from sklearn.linear_model import Lasso
+from sklearn.model_selection import RepeatedKFold
+from sklearn.model_selection import GridSearchCV
 
 
 # plot styles
@@ -74,15 +78,26 @@ for expname in ["active", "passive"]:
 selfdf = pd.concat(selfdf_)
 statsdf = pd.concat(statsdf_)
 df = statsdf.merge(selfdf, on = "id")
-df.loc[:, df.dtypes == "float64"] = df.select_dtypes("number") - df.select_dtypes("number").apply(np.mean, axis = 0)
+# for exp in ["active", "passive"]:
+# 	df.loc[df["exp"] == exp, df.dtypes == "float64"] = (df[df["exp"] == exp].select_dtypes("number") - df[df["exp"] == exp].select_dtypes("number").apply(np.mean, axis = 0)) / df[df["exp"] == exp].select_dtypes("number").apply(np.std, axis = 0)
+scaler = sklearn.preprocessing.StandardScaler
+a = preprocessing.StandardScaler()
+a.fit(df.select_dtypes("number"))
+df.loc[:, df.dtypes == "float64"]= a.transform(df.select_dtypes("number"))
+
 df["exp"] = pd.Categorical(df["exp"], categories = ["passive", "active"], ordered = True)
 
+df = df[~np.isnan(df['discount_logk'])]
+################ 
+# record whether there is an interaction of exp  
+# calculate simple correlations 
 
-self_vars = ["BIS", "UPPS", "discount_logk"] + BIS_l2_subscales + UPPS_subscales
+self_vars = ["discount_logk"] + BIS_l1_subscales + UPPS_subscales
+# self_vars = ["BIS", "UPPS", "discount_logk"] 
 task_vars = ["auc", "auc_delta", "std_wtw"]
 nselfvar = len(self_vars)
 ntaskvar = len(task_vars)
-# record whether there is an interaction of exp 
+
 cb_p_df = pd.DataFrame(np.zeros((ntaskvar, nselfvar)), index = task_vars, columns = self_vars)
 ps_p_df = pd.DataFrame(np.zeros((ntaskvar, nselfvar)), index = task_vars, columns = self_vars)
 ac_p_df = pd.DataFrame(np.zeros((ntaskvar, nselfvar)), index = task_vars, columns = self_vars)
@@ -96,45 +111,252 @@ for self_var, task_var in itertools.product(self_vars, task_vars):
 	cb_r_df.loc[task_var, self_var],cb_p_df.loc[task_var, self_var]  = spearmanr(df[self_var], df[task_var], nan_policy = "omit")
 	ps_r_df.loc[task_var, self_var],ps_p_df.loc[task_var, self_var] = spearmanr(df.loc[df["exp"]=="passive", self_var], df.loc[df["exp"]=="passive", task_var], nan_policy = "omit")
 	ac_r_df.loc[task_var, self_var],ac_p_df.loc[task_var, self_var]  = spearmanr(df.loc[df["exp"]=="active", self_var], df.loc[df["exp"]=="active", task_var], nan_policy = "omit")
-
+	# cb_r_df.loc[task_var, self_var],cb_p_df.loc[task_var, self_var]  = pearsonr(df[self_var], df[task_var])
+	# ps_r_df.loc[task_var, self_var],ps_p_df.loc[task_var, self_var] = pearsonr(df.loc[df["exp"]=="passive", self_var], df.loc[df["exp"]=="passive", task_var])
+	# ac_r_df.loc[task_var, self_var],ac_p_df.loc[task_var, self_var]  = pearsonr(df.loc[df["exp"]=="active", self_var], df.loc[df["exp"]=="active", task_var])
 
 cb_p_df[interaction_pvals < 0.05] = np.nan
-cb_p_df[interaction_pvals < 0.05]
+cb_p_df[cb_p_df > 0.01] = np.nan
+
+cb_sig_r_df = []
+for self_var, task_var in itertools.product(self_vars, task_vars):
+	if  ~np.isnan(cb_p_df.loc[task_var, self_var]):
+		tmp = pd.DataFrame({
+			"selfvar": self_var,
+			"task_var": task_var,
+			"r": cb_r_df.loc[task_var, self_var],
+			"p": cb_p_df.loc[task_var, self_var]
+			}, index = [0])
+		cb_sig_r_df.append(tmp)
+cb_sig_r_df = pd.concat(cb_sig_r_df)
 
 
-##### permutation tests #######
+ac_p_df[interaction_pvals >= 0.05] = np.nan
+ac_p_df[ac_p_df > 0.01] = np.nan
+
+ac_sig_r_df = []
+for self_var, task_var in itertools.product(self_vars, task_vars):
+	if  ~np.isnan(ac_p_df.loc[task_var, self_var]):
+		tmp = pd.DataFrame({
+			"selfvar": self_var,
+			"task_var": task_var,
+			"r": ac_r_df.loc[task_var, self_var],
+			"p": ac_p_df.loc[task_var, self_var]
+			}, index = [0])
+		ac_sig_r_df.append(tmp)
+ac_sig_r_df = pd.concat(ac_sig_r_df)
+
+
+ps_p_df[interaction_pvals >= 0.05] = np.nan
+ps_p_df[ps_p_df > 0.01] = np.nan
+
+ps_sig_r_df = []
+for self_var, task_var in itertools.product(self_vars, task_vars):
+	if  ~np.isnan(ps_p_df.loc[task_var, self_var]):
+		tmp = pd.DataFrame({
+			"selfvar": self_var,
+			"task_var": task_var,
+			"r": ps_r_df.loc[task_var, self_var],
+			"p": ps_p_df.loc[task_var, self_var]
+			}, index = [0])
+		ps_sig_r_df.append(tmp)
+ps_sig_r_df = pd.concat(ps_sig_r_df)
+
+################ permutation tests, separetly for both experiments ##################
 # shuffle within each condition # 
-self_vars = ["discount_logk"] + BIS_l1_subscales + UPPS_subscales
+self_vars = ["discount_logk"] + BIS_l2_subscales + UPPS_subscales
 n_perm = 500
 ps_max_abs_r_dist = []
 ac_max_abs_r_dist = []
 for i in np.arange(n_perm):
-	for task_var in task_vars:
-		df.loc[df["exp"] == "passive", "rd_" + task_var] = np.random.permutation(df.loc[df["exp"] == "passive", task_var])
-		df.loc[df["exp"] == "active", "rd_" + task_var] = np.random.permutation(df.loc[df["exp"] == "active", task_var])
-	r_, _ = analysisFxs.calc_prod_correlations(df[df["exp"] == 'passive'], ["rd_" + x for x in task_vars], self_vars)
-	ps_max_abs_r_dist.append(np.max(np.abs(r_.values)))
-	r_, _ = analysisFxs.calc_prod_correlations(df[df["exp"] == 'active'], ["rd_" + x for x in task_vars], self_vars)
-	ac_max_abs_r_dist.append(np.max(np.abs(r_.values)))
+	df.loc[df["exp"] == "passive", ["rd_" + x for x in task_vars]] = np.random.permutation(df.loc[df["exp"] == "passive", task_vars])
+	df.loc[df["exp"] == "active", ["rd_" + x for x in task_vars]] = np.random.permutation(df.loc[df["exp"] == "active", task_vars])
+	ps_r_, _ = analysisFxs.calc_prod_correlations(df[df["exp"] == 'passive'], ["rd_" + x for x in task_vars], self_vars)
+	ps_max_abs_r_dist.append(np.max(np.abs(ps_r_.values)))
+	ac_r_, _ = analysisFxs.calc_prod_correlations(df[df["exp"] == 'active'], ["rd_" + x for x in task_vars], self_vars)
+	ac_max_abs_r_dist.append(np.max(np.abs(ac_r_.values)))
 
-n_perm = 500
+# correct for ps df
+mc_pvals = []
+for _, row in ps_sig_r_df.iterrows():
+	mc_pvals.append(np.mean(np.array(ps_max_abs_r_dist) > abs(row['r'])))
+ps_sig_r_df['corrected_two-sided_p'] = mc_pvals
+
+
+################ permutation tests, combined for both experiments ##################
+n_perm = 1000
 cb_max_abs_r_dist = []
+coef_dist_ = dict(zip(['%s-%s'%(x,y) for x, y in itertools.product(self_vars, task_vars)], [[]]*len(self_vars)*len(task_vars)))
 for i in np.arange(n_perm):
-	for task_var in task_vars:
-		df["rd_" + task_var] = np.random.permutation(df[task_var])
+	df[["rd_" + x for x in task_vars]] = np.random.permutation(df[task_vars])
 	r_, _ = analysisFxs.calc_prod_correlations(df, ["rd_" + x for x in task_vars], self_vars)
 	cb_max_abs_r_dist.append(np.max(np.abs(r_.values)))
+	for self_var in self_vars:
+		for task_var in task_vars:
+			coef_dist_['%s-%s'%(self_var, task_var)] = coef_dist_['%s-%s'%(self_var, task_var)] + [abs(r_.loc['rd_' + task_var, self_var])]
+
+mc_pvals = []
+mc_pvals2 = []
+for _, row in cb_sig_r_df.iterrows():
+	mc_pvals.append(np.mean(np.array(cb_max_abs_r_dist) > abs(row['r'])))
+	mc_pvals2.append(np.mean(np.array(coef_dist_['%s-%s'%(row['selfvar'], row['task_var'])])> abs(row['r']))* 3 * 9)
+cb_sig_r_df['corrected_two-sided_p'] = mc_pvals
+cb_sig_r_df['simple_corrected_two-sided_p'] = mc_pvals2
 
 
-################
-ac_res_df = pd.DataFrame({
-	""
-	})
-# 
-smf.ols("discount_logk ~ auc_delta + exp", data = df).fit().summary() # the best
-smf.ols("discount_logk ~ auc_delta", data = df).fit().summary() # the best
-smf.ols("discount_logk ~ auc_delta", data = df[df["exp"] == "passive"]).fit().summary()
-smf.ols("discount_logk ~ auc_delta", data = df[df["exp"] == "active"]).fit().summary()
+############## let me try this ########
+best_params_ = []
+for var in task_vars:
+	# X = df[['discount_logk', 'UPPS', 'BIS']][~np.isnan(df['discount_logk'])]
+	# X = df[BIS_l2_subscales][~np.isnan(df['discount_logk'])]
+	X = df[UPPS_subscales][np.logical_and(df['exp'] == "passive", ~np.isnan(df['discount_logk']))]
+	y = df[var][np.logical_and(df['exp'] == "passive", ~np.isnan(df['discount_logk']))]
+	alpha_vals = 10**np.linspace(np.log10(0.01), np.log10(1), 10)
+	gv = GridSearchCV(Lasso(max_iter = 1000000), {"alpha": alpha_vals}, cv = RepeatedKFold(2, 10), scoring = 'neg_mean_squared_error')
+	res = gv.fit(X, y)
+	#alpha_vals = [0.001, 0.01, 0.1, 1, 10, 100]
+	plotdf = pd.DataFrame({
+		"alpha": [x['alpha'] for x in res.cv_results_['params'] ],
+		"score": res.cv_results_['mean_test_score']
+		})
+	print(res.best_params_)
+	best_params_.append(res.best_params_['alpha'])
+	fig, ax = plt.subplots()
+	ax.set_xlabel("log10(alpha)")
+	ax.set_ylabel("neg mean squared error")
+	ax.plot(np.log10(plotdf['alpha']), plotdf['score'])
+	fig.savefig(os.path.join("../figures", "combined", "BIS_%s_alpha_score.pdf"%var))
+
+
+for var in task_vars:
+	for predictors in predictors_:
+		X = df[predictors][~np.isnan(df['discount_logk'])]
+		y = df[var][~np.isnan(df['discount_logk'])]
+		reg = Lasso(alpha = 0.1).fit(X, y)
+		# reg = LinearRegression().fit(X, y)
+		# print(pd.DataFrame(zip(['discount_logk', 'UPPS', 'BIS'] , reg.coef_)))
+		# print(pd.DataFrame(zip(BIS_l2_subscales , reg.coef_)))
+		print(pd.DataFrame(zip(predictors, reg.coef_)))
+
+# permutation tests 
+predictors_ = [['discount_logk', 'UPPS', 'BIS'], BIS_l2_subscales, UPPS_subscales]
+# predictors_ = [['discount_logk', 'UPPS', 'BIS']]
+max_coef_ = []
+coef_dist_ = []
+for p in np.arange(500):
+	df[["rd_" + x for x in task_vars]] = np.random.permutation(df[task_vars])
+	tmp = []
+	for predictors in predictors_:
+		for var in task_vars:
+			# X = df[['discount_logk', 'UPPS', 'BIS']][~np.isnan(df['discount_logk'])]
+			# X = df[BIS_l2_subscales][~np.isnan(df['discount_logk'])]
+			X = df[predictors][~np.isnan(df['discount_logk'])]
+			y = df['rd_' + var][~np.isnan(df['discount_logk'])]
+			res = Lasso(alpha = 0.1).fit(X, y)
+			tmp.append(np.max(np.abs(res.coef_)))
+	max_coef_.append(np.max(tmp))
+
+np.mean(np.array(max_coef_) > 0.04698)
+
+
+################### change the directions 
+self_vars = ["discount_logk"] + BIS_l2_subscales + UPPS_subscales
+best_params_ = []
+fig, axes = plt.subplots(len(self_vars))
+for i, var in enumerate(self_vars):
+	# X = df[['discount_logk', 'UPPS', 'BIS']][~np.isnan(df['discount_logk'])]
+	# X = df[BIS_l2_subscales][~np.isnan(df['discount_logk'])]
+	X = df[task_vars][np.logical_and(np['exp'] == 'passive', ~np.isnan(df['discount_logk']))]
+	y = df[var][np.logical_and(np['exp'] == 'passive', ~np.isnan(df['discount_logk']))]
+	alpha_vals = [0.01, 0.02, 0.03, 0.04, 0.05, 0.1, 0.5]
+	# alpha_vals = 10**np.linspace(np.log10(0.01), np.log10(1), 10)
+	gv = GridSearchCV(Lasso(max_iter = 1000000), {"alpha": alpha_vals}, cv = RepeatedKFold(2, 10), scoring = 'neg_mean_squared_error')
+	res = gv.fit(X, y)
+	plotdf = pd.DataFrame({
+		"alpha": [x['alpha'] for x in res.cv_results_['params'] ],
+		"score": res.cv_results_['mean_test_score']
+		})
+	print(res.best_params_)
+	best_params_.append(res.best_params_['alpha'])
+	axes.flatten()[i].plot(plotdf['alpha'], plotdf['score'])
+	# ax.set_xlabel("log10(alpha)")
+	# ax.set_ylabel("neg mean squared error")
+
+res_ = []
+for i, var in enumerate(self_vars):
+	print(var)
+	# X = df[task_vars][np.logical_and(df['exp'] == "active", ~np.isnan(df['discount_logk']))]
+	# y = df[var][np.logical_and(df['exp'] == "active", ~np.isnan(df['discount_logk']))]
+	X = df[task_vars][~np.isnan(df['discount_logk'])]
+	y = df[var][~np.isnan(df['discount_logk'])]
+	# reg = Lasso(alpha = best_params_[i]).fit(X, y)
+	reg = Lasso(alpha = 0.1).fit(X, y)
+	# reg = LinearRegression().fit(X, y)
+	# print(pd.DataFrame(zip(['discount_logk', 'UPPS', 'BIS'] , reg.coef_)))
+	# print(pd.DataFrame(zip(BIS_l2_subscales , reg.coef_)))
+	res_.append(reg.coef_)
+
+res = pd.DataFrame(np.vstack(res_), index = self_vars, columns = task_vars)
+
+coef_dist_ = dict(zip(['%s-%s'%(x,y) for x, y in itertools.product(self_vars, task_vars)], [[]]*len(self_vars)*len(task_vars)))
+max_coef_ = []
+for p in np.arange(1000):
+	df[["rd_" + x for x in task_vars]] = np.random.permutation(df[task_vars])
+	X = df[task_vars][~np.isnan(df['discount_logk'])]
+	# X = df[['rd_'+x for x in task_vars]][np.logical_and(df['exp'] == "active", ~np.isnan(df['discount_logk']))]
+	if p % 100 == 0:
+		print(p)
+	tmp = []
+	for i, var in enumerate(self_vars):
+		y = df[var][~np.isnan(df['discount_logk'])]
+		# y = df[var][np.logical_and(df['exp'] == "active", ~np.isnan(df['discount_logk']))]
+		# reg = Lasso(alpha = best_params_[i]).fit(X, y)
+		reg = Lasso(alpha = 0.1).fit(X, y)
+		tmp.append(np.max(np.abs(reg.coef_)))
+		for i, task_var in enumerate(task_vars):
+			coef_dist_['%s-%s'%(var, task_var)] = coef_dist_['%s-%s'%(var, task_var)] + [abs(reg.coef_[i])]
+	max_coef_.append(np.max(tmp))
+
+np.mean(np.array(max_coef_) > 0.0489)	## hmmmm wierd
+
+# fig, axes = plt.subplots(len(self_vars))
+# count = 0
+# for y in coef_dist_.values():
+# 	axes.flatten[count].hist(y)
+# 	count = count + 1
+
+# a = list(coef_dist_.keys())
+# plt.hist(coef_dist_[a[-1]])
+
+# this works. 
+# Let me debug tomorrow 
+p_df = pd.DataFrame(columns = task_vars, index = self_vars)
+for self_var in self_vars:
+	for task_var in task_vars:
+		p_df.loc[self_var, task_var] = np.mean(np.array(coef_dist_['%s-%s'%(self_var, task_var)]) >= abs(res.loc[self_var, task_var]))
+
+
+##########
+cb_sig_r_df['simple_corrected_two-sided_p'] = mc_pvals
+smf.ols("std_wtw ~ discount_logk + NU + PU + PM + PS + SS + selfcontrol + cogstable + attention + motor + cogcomplex + perseverance", data = df).fit().summary()
+
+
+smf.ols("auc ~ discount_logk + NU + PU + PM + PS + SS + selfcontrol + cogstable + attention + motor + cogcomplex + perseverance", data = df[df["exp"] == "passive"]).fit().summary()
+
+
+smf.ols("std_wtw ~ NU + PU + PM + PS + SS ", data = df[df["exp"] == "passive"]).fit().summary()
+
+
+smf.ols("auc ~ selfcontrol + cogstable + attention + motor + cogcomplex + perseverance", data = df[df["exp"] == "passive"]).fit().summary()
+
+
+smf.ols("auc ~ NU + PU + PM + PS + SS ", data = df[df["exp"] == "passive"]).fit().summary()
+smf.ols("discount_logk ~ auc_delta + std_wtw + auc", data = df).fit().summary() # yes .... I am not sure
+smf.ols("PU ~ auc_delta + std_wtw + auc", data = df).fit().summary() 
+smf.ols("motor ~ auc_delta + std_wtw + auc", data = df).fit().summary() # No 
+smf.ols("selfcontrol ~ auc_delta + std_wtw + auc", data = df[df['exp'] == 'passive']).fit().summary() # No
+smf.ols("cogstable ~ auc + auc_delta + std_wtw", data = df[df['exp'] == 'passive']).fit().summary() # No
+smf.ols("Nonplanning ~ auc_delta + std_wtw + auc", data = df[df['exp'] == 'passive']).fit().summary()
 
 
 smf.ols("discount_logk ~ std_wtw * exp", data = df).fit().summary() # the best 
