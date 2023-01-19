@@ -35,6 +35,7 @@ from scipy.stats import mannwhitneyu
 from sklearn.linear_model import Lasso
 from sklearn.model_selection import RepeatedKFold
 from sklearn.model_selection import GridSearchCV
+import sklearn
 
 
 # plot styles
@@ -78,23 +79,26 @@ for expname in ["active", "passive"]:
 selfdf = pd.concat(selfdf_)
 statsdf = pd.concat(statsdf_)
 df = statsdf.merge(selfdf, on = "id")
-# for exp in ["active", "passive"]:
-# 	df.loc[df["exp"] == exp, df.dtypes == "float64"] = (df[df["exp"] == exp].select_dtypes("number") - df[df["exp"] == exp].select_dtypes("number").apply(np.mean, axis = 0)) / df[df["exp"] == exp].select_dtypes("number").apply(np.std, axis = 0)
-scaler = sklearn.preprocessing.StandardScaler
-a = preprocessing.StandardScaler()
-a.fit(df.select_dtypes("number"))
-df.loc[:, df.dtypes == "float64"]= a.transform(df.select_dtypes("number"))
+
+# normalize the data 
+scaler = sklearn.preprocessing.StandardScaler()
+scaler.fit(df.select_dtypes("number"))
+df.loc[:, df.dtypes == "float64"]= scaler.transform(df.select_dtypes("number"))
 
 df["exp"] = pd.Categorical(df["exp"], categories = ["passive", "active"], ordered = True)
 
 df = df[~np.isnan(df['discount_logk'])]
+
+df.to_csv("~/Downloads/measures.csv")
+
 ################ 
 # record whether there is an interaction of exp  
 # calculate simple correlations 
+# ['BIS-%d'%(x+1) for x in np.arange(30)] + ['UP-%d'%(x+1) for x in np.arange(59)]
+self_vars = ["discount_logk"] + BIS_l1_subscales + UPPS_subscales 
 
-self_vars = ["discount_logk"] + BIS_l1_subscales + UPPS_subscales
 # self_vars = ["BIS", "UPPS", "discount_logk"] 
-task_vars = ["auc", "auc_delta", "std_wtw"]
+task_vars = ["auc", "auc_delta", "std_wtw", "behavioral"]
 nselfvar = len(self_vars)
 ntaskvar = len(task_vars)
 
@@ -106,8 +110,8 @@ ps_r_df = pd.DataFrame(np.zeros((ntaskvar, nselfvar)), index = task_vars, column
 ac_r_df = pd.DataFrame(np.zeros((ntaskvar, nselfvar)), index = task_vars, columns = self_vars)
 interaction_pvals = pd.DataFrame(np.zeros((ntaskvar, nselfvar)), index = task_vars, columns = self_vars)
 for self_var, task_var in itertools.product(self_vars, task_vars):
-	fit = smf.ols(self_var +  " ~ %s * exp" % task_var, data = df).fit()
-	interaction_pvals.loc[task_var, self_var] = fit.pvalues[3]
+	#fit = smf.ols(self_var +  " ~ %s * exp" % task_var, data = df).fit()
+	#interaction_pvals.loc[task_var, self_var] = fit.pvalues[3]
 	cb_r_df.loc[task_var, self_var],cb_p_df.loc[task_var, self_var]  = spearmanr(df[self_var], df[task_var], nan_policy = "omit")
 	ps_r_df.loc[task_var, self_var],ps_p_df.loc[task_var, self_var] = spearmanr(df.loc[df["exp"]=="passive", self_var], df.loc[df["exp"]=="passive", task_var], nan_policy = "omit")
 	ac_r_df.loc[task_var, self_var],ac_p_df.loc[task_var, self_var]  = spearmanr(df.loc[df["exp"]=="active", self_var], df.loc[df["exp"]=="active", task_var], nan_policy = "omit")
@@ -164,7 +168,7 @@ ps_sig_r_df = pd.concat(ps_sig_r_df)
 
 ################ permutation tests, separetly for both experiments ##################
 # shuffle within each condition # 
-self_vars = ["discount_logk"] + BIS_l2_subscales + UPPS_subscales
+self_vars = ["discount_logk"] + BIS_l2_subscales + UPPS_subscales 
 n_perm = 500
 ps_max_abs_r_dist = []
 ac_max_abs_r_dist = []

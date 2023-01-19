@@ -294,6 +294,7 @@ def parse_group_selfreport(expname, sess, isplot):
         selfdata = selfdata.rename(columns = {"GMK":"discount_k"})
         selfdata["discount_logk"] = np.log(selfdata["discount_k"])
     selfdata["survey_impulsivity"] = scipy.stats.zscore(selfdata["UPPS"], nan_policy = "omit") + scipy.stats.zscore(selfdata["BIS"], nan_policy = "omit")
+    selfdata = pd.concat([selfdata, selfreport.filter(like = "UP"), selfreport.filter(like = "BIS")], axis = 1)
     return selfdata 
 
 # Maybe I need a function to load MCQ
