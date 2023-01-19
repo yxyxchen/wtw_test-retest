@@ -326,6 +326,8 @@ def load_parameter_estimates(expname, sess, hdrdata, modelname, fitMethod, stepS
         try:
             robjects.r['load'](os.path.join("..", "analysis_results", expname, "modelfit", fitMethod, 'stepsize%.2f'%stepSec, modelname, '%s_sess%d_waic.RData'%(subj_id, sess)))
             waic = robjects.r['WAIC'][4][0]
+            pwaic = robjects.r['WAIC'][3][0]
+            neg_ippd = -(-waic/2 + pwaic)
         except:
             print("can't find the WAIC file for %s, sess%d"%(subj_id, sess))
             continue
@@ -334,6 +336,8 @@ def load_parameter_estimates(expname, sess, hdrdata, modelname, fitMethod, stepS
         this_row['id'] = subj_id
         this_row['sess'] = sess
         this_row['waic'] = waic
+        this_row['pwaic'] = pwaic,
+        this_row['neg_ippd'] = neg_ippd
         paradf.append(this_row)
     paradf = pd.concat(paradf)
 
