@@ -27,11 +27,12 @@ from subFxs import figFxs
 from subFxs import analysisFxs
 from datetime import datetime as dt
 import pickle
+import scipy as sp 
 
 # plot styles
 sns.set_theme(style="white", font_scale = 1)
 condition_palette = ["#762a83", "#1b7837"]
-expname = 'passive'
+expname = 'active'
 
 # load data 
 hdrdata_sess1, trialdata_sess1_ = loadFxs.group_quality_check(expname, 1, plot_quality_check = False)
@@ -120,10 +121,36 @@ paradf = pd.concat([s1_paradf, s2_paradf])
 fig, ax = plt.subplots()
 sns.barplot(data = paradf, x = "model", y = "waic", ax = ax, palette = sns.color_palette("tab10"))
 fig.savefig(os.path.join("..", "figures", expname, "waic_multi.pdf"))
-paradf.groupby("model").agg({"waic":[np.median, lambda x: np.std(x) / np.sqrt(len(x))]})
-paradf.pivot_table(values = ['waic'], index = 'id', columns = "model").to_csv(os.path.join("..", "figures", expname, "waic_multi.csv"), index = None, header = None)
+paradf.groupby(["sess", "model"]).agg({"waic":[np.median, lambda x: np.std(x) / np.sqrt(len(x))]})
 
-######## compare report ############ reliability report ##########
+paradf.groupby(["sess", "model"]).agg({"neg_ippd":[np.median, lambda x: np.std(x) / np.sqrt(len(x))]})
+# let me calculate the best fit 
+waicdf = paradf.pivot_table(values = ['waic'], index = ['id', "sess"], columns = "model")
+waicdf.to_csv(os.path.join("..", "figures", expname, "waic_multi.csv"), index = None, header = None)
+
+a = waicdf.reset_index()
+for sess in [1, 2]:
+    a.loc[a[("sess", "")] == sess].iloc[:,2:].to_csv(os.path.join("..", "figures", expname, "waic_multi_sess%d.csv"%sess), index = None, header = None)
+    a.loc[a[("sess", "")] == sess].iloc[:,2:].apply(np.argmin, axis = 1).value_counts()
+    
+# use neg_lppd
+neglppd_df = paradf.pivot_table(values = ['neg_ippd'], index = ['id', "sess"], columns = "model")
+a = neglppd_df.reset_index()
+for sess in [1, 2]:
+    a.loc[a[("sess", "")] == sess].iloc[:,2:].to_csv(os.path.join("..", "figures", expname, "waic_multi_sess%d.csv"%sess), index = None, header = None)
+    a.loc[a[("sess", "")] == sess].iloc[:,2:].apply(np.argmin, axis = 1).value_counts()
+
+# let me calculate the waic differences
+fig, axes = plt.subplots(1, 3)
+for i, ax in zip(np.arange(3), axes):
+	ax.hist(waicdf.iloc[:,i+1] - waicdf.iloc[:,i])
+	ax.set_title(modelnames[i+1] + ' - ' + modelnames[i])
+
+plt.hist(waicdf.iloc[:,1] - waicdf.iloc[:,0])
+sp.stats.wilcoxon(waicdf.iloc[:,1], waicdf.iloc[:,0])
+
+
+######## compare variance explained
 s1_df_emp, s2_df_emp = analysisFxs.pivot_by_condition(s1_stats), analysisFxs.pivot_by_condition(s2_stats)
 emp_df = analysisFxs.agg_across_sessions(s1_df_emp, s2_df_emp)
 vars = ['auc', 'std_wtw', "auc_delta"]

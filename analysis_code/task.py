@@ -27,6 +27,8 @@ from subFxs import figFxs
 from subFxs import analysisFxs
 from datetime import datetime as dt
 from scipy.stats import mannwhitneyu
+import scipy as sp
+import scipy
 
 # plot styles
 plt.style.use('classic')
@@ -132,7 +134,7 @@ for expname in ['active', 'passive', "combined"]:
     g.map(sns.boxplot, "sess", "value", boxprops={'facecolor':'None'}, medianprops={"linestyle":"--", "color": "red"})
     g.map(sns.swarmplot, "sess", "value",  color = "grey", edgecolor = "black", alpha = 0.4, linewidth=1,  size = 3)
     for ax, var in zip(g.axes.flatten(), labels):
-        sig = figFxs.tosig(mannwhitneyu(df.loc[np.logical_and(df["sess"] == "Session 1", df["variable"] == var), "value"], df.loc[np.logical_and(df["sess"] == "Session 2", df["variable"] == var), "value"]).pvalue)
+        sig = figFxs.tosig(sp.stats.wilcoxon(df.loc[np.logical_and(df["sess"] == "Session 1", df["variable"] == var), "value"], df.loc[np.logical_and(df["sess"] == "Session 2", df["variable"] == var), "value"]).pvalue)
         ymax = df.loc[df["variable"] == var, "value"].max()
         ax.plot([0, 0, 1, 1], [ymax * 1.1, ymax * 1.2, ymax * 1.2, ymax * 1.1], lw=1.5, color = "black")
         ax.text((0+1)*.5, ymax * 1.2, sig, ha='center', va='bottom', size = 10)
