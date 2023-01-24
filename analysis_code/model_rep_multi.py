@@ -32,7 +32,7 @@ import scipy as sp
 # plot styles
 sns.set_theme(style="white", font_scale = 1)
 condition_palette = ["#762a83", "#1b7837"]
-expname = 'active'
+expname = 'passive'
 
 # load data 
 hdrdata_sess1, trialdata_sess1_ = loadFxs.group_quality_check(expname, 1, plot_quality_check = False)
@@ -49,8 +49,8 @@ s1_stats, s1_Psurv_b1_, s1_Psurv_b2_, s1_WTW_emp = analysisFxs.group_MF(trialdat
 s2_stats, s2_Psurv_b1_, s2_Psurv_b2_, s2_WTW_emp = analysisFxs.group_MF(trialdata_sess2_, plot_each = False)   
 
 
-modelnames = ['QL2reset', 'QL2reset_slope', 'QL2reset_slope_two', 'QL2reset_slope_two_simple']
-# modelnames = ['QL2', 'QL2reset']
+# modelnames = ['QL2reset', 'QL2reset_slope', 'QL2reset_slope_two', 'QL2reset_slope_two_simple']
+modelnames = ['QL2', 'QL2reset']
 fitMethod = "whole"
 stepsize = 0.5
 
