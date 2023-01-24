@@ -30,7 +30,7 @@ from datetime import datetime as dt
 
 
 ################## 
-expname = "passive"
+expname = "active"
 s1_selfdf = loadFxs.parse_group_selfreport(expname, 1, isplot = False)
 hdrdata_sess1, trialdata_sess1_ = loadFxs.group_quality_check(expname, 1, plot_quality_check = True)
 hdrdata_sess2, trialdata_sess2_ = loadFxs.group_quality_check(expname, 2, plot_quality_check = True)
@@ -46,7 +46,7 @@ _, _, _, s1_WTW_ = analysisFxs.group_MF(trialdata_sess1_, plot_each = False, isT
 _,_,_, s2_WTW_ = analysisFxs.group_MF(trialdata_sess2_, plot_each = False, isTrct = False)
 
 
-s1_stats, s1_Psurv_b1_, s1_Psurv_b2_, _ = analysisFxs.group_MF(trialdata_sess2_, plot_each = False)    
+s1_stats, s1_Psurv_b1_, s1_Psurv_b2_, _ = analysisFxs.group_MF(trialdata_sess1_, plot_each = False)    
 s2_stats, s2_Psurv_b1_, s2_Psurv_b2_, _ = analysisFxs.group_MF(trialdata_sess2_, plot_each = False)  
 
 plt.style.use('classic')
