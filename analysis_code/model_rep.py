@@ -35,7 +35,7 @@ sns.set_style("white")
 condition_palette = ["#762a83", "#1b7837"]
 
 
-expname = "active"
+expname = "passive"
 
 # load data 
 hdrdata_sess1, trialdata_sess1_ = loadFxs.group_quality_check(expname, 1, plot_quality_check = False)
@@ -49,7 +49,7 @@ trialdata_sess1_ = {x: y for x,y in trialdata_sess1_.items() if x[0] in hdrdata_
 s1_stats, s1_Psurv_b1_, s1_Psurv_b2_, s1_WTW_emp = analysisFxs.group_MF(trialdata_sess1_, plot_each = False)   
 s2_stats, s2_Psurv_b1_, s2_Psurv_b2_, s2_WTW_emp = analysisFxs.group_MF(trialdata_sess2_, plot_each = False)   
 
-for modelname in ['QL2reset_slope']:
+for modelname in ['QL2', 'QL2reset']:
 # modelname = 'QL2reset_slope'
     fitMethod = "whole"
     stepsize = 0.5
@@ -60,56 +60,62 @@ for modelname in ['QL2reset_slope']:
     s1_paradf = loadFxs.load_parameter_estimates(expname, 1, hdrdata_sess1, modelname, fitMethod, stepsize)
     s2_paradf = loadFxs.load_parameter_estimates(expname, 2, hdrdata_sess2, modelname, fitMethod, stepsize)
     # if it is the first time 
-    s1_stats_rep, s1_WTW_rep, s1_dist_vals_ = modelFxs.group_model_rep(trialdata_sess1_, s1_paradf, modelname, 'whole', stepsize, isTrct = True, plot_each = False)
-    s2_stats_rep, s2_WTW_rep, s2_dist_vals_ = modelFxs.group_model_rep(trialdata_sess2_, s2_paradf, modelname, 'whole', stepsize, isTrct = True, plot_each = False)
-    s1_stats_rep.to_csv(os.path.join('..', 'analysis_results', expname, 'taskstats', 'rep_%s_sess1_%s_stepsize%.2f.csv'%(modelname, fitMethod, stepsize)), index = None)
-    s2_stats_rep.to_csv(os.path.join('..', 'analysis_results', expname, 'taskstats', 'rep_%s_sess2_%s_stepsize%.2f.csv'%(modelname, fitMethod, stepsize)), index = None)
-    dbfile = open(os.path.join('..', 'analysis_results', expname, 'taskstats', 'rep_%s_%s_stepsize%.2f'%(modelname, fitMethod, stepsize)), "wb")
-    dbobj = {
-        "s1_WTW_rep": s1_WTW_rep,
-        "s2_WTW_rep": s2_WTW_rep
-    }
-    pickle.dump(dbobj, dbfile)
+    # s1_stats_rep, s1_WTW_rep, s1_dist_vals_ = modelFxs.group_model_rep(trialdata_sess1_, s1_paradf, modelname, 'whole', stepsize, isTrct = True, plot_each = False)
+    # s2_stats_rep, s2_WTW_rep, s2_dist_vals_ = modelFxs.group_model_rep(trialdata_sess2_, s2_paradf, modelname, 'whole', stepsize, isTrct = True, plot_each = False)
+    # s1_stats_rep.to_csv(os.path.join('..', 'analysis_results', expname, 'taskstats', 'rep_%s_sess1_%s_stepsize%.2f.csv'%(modelname, fitMethod, stepsize)), index = None)
+    # s2_stats_rep.to_csv(os.path.join('..', 'analysis_results', expname, 'taskstats', 'rep_%s_sess2_%s_stepsize%.2f.csv'%(modelname, fitMethod, stepsize)), index = None)
+    # dbfile = open(os.path.join('..', 'analysis_results', expname, 'taskstats', 'rep_%s_%s_stepsize%.2f'%(modelname, fitMethod, stepsize)), "wb")
+    # dbobj = {
+    #     "s1_WTW_rep": s1_WTW_rep,
+    #     "s2_WTW_rep": s2_WTW_rep
+    # }
+    # pickle.dump(dbobj, dbfile)
+    # if it is the second time 
+    dbfile = open(os.path.join('..', 'analysis_results', expname, 'taskstats', 'rep_%s_%s_stepsize%.2f'%(modelname, fitMethod, stepsize)), "rb")
+    dbobj = pickle.load(dbfile)
+    s1_WTW_rep = dbobj['s1_WTW_rep']
+    s2_WTW_rep = dbobj['s2_WTW_rep']
 
 
-# plot WTW 
-sns.set(font_scale = 1.5)
-sns.set_style("white")
-g = figFxs.plot_group_emp_rep_wtw(s1_WTW_rep, s2_WTW_rep, s1_WTW_emp, s2_WTW_emp, hdrdata_sess1, hdrdata_sess2, s1_paradf, s2_paradf)
-plt.tight_layout()
-plt.gcf().set_size_inches(12, 6)
-g.savefig(os.path.join("..", "figures", expname, "emp_rep_%s_wtw_%s_stepsize%.2f.pdf"%(modelname, fitMethod, stepsize)))
-# plot task measures separately for both conditions
-vars = ['auc', 'std_wtw']
-labels = ['AUC', 'std_wtw']
-for var, label in zip(vars, labels):
-    g = figFxs.plot_group_emp_rep(s1_stats_rep, s2_stats_rep, s1_stats, s2_stats, "std_wtw", "std_wtw")
-    plt.gcf().set_size_inches(10, 6)
-    plt.savefig(os.path.join("..", "figures", expname, "emp_rep_%s_%s_%s_stepsize%.2f.pdf"%(modelname, fitMethod, var, stepsize)))
 
-# plot task measures, combining both sessions and both conditions 
-s1_df_emp, s2_df_emp = analysisFxs.pivot_by_condition(s1_stats), analysisFxs.pivot_by_condition(s2_stats)
-emp_df = analysisFxs.agg_across_sessions(s1_df_emp, s2_df_emp)
-s1_df_rep, s2_df_rep = analysisFxs.pivot_by_condition(s1_stats_rep), analysisFxs.pivot_by_condition(s2_stats_rep)
-rep_df = analysisFxs.agg_across_sessions(s1_df_rep, s2_df_rep)
-plotdf = emp_df.merge(rep_df, on = "id", suffixes = ["_emp", "_rep"])
-vars = ['auc', 'std_wtw', "auc_delta"]
-labels = ['AUC (s)', r'$\sigma_{wtw}$ (s)', r"$\Delta$ AUC (s)"]
-fig, axes = plt.subplots(1, 3)
-for (var, label), ax in zip(zip(vars, labels), axes.flatten()):
-    sns.regplot(x = var + '_emp', y = var + '_rep', data = plotdf, scatter_kws={"color": "grey", "s": 40, "alpha":0.7, "edgecolor":'black'}, line_kws={"color": "black", "linestyle":"--"}, ax = ax)
-    ax.set_xlabel("Observed")
-    ax.set_ylabel("Model-generated")
-    ax.set_title(label)
+    # plot WTW 
+    sns.set(font_scale = 1.5)
+    sns.set_style("white")
+    g = figFxs.plot_group_emp_rep_wtw(s1_WTW_rep, s2_WTW_rep, s1_WTW_emp, s2_WTW_emp, hdrdata_sess1, hdrdata_sess2, s1_paradf, s2_paradf)
+    plt.tight_layout()
+    plt.gcf().set_size_inches(12, 6)
+    g.savefig(os.path.join("..", "figures", expname, "emp_rep_%s_wtw_%s_stepsize%.2f.pdf"%(modelname, fitMethod, stepsize)))
+    # plot task measures separately for both conditions
+    vars = ['auc', 'std_wtw']
+    labels = ['AUC', 'std_wtw']
+    for var, label in zip(vars, labels):
+        g = figFxs.plot_group_emp_rep(s1_stats_rep, s2_stats_rep, s1_stats, s2_stats, "std_wtw", "std_wtw")
+        plt.gcf().set_size_inches(10, 6)
+        plt.savefig(os.path.join("..", "figures", expname, "emp_rep_%s_%s_%s_stepsize%.2f.pdf"%(modelname, fitMethod, var, stepsize)))
 
-fig.tight_layout()
-fig.set_size_inches(14, 4)
-fig.savefig(os.path.join("..", "figures", expname, "cb_emp_rep_%s_%s.pdf"%(modelname, var)))
+    # plot task measures, combining both sessions and both conditions 
+    s1_df_emp, s2_df_emp = analysisFxs.pivot_by_condition(s1_stats), analysisFxs.pivot_by_condition(s2_stats)
+    emp_df = analysisFxs.agg_across_sessions(s1_df_emp, s2_df_emp)
+    s1_df_rep, s2_df_rep = analysisFxs.pivot_by_condition(s1_stats_rep), analysisFxs.pivot_by_condition(s2_stats_rep)
+    rep_df = analysisFxs.agg_across_sessions(s1_df_rep, s2_df_rep)
+    plotdf = emp_df.merge(rep_df, on = "id", suffixes = ["_emp", "_rep"])
+    vars = ['auc', 'std_wtw', "auc_delta"]
+    labels = ['AUC (s)', r'$\sigma_{wtw}$ (s)', r"$\Delta$ AUC (s)"]
+    fig, axes = plt.subplots(1, 3)
+    for (var, label), ax in zip(zip(vars, labels), axes.flatten()):
+        sns.regplot(x = var + '_emp', y = var + '_rep', data = plotdf, scatter_kws={"color": "grey", "s": 40, "alpha":0.7, "edgecolor":'black'}, line_kws={"color": "black", "linestyle":"--"}, ax = ax)
+        ax.set_xlabel("Observed")
+        ax.set_ylabel("Model-generated")
+        ax.set_title(label)
+        
+    fig.tight_layout()
+    fig.set_size_inches(14, 4)
+    fig.savefig(os.path.join("..", "figures", expname, "cb_emp_rep_%s_%s.pdf"%(modelname, var)))
 
-# let me get a report 
-_, _, _, _, _, report = analysisFxs.calc_zip_reliability(plotdf, [(x,y) for x, y in zip([x + "_emp" for x in vars], [x + "_rep" for x in vars])])
-report['rsquared'] = report['pearson_rho']**2
-report.round(3)
+    # let me get a report 
+    _, _, _, _, _, report = analysisFxs.calc_zip_reliability(plotdf, [(x,y) for x, y in zip([x + "_emp" for x in vars], [x + "_rep" for x in vars])])
+    report['rsquared'] = report['pearson_rho']**2
+    report.round(3)
 
 
 # I need to combine both conditions

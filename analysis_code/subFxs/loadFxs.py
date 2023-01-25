@@ -160,6 +160,8 @@ def group_quality_check(expname, sess, plot_quality_check = False):
     # code.interact(local = dict(locals(), **globals()))
     consentdata = pd.read_csv(os.path.join(datadir, expname, "demographic_sess%d.csv"%sess))
     # code.interact(local = dict(globals(), **locals()))
+    if not os.path.exists(os.path.join("..", "analysis_results", expname, "excluded")):
+        os.mkdir(os.path.join("..", "analysis_results", expname, "excluded"))
     excluded.to_csv(os.path.join("..", "analysis_results", expname, "excluded", "excluded_participants_sess%d.csv"%sess), index = False)
     # excluded = pd.read_csv(os.path.join("..", "analysis_results", "excluded", "excluded_participants_sess%d.csv"%sess))
 
@@ -284,7 +286,8 @@ def parse_group_selfreport(expname, sess, isplot):
     if os.path.exists(mcqfile):
         # code.interact(local = dict(locals(), **globals()))
         mcqdata = pd.read_csv(mcqfile)
-        k_filter = np.logical_and.reduce([mcqdata.SmlCons >= 0.8, mcqdata.MedCons >= 0.8, mcqdata.LrgCons > 0.8])
+        # k_filter = np.logical_and.reduce([mcqdata.SmlCons >= 0.8, mcqdata.MedCons >= 0.8, mcqdata.LrgCons > 0.8])
+        k_filter = mcqdata[['SmlCons', 'MedCons', 'LrgCons']].mean(axis = 1) >= 0.8
         n_nonvalid_k = (~k_filter).sum()
         print("k estimates for %d participants are not valid! Didn't record them."%n_nonvalid_k)
         mcqdata = mcqdata.loc[k_filter,:] 

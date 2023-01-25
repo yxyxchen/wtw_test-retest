@@ -125,6 +125,27 @@ g = sns.pairplot(selfdf[["UPPS", "BIS", "discount_logk"]], kind = "reg", diag_kw
 g.map_lower(figFxs.annotate_reg)
 plt.savefig(os.path.join("..", "figures", "combined", "impulsivity_corr.pdf"))
 
+# plot a flatten version
+plt.style.use('classic')
+sns.set(font_scale = 1.5)
+sns.set_style("white")
+plotdf = pd.DataFrame({
+  "x": selfdf[["UPPS", "UPPS", "BIS"]].values.flatten("F"),
+  'y': selfdf[["BIS", "discount_logk", "discount_logk"]].values.flatten("F"),
+  'pair': np.repeat(np.arange(3), selfdf.shape[0])
+  })
+g = sns.FacetGrid(data = plotdf, col = "pair", sharex = False, sharey = False)
+g.map(figFxs.my_regplot, "x", "y", equal_aspect = False)
+g.set_titles("")
+label_pairs = zip(["UPPS-P", "UPPS-P", "BIS"], ["BIS", "MCQ's log(k)", "MCQ's log(k)"])
+for (x, y), ax in zip(label_pairs, g.axes.flatten()):
+  ax.set_xlabel(x)
+  ax.set_ylabel(y)
+   
+plt.gcf().set_size_inches(4 * 3, 5.5)
+g.savefig(os.path.join('..', 'figures', "combined", 'impulsivity_corr_line.pdf'), bbox_inches = "tight")
+
+   ####
 g = sns.pairplot(selfdf[["NU", "PU", "PM", "PS", "SS"]], kind = "reg", diag_kws = {"color": "grey", "edgecolor": "black"},\
 	plot_kws ={'line_kws':{'color':'red'}, "scatter_kws": {"color": "grey", "edgecolor": "black"}})
 g.map_lower(figFxs.annotate_reg)
