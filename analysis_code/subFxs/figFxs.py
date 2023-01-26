@@ -82,7 +82,9 @@ def plot_group_emp_rep_wtw(s1_WTW_rep, s2_WTW_rep, s1_WTW_emp, s2_WTW_emp, hdrda
     plotdf['ymin'] = plotdf['wtw'] - plotdf['se']
     plotdf['ymax'] = plotdf['wtw'] + plotdf['se']
 
-    g = sns.FacetGrid(plotdf, col= "sess", hue = 'type', sharex = True, sharey = True, palette = ["black", "red"])
+    palette = ["black"] + [sns.color_palette("tab10")[1]]
+
+    g = sns.FacetGrid(plotdf, col= "sess", hue = 'type', sharex = True, sharey = True, palette = palette)
     g.map(sns.lineplot, "time", "wtw")
     g.map(plt.fill_between, "time", "ymin", "ymax", facecolor='grey', edgecolor = "none",alpha = 0.4, interpolate=True, linewidth = 2)
     g.set(ylim=(3, 10), ylabel = "WTW (s)", xlabel = "Task time (min)")
