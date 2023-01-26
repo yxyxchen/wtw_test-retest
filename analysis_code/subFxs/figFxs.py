@@ -530,7 +530,7 @@ def annotate_reg(x, y, test = "spearman", ax = None, **kwargs):
         ax.text(0.4, 0.1, "icc = %.3f\n"%abs_icc, size=18, color='red', transform=ax.transAxes)
 
 
-def my_regplot(x, y, ax = None, exclude_outliers = False, equal_aspect = True, **kwargs):  
+def my_regplot(x, y, ax = None, exclude_outliers = False, equal_aspect = True, rsquared = False, **kwargs):  
     if(ax is None):
         ax = plt.gca()
     # cacl realibility 
@@ -579,7 +579,11 @@ def my_regplot(x, y, ax = None, exclude_outliers = False, equal_aspect = True, *
     # add text
     # code.interact(local = dict(locals(), **globals()))
     # ax.text(0.4, 0.1, 'ICC = %.3f\n'%abs_icc, size=16, color='red', transform=ax.transAxes)
-    ax.text(0.4, 0.1, 'r = %.3f\n'%spearman_rho, size=20, color='red', transform=ax.transAxes)
+    if not rsquared:
+        ax.text(0.4, 0.1, 'r = %.3f\n'%spearman_rho, size=20, color='red', transform=ax.transAxes)
+    else:
+        r2 = pearson_rho ** 2
+        ax.text(0.4, 0.1, r'\rho^2 = %.3f\n'%r2, size=20, color='red', transform=ax.transAxes)
     # print('ci = (%.3f, %.3f)'%ci)
     # ax.text(0.7, 0.1, 'n_o = %d'%n_outlier, size=15, color='red', transform=ax.transAxes)
 
