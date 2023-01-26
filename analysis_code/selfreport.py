@@ -145,7 +145,7 @@ for (x, y), ax in zip(label_pairs, g.axes.flatten()):
 plt.gcf().set_size_inches(4 * 3, 5.5)
 g.savefig(os.path.join('..', 'figures', "combined", 'impulsivity_corr_line.pdf'), bbox_inches = "tight")
 
-   ####
+####
 g = sns.pairplot(selfdf[["NU", "PU", "PM", "PS", "SS"]], kind = "reg", diag_kws = {"color": "grey", "edgecolor": "black"},\
 	plot_kws ={'line_kws':{'color':'red'}, "scatter_kws": {"color": "grey", "edgecolor": "black"}})
 g.map_lower(figFxs.annotate_reg)
