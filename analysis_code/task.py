@@ -182,6 +182,33 @@ for expname in ['active', 'passive', "combined"]:
     plot_kws ={'line_kws':{'color':'red'}, "scatter_kws": {"color": "grey", "edgecolor": "black"}})
     g.map_lower(figFxs.annotate_reg)
     g.savefig(os.path.join('..', 'figures', expname, 'among_measures.pdf'))
+
+
+    # let me use another way
+    plotdf = pd.DataFrame({
+        "x": statsdf[[var2label(x) for x in ["auc", "auc", "std_wtw"]]].values.flatten("F"),
+        'y': statsdf[[var2label(x) for x in ["std_wtw", "auc_delta", "auc_delta"]]].values.flatten("F"),
+        'pair': np.repeat(np.arange(3), statsdf.shape[0])
+        })
+    g = sns.FacetGrid(data = plotdf, col = "pair", sharex = False, sharey = False)
+    g.map(figFxs.my_regplot, "x", "y", equal_aspect = False)
+    g.set_titles("")
+
+    label_pairs = zip([var2label(x) for x in ["auc", "auc", "std_wtw"]], [var2label(x) for x in ["std_wtw", "auc_delta", "auc_delta"]])
+    for (x, y), ax in zip(label_pairs, g.axes.flatten()):
+        ax.set_xlabel(x)
+        ax.set_ylabel(y)
+        if x == "AUC (s)":
+            ax.set_xlim([-0.5, 12.5])
+        if x == "$\\sigma_\\mathrm{wtw}$ (s)":
+            ax.set_xticks([0.0, 1.5, 3.0, 4.5])
+            ax.set_xlim([-0.5, 5])
+        if y == "$\\sigma_\\mathrm{wtw}$ (s)":
+            ax.set_yticks([0.0, 1.5, 3.0, 4.5])
+            ax.set_ylim([-0.5, 5])     
+
+    plt.gcf().set_size_inches(4 * 3, 5.5)
+    g.savefig(os.path.join('..', 'figures', expname, 'among_measures_line.pdf'), bbox_inches = "tight")
 ############ model parameter analysis ###########
 # expname = 'passive'
 # modelname = 'QL2reset_HM_short'

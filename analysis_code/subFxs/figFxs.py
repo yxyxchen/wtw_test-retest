@@ -522,15 +522,15 @@ def annotate_reg(x, y, test = "spearman", ax = None, **kwargs):
     print(test)
     if test == "spearman":
         r, p = spearmanr(x, y)
-        ax.text(0.4, 0.1, "r = %.3f\n p = %.3f"%(r, p), size=12, color='red', transform=ax.transAxes)
+        ax.text(0.4, 0.1, "r = %.3f\n"%r, size=18, color='red', transform=ax.transAxes)
     elif test == "pearson":
         r, p = pearsonr(x, y)
-        ax.text(0.4, 0.1, "pearson's r = %.3f\n p = %.3f"%(r, p), size=12, color='red', transform=ax.transAxes)
+        ax.text(0.4, 0.1, "pearson's r = %.3f"%r, size=18, color='red', transform=ax.transAxes)
     elif test == "icc":
-        ax.text(0.4, 0.1, "icc = %.3f\n"%abs_icc, size=12, color='red', transform=ax.transAxes)
+        ax.text(0.4, 0.1, "icc = %.3f\n"%abs_icc, size=18, color='red', transform=ax.transAxes)
 
 
-def my_regplot(x, y, ax = None, exclude_outliers = True, **kwargs):  
+def my_regplot(x, y, ax = None, exclude_outliers = False, equal_aspect = True, **kwargs):  
     if(ax is None):
         ax = plt.gca()
     # cacl realibility 
@@ -567,13 +567,14 @@ def my_regplot(x, y, ax = None, exclude_outliers = True, **kwargs):
         ax.set_ylim(lims)
         ax.set_xlim(lims)  
     else:
-        sns.regplot(x, y, **kwargs, ax = ax)
+        sns.regplot(x = x, y = y, scatter_kws={"color": "grey", "s": 40, "alpha":0.7, "edgecolor":'black'}, line_kws={"color": "black", "linestyle":"--"}, **kwargs, ax = ax)
     # 
     # choose equal limits for the x and y axes
 
     # ax.set_xlabel("SESS1 value")
     # ax.set_ylabel("SESS2 value")
-    ax.set_aspect('equal')
+    if equal_aspect:
+        ax.set_aspect('equal')
 
     # add text
     # code.interact(local = dict(locals(), **globals()))
