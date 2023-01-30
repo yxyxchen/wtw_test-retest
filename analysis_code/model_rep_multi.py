@@ -49,8 +49,7 @@ s1_stats, s1_Psurv_b1_, s1_Psurv_b2_, s1_WTW_emp = analysisFxs.group_MF(trialdat
 s2_stats, s2_Psurv_b1_, s2_Psurv_b2_, s2_WTW_emp = analysisFxs.group_MF(trialdata_sess2_, plot_each = False)   
 
 
-# modelnames = ['QL2reset', 'QL2reset_slope', 'QL2reset_slope_two', 'QL2reset_slope_two_simple']
-modelnames = ['QL2', 'QL2reset']
+modelnames = ['QL2reset', 'QL2reset_slope', 'QL2reset_slope_two', 'QL2reset_slope_two_simple']
 fitMethod = "whole"
 stepsize = 0.5
 
@@ -104,10 +103,11 @@ figFxs.plot_group_emp_rep_wtw_multi(s1_WTW_rep_, s2_WTW_rep_, s1_WTW_emp, s2_WTW
 plt.legend("", frameon = False)
 plt.gcf().set_size_inches(12, 6)
 plt.tight_layout()
-plt.savefig(os.path.join("..", "figures", expname, "emp_rep_multi.pdf"))
+plt.savefig(os.path.join("..", "figures", expname, "emp_rep_para.pdf"))
 
 
-######### compare WAIC ##############
+
+##### load things ##
 for i in np.arange(len(modelnames)):
     s1_paradf = s1_paradf_[i]
     s2_paradf = s2_paradf_[i]
@@ -118,71 +118,6 @@ for i in np.arange(len(modelnames)):
 s1_paradf = pd.concat([x for x in s1_paradf_])
 s2_paradf = pd.concat([x for x in s2_paradf_])
 paradf = pd.concat([s1_paradf, s2_paradf])
-
-fig, ax = plt.subplots()
-sns.barplot(data = paradf, x = "model", y = "waic", ax = ax, palette = sns.color_palette("tab10"))
-fig.savefig(os.path.join("..", "figures", expname, "waic_multi.pdf"))
-paradf.groupby(["sess", "model"]).agg({"waic":[np.median, lambda x: np.std(x) / np.sqrt(len(x))]})
-
-paradf.groupby(["sess", "model"]).agg({"neg_ippd":[np.median, lambda x: np.std(x) / np.sqrt(len(x))]})
-# let me calculate the best fit 
-waicdf = paradf.pivot_table(values = ['waic'], index = ['id', "sess"], columns = "model")
-waicdf.to_csv(os.path.join("..", "figures", expname, "waic_multi.csv"), index = None, header = None)
-
-a = waicdf.reset_index()
-for sess in [1, 2]:
-    a.loc[a[("sess", "")] == sess].iloc[:,2:].to_csv(os.path.join("..", "figures", expname, "waic_multi_sess%d.csv"%sess), index = None, header = None)
-    a.loc[a[("sess", "")] == sess].iloc[:,2:].apply(np.argmin, axis = 1).value_counts()
-    
-# use neg_lppd
-neglppd_df = paradf.pivot_table(values = ['neg_ippd'], index = ['id', "sess"], columns = "model")
-a = neglppd_df.reset_index()
-for sess in [1, 2]:
-    a.loc[a[("sess", "")] == sess].iloc[:,2:].to_csv(os.path.join("..", "figures", expname, "waic_multi_sess%d.csv"%sess), index = None, header = None)
-    a.loc[a[("sess", "")] == sess].iloc[:,2:].apply(np.argmin, axis = 1).value_counts()
-
-# let me calculate the waic differences
-fig, axes = plt.subplots(1, 3)
-for i, ax in zip(np.arange(3), axes):
-	ax.hist(waicdf.iloc[:,i+1] - waicdf.iloc[:,i])
-	ax.set_title(modelnames[i+1] + ' - ' + modelnames[i])
-
-plt.hist(waicdf.iloc[:,1] - waicdf.iloc[:,0])
-sp.stats.wilcoxon(waicdf.iloc[:,1], waicdf.iloc[:,0])
-
-
-######## compare variance explained
-s1_df_emp, s2_df_emp = analysisFxs.pivot_by_condition(s1_stats), analysisFxs.pivot_by_condition(s2_stats)
-emp_df = analysisFxs.agg_across_sessions(s1_df_emp, s2_df_emp)
-vars = ['auc', 'std_wtw', "auc_delta"]
-for s1_stats_rep, s2_stats_rep in zip(s1_stats_rep_, s2_stats_rep_):
-    s1_df_rep, s2_df_rep = analysisFxs.pivot_by_condition(s1_stats_rep), analysisFxs.pivot_by_condition(s2_stats_rep)
-    rep_df = analysisFxs.agg_across_sessions(s1_df_rep, s2_df_rep)
-    plotdf = emp_df.merge(rep_df, on = "id", suffixes = ["_emp", "_rep"])
-    _, _, _, _, _, report = analysisFxs.calc_zip_reliability(plotdf, [(x,y) for x, y in zip([x + "_emp" for x in vars], [x + "_rep" for x in vars])])
-    report['rsquared'] = report['pearson_rho']**2
-    report.round(3)
-
-
-vars = ['auc', 'std_wtw', "auc_delta"]
-labels = ['AUC (s)', r'$\sigma_{wtw}$ (s)', r"$\Delta$ AUC (s)"]
-for s1_stats_rep, s2_stats_rep, modelname in zip(s1_stats_rep_, s2_stats_rep_, modelnames):
-    s1_df_rep, s2_df_rep = analysisFxs.pivot_by_condition(s1_stats_rep), analysisFxs.pivot_by_condition(s2_stats_rep)
-    rep_df = analysisFxs.agg_across_sessions(s1_df_rep, s2_df_rep)
-    plotdf = emp_df.merge(rep_df, on = "id", suffixes = ["_emp", "_rep"])
-    fig, axes = plt.subplots(1, 3)
-    for (var, label), ax in zip(zip(vars, labels), axes.flatten()):
-        sns.regplot(x = var + '_emp', y = var + '_rep', data = plotdf, scatter_kws={"color": "grey", "s": 40, "alpha":0.7, "edgecolor":'black'}, line_kws={"color": "black", "linestyle":"--"}, ax = ax)
-        ax.set_xlabel("Observed")
-        ax.set_ylabel("Model-generated")
-        ax.set_title(label)
-    fig.tight_layout()
-    fig.set_size_inches(14, 4)
-    fig.savefig(os.path.join("..", "figures", expname, "cb_emp_rep_%s_%s.pdf"%(modelname, var)))
-
-
-
-
 ################ compare structural correlation ##########
 r_ = []
 pair_ = []
@@ -321,4 +256,80 @@ g = sns.FacetGrid(data = plotdf, col = "var")
 g.map(sns.barplot, "model", "r")
 
 g.savefig(os.path.join("..", "figures", expname, "reliability_multi.pdf"))
+
+
+######### compare WAIC ##############
+
+
+fig, ax = plt.subplots()
+sns.barplot(data = paradf, x = "model", y = "waic", ax = ax, palette = sns.color_palette("tab10"))
+fig.savefig(os.path.join("..", "figures", expname, "waic_multi.pdf"))
+paradf.groupby(["sess", "model"]).agg({"waic":[np.median, lambda x: np.std(x) / np.sqrt(len(x))]})
+
+paradf.groupby(["sess", "model"]).agg({"neg_ippd":[np.median, lambda x: np.std(x) / np.sqrt(len(x))]})
+# let me calculate the best fit 
+waicdf = paradf.pivot_table(values = ['waic'], index = ['id', "sess"], columns = "model")
+waicdf.to_csv(os.path.join("..", "figures", expname, "waic_multi.csv"), index = None, header = None)
+
+a = waicdf.reset_index()
+for sess in [1, 2]:
+    a.loc[a[("sess", "")] == sess].iloc[:,2:].to_csv(os.path.join("..", "figures", expname, "waic_multi_sess%d.csv"%sess), index = None, header = None)
+    a.loc[a[("sess", "")] == sess].iloc[:,2:].apply(np.argmin, axis = 1).value_counts()
+    
+# use neg_lppd
+neglppd_df = paradf.pivot_table(values = ['neg_ippd'], index = ['id', "sess"], columns = "model")
+a = neglppd_df.reset_index()
+for sess in [1, 2]:
+    a.loc[a[("sess", "")] == sess].iloc[:,2:].to_csv(os.path.join("..", "figures", expname, "waic_multi_sess%d.csv"%sess), index = None, header = None)
+    a.loc[a[("sess", "")] == sess].iloc[:,2:].apply(np.argmin, axis = 1).value_counts()
+
+# let me calculate the waic differences
+fig, axes = plt.subplots(1, 3)
+for i, ax in zip(np.arange(3), axes):
+	ax.hist(waicdf.iloc[:,i+1] - waicdf.iloc[:,i])
+	ax.set_title(modelnames[i+1] + ' - ' + modelnames[i])
+
+plt.hist(waicdf.iloc[:,1] - waicdf.iloc[:,0])
+sp.stats.wilcoxon(waicdf.iloc[:,1], waicdf.iloc[:,0])
+
+# let me calculate the waic difference for two sessions 
+delta_waic = waicdf.iloc[:,1] - waicdf.iloc[:,0]
+delta_waic = delta_waic.reset_index()
+delta_waic.columns = ['id', "sess", "waic"]
+delta_waic['rank'] = delta_waic.groupby("sess")['waic'].rank()
+
+g = sns.FacetGrid(delta_waic, col = "sess")
+g.map(sns.barplot, "rank", "waic") # it dosen't work this way ....
+
+######## compare variance explained
+s1_df_emp, s2_df_emp = analysisFxs.pivot_by_condition(s1_stats), analysisFxs.pivot_by_condition(s2_stats)
+emp_df = analysisFxs.agg_across_sessions(s1_df_emp, s2_df_emp)
+vars = ['auc', 'std_wtw', "auc_delta"]
+for s1_stats_rep, s2_stats_rep in zip(s1_stats_rep_, s2_stats_rep_):
+    s1_df_rep, s2_df_rep = analysisFxs.pivot_by_condition(s1_stats_rep), analysisFxs.pivot_by_condition(s2_stats_rep)
+    rep_df = analysisFxs.agg_across_sessions(s1_df_rep, s2_df_rep)
+    plotdf = emp_df.merge(rep_df, on = "id", suffixes = ["_emp", "_rep"])
+    _, _, _, _, _, report = analysisFxs.calc_zip_reliability(plotdf, [(x,y) for x, y in zip([x + "_emp" for x in vars], [x + "_rep" for x in vars])])
+    report['rsquared'] = report['pearson_rho']**2
+    report.round(3)
+
+
+vars = ['auc', 'std_wtw', "auc_delta"]
+labels = ['AUC (s)', r'$\sigma_{wtw}$ (s)', r"$\Delta$ AUC (s)"]
+for s1_stats_rep, s2_stats_rep, modelname in zip(s1_stats_rep_, s2_stats_rep_, modelnames):
+    s1_df_rep, s2_df_rep = analysisFxs.pivot_by_condition(s1_stats_rep), analysisFxs.pivot_by_condition(s2_stats_rep)
+    rep_df = analysisFxs.agg_across_sessions(s1_df_rep, s2_df_rep)
+    plotdf = emp_df.merge(rep_df, on = "id", suffixes = ["_emp", "_rep"])
+    fig, axes = plt.subplots(1, 3)
+    for (var, label), ax in zip(zip(vars, labels), axes.flatten()):
+        sns.regplot(x = var + '_emp', y = var + '_rep', data = plotdf, scatter_kws={"color": "grey", "s": 40, "alpha":0.7, "edgecolor":'black'}, line_kws={"color": "black", "linestyle":"--"}, ax = ax)
+        ax.set_xlabel("Observed")
+        ax.set_ylabel("Model-generated")
+        ax.set_title(label)
+    fig.tight_layout()
+    fig.set_size_inches(14, 4)
+    fig.savefig(os.path.join("..", "figures", expname, "cb_emp_rep_%s_%s.pdf"%(modelname, var)))
+
+
+
 

@@ -333,14 +333,16 @@ def log_transform_parameter(paradf, selected_paranames):
 
 def plot_parameter_reliability(modelname, paradf_sess1, paradf_sess2, subtitles):
     # log transform parameter data
-    log_transform_parameter(paradf_sess1, ['alpha', 'nu', 'eta'])
-    log_transform_parameter(paradf_sess2, ['alpha', 'nu', 'eta'])
+    paradf_sess1 = log_transform_parameter(paradf_sess1, ['alpha', 'nu', 'eta'])
+    paradf_sess2 = log_transform_parameter(paradf_sess2, ['alpha', 'nu', 'eta'])
     plt.style.use('classic')
     sns.set(font_scale=1.5)
     sns.set_style("white")
+    paranames = modelFxs.getModelParas(modelname)
+    labelnames = ["log_" + x if x in ['alpha', 'nu', 'eta'] else x for x in paranames]
     # reorganize and merge sess1 and sess2 data
-    paradf_sess1 = pd.melt(paradf_sess1, id_vars = ('id', 'sess'), value_vars = paradf_sess1.columns.drop(['id', 'sess']))
-    paradf_sess2 = pd.melt(paradf_sess2, id_vars = ('id', 'sess'), value_vars = paradf_sess2.columns.drop(['id', 'sess']))
+    paradf_sess1 = pd.melt(paradf_sess1, id_vars = ('id', 'sess'), value_vars = labelnames)
+    paradf_sess2 = pd.melt(paradf_sess2, id_vars = ('id', 'sess'), value_vars = labelnames)
     paradf = paradf_sess1.merge(paradf_sess2, left_on = ("id", "variable"), right_on = ("id", "variable"), suffixes = ['_sess1', '_sess2'])
     g = sns.FacetGrid(paradf, col= "variable", sharex = False, sharey = False)
     g.map(my_regplot, 'value_sess1', "value_sess2")
@@ -532,7 +534,7 @@ def annotate_reg(x, y, test = "spearman", ax = None, **kwargs):
         ax.text(0.4, 0.1, "icc = %.3f\n"%abs_icc, size=18, color='red', transform=ax.transAxes)
 
 
-def my_regplot(x, y, ax = None, exclude_outliers = False, equal_aspect = True, **kwargs):  
+def my_regplot(x, y, ax = None, exclude_outliers = False, equal_aspect = True, rsquared = False, **kwargs):  
     if(ax is None):
         ax = plt.gca()
     # cacl realibility 
@@ -558,7 +560,7 @@ def my_regplot(x, y, ax = None, exclude_outliers = False, equal_aspect = True, *
     # scatter plot with included data
     # 
     if exclude_outliers:
-        sns.regplot(x[~is_outlier], y[~is_outlier], scatter_kws={"color": "grey", "s": 40, "alpha":0.7, "edgecolor":'black'}, line_kws={"color": "black", "linestyle":"--"}, **kwargs, ax = ax)
+        sns.regplot(x[~is_outlier], y[~is_outlier], scatter_kws={"color": "#bdbdbd", "s": 40, "alpha":0.7, "edgecolor":'black'}, line_kws={"color": "#cb181d", "linestyle":"--"}, **kwargs, ax = ax)
         print('n_o = %d'%n_outlier)
         x_now_min = x[~is_outlier].min()
         y_now_min = y[~is_outlier].min()
@@ -569,7 +571,7 @@ def my_regplot(x, y, ax = None, exclude_outliers = False, equal_aspect = True, *
         ax.set_ylim(lims)
         ax.set_xlim(lims)  
     else:
-        sns.regplot(x = x, y = y, scatter_kws={"color": "grey", "s": 40, "alpha":0.7, "edgecolor":'black'}, line_kws={"color": "black", "linestyle":"--"}, **kwargs, ax = ax)
+        sns.regplot(x = x, y = y, scatter_kws={"color": "#bdbdbd", "s": 40, "alpha":0.7, "edgecolor":'black'}, line_kws={"color": "#cb181d", "linestyle":"--"}, **kwargs, ax = ax)
     # 
     # choose equal limits for the x and y axes
 
@@ -581,7 +583,11 @@ def my_regplot(x, y, ax = None, exclude_outliers = False, equal_aspect = True, *
     # add text
     # code.interact(local = dict(locals(), **globals()))
     # ax.text(0.4, 0.1, 'ICC = %.3f\n'%abs_icc, size=16, color='red', transform=ax.transAxes)
-    ax.text(0.4, 0.1, 'r = %.3f\n'%spearman_rho, size=20, color='red', transform=ax.transAxes)
+    if not rsquared:
+        ax.text(0.4, 0.1, r'$\rho$ = %.3f\n'%spearman_rho, size=20, color='red', transform=ax.transAxes)
+    else:
+        r2 = pearson_rho ** 2
+        ax.text(0.4, 0.1, r'$R^2$ = %.3f'%r2, size=16, color='red', transform=ax.transAxes)
     # print('ci = (%.3f, %.3f)'%ci)
     # ax.text(0.7, 0.1, 'n_o = %d'%n_outlier, size=15, color='red', transform=ax.transAxes)
 

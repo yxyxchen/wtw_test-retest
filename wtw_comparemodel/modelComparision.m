@@ -1,13 +1,13 @@
 
 
 
-fileDir = sprintf('waic_multi.csv');
+fileDir = sprintf('waic_compare_sess1.csv');
 waic = csvread(fileDir);
 
 % transfer into the loss domain 
 L = -waic';
 
-L = L(1:3,:);
+L = L(1:2,:);
 
 % exclude participants with disconvergent model fitting results 
 % L = L(1:5, all(L(7:11,:)));
