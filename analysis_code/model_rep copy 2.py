@@ -122,54 +122,38 @@ structure_noise_summary_df = structure_noise_df.groupby(["pair", "sess"]).agg({"
 
 structure_noise_summary_df = structure_noise_df.groupby(["pair", "sess"]).agg({"r":np.mean}).reset_index()
 
-
-# plot the heatmap version 
-structure_noise_df['var1'] = pd.Categorical([x[0] for x in structure_noise_df['pair']], paranames)
-structure_noise_df['var2'] = pd.Categorical([x[1] for x in structure_noise_df['pair']], paranames)
-structure_noise_matrix = pd.DataFrame(np.full((len(paranames), len(paranames)), np.nan), columns = paranames, index = paranames)
-structure_noise_matrix.loc[paranames[:5], paranames[1:]] = structure_noise_df.pivot_table('r', 'var1', 'var2', np.mean)
-fig, ax
-g = sns.heatmap(structure_noise_matrix, annot=True, square=True, linewidths=1, vmin=-1, vmax=1, center = 0, cmap = cmap, norm = norm)
-plt.colorbar(mpl.cm.ScalarMappable(norm=norm, cmap=cmap),
-             cax=ax, orientation='horizontal', label='Some Units')
-plt.savefig(os.path.join("..", "figures", expname, "heatmap_structure_corr_%s.pdf"%modelname))
-
-from matplotlib.colors import Normalize
-import matplotlib.cm as cm
-norm = Normalize(vmin=-0.75, vmax=0.75)
-cmap = cm.get_cmap('RdBu_r')
-rgba_values = cmap(norm(structure_noise_matrix))
-
-
 plt.style.use('classic')
 sns.set(font_scale = 1)
 sns.set_style("white")
 condition_palette = ["#762a83", "#1b7837"]
 para_label_mapping = dict(zip(paranames, [r'$\alpha$', r'$\nu$', r'$\tau$', r'$\gamma$', r'$\eta$']))
 fig, axes = plt.subplots(len(paranames), len(paranames))
-for (i, x), (j,y) in itertools.product(enumerate(paranames), enumerate(paranames)):
+for (i, y), (j,x) in itertools.product(enumerate(paranames), enumerate(paranames)):
     if (x, y) in itertools.combinations(paranames, 2):
-        axes[j,i].hist(structure_noise_df.loc[structure_noise_df["pair"] == (x,y), "r"].values, bins = 15, color = "#bdbdbd", edgecolor = "#bdbdbd")
-        axes[j,i].set_xlim((-1.05, 1.05))
+        axes[i,j].hist(structure_noise_df.loc[structure_noise_df["pair"] == (x,y), "r"].values, bins = 15, color = "grey")
+        axes[i,j].set_xlim((-1, 1))
         median_val = np.median(structure_noise_df.loc[structure_noise_df["pair"] == (x,y), "r"].values)
-        print(median_val)
-        axes[j,i].axvline(median_val, color = rgba_values[i, j, :], linewidth = 3)
-        axes[j,i].text(0.2, 50, "%.2f"%median_val, color = "black")
-        axes[j,i].axvline(0, color = "black") # "#238b45", 
-        axes[j,i].set_ylim([0, 95])
+        axes[i,j].axvline(median_val, color = "red")
+        axes[i,j].text(median_val, 40, "%.2f"%median_val, color = "red")
+        axes[i,j].axvline(0, color = "black", linestyle = "dotted")
     if i == (npara-1):
        axes[i,j].set_xlabel(para_label_mapping[x])
     if i != (npara-1):
         axes[i,j].set_xticklabels([])
     if j == 0:
         axes[i,j].set_ylabel(para_label_mapping[y])
-    if j != 0 or(i == 0 and j == 0):
+    if j != 0:
         axes[i,j].set_yticklabels([])
-fig.colorbar(cmap)
 fig.savefig(os.path.join("..", "figures", expname, "para_structure_corr_%s.pdf"%modelname))
 
 
-
+# plot the heatmap version 
+structure_noise_df['var1'] = pd.Categorical([x[0] for x in structure_noise_df['pair']], paranames)
+structure_noise_df['var2'] = pd.Categorical([x[1] for x in structure_noise_df['pair']], paranames)
+structure_noise_matrix = pd.DataFrame(np.full((len(paranames), len(paranames)), np.nan), columns = paranames, index = paranames)
+structure_noise_matrix.loc[paranames[:5], paranames[1:]] = structure_noise_df.pivot_table('r', 'var1', 'var2', np.mean)
+g = sns.heatmap(structure_noise_matrix, vmin = -0.6, vmax = 0.6, center = 0, cmap = 'PiYG', annot = True)
+plt.savefig(os.path.join("..", "figures", expname, "heatmap_structure_corr_%s.pdf"%modelname))
 
 ### flatten version
 g = sns.FacetGrid(data = structure_noise_df, col = "pair")

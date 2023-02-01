@@ -106,7 +106,6 @@ plt.tight_layout()
 plt.savefig(os.path.join("..", "figures", expname, "emp_rep_para.pdf"))
 
 
-
 ##### load things ##
 for i in np.arange(len(modelnames)):
     s1_paradf = s1_paradf_[i]

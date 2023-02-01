@@ -90,6 +90,7 @@ for modelname in ['QL2reset']:
     _, _, _, _, _, report = analysisFxs.calc_zip_reliability(plotdf, [(x,y) for x, y in zip([x + "_emp" for x in vars], [x + "_rep" for x in vars])])
     report['rsquared'] = report['pearson_rho']**2
     report.round(3)
+    
     # plot
     plt.style.use('classic')
     sns.set(font_scale = 1.5)
