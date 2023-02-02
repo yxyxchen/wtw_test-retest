@@ -35,7 +35,7 @@ sns.set_style("white")
 condition_palette = ["#762a83", "#1b7837"]
 
 
-expname = "active"
+expname = "passive"
 
 # load data 
 hdrdata_sess1, trialdata_sess1_ = loadFxs.group_quality_check(expname, 1, plot_quality_check = False)
@@ -85,6 +85,7 @@ plt.savefig(os.path.join("..", 'figures', expname, "%s_%s_stepsize%.2f_para_dist
 figFxs.plot_parameter_reliability(modelname, s1_paradf.iloc[:, :-1], s2_paradf.iloc[:, :-1], subtitles)
 
 ########## bootstrapped structural noise ########
+########## should I combine data here???? #### rethink
 r_ = []
 pair_ = []
 id_ = []
@@ -123,22 +124,36 @@ structure_noise_summary_df = structure_noise_df.groupby(["pair", "sess"]).agg({"
 structure_noise_summary_df = structure_noise_df.groupby(["pair", "sess"]).agg({"r":np.mean}).reset_index()
 
 
+# plot one participant example 
+fig, ax = plt.subplots()
+figFxs.my_regplot(parasamples['tau'], parasamples['eta'], equal_aspect = False, ax = ax)
+ax.set_xlabel('Posterior ' + r"$\tau$", fontsize = 25)
+ax.set_ylabel('Posterior ' + r"$\eta$", fontsize = 25)
+fig.set_size_inches(w = 6, h = 6)
+fig.tight_layout()
+fig.savefig(os.path.join("..", "figures", expname, "sample_structure_corr_%s.pdf"%modelname))
+
+
 # plot the heatmap version 
 structure_noise_df['var1'] = pd.Categorical([x[0] for x in structure_noise_df['pair']], paranames)
 structure_noise_df['var2'] = pd.Categorical([x[1] for x in structure_noise_df['pair']], paranames)
 structure_noise_matrix = pd.DataFrame(np.full((len(paranames), len(paranames)), np.nan), columns = paranames, index = paranames)
 structure_noise_matrix.loc[paranames[:5], paranames[1:]] = structure_noise_df.pivot_table('r', 'var1', 'var2', np.mean)
-fig, ax
-g = sns.heatmap(structure_noise_matrix, annot=True, square=True, linewidths=1, vmin=-1, vmax=1, center = 0, cmap = cmap, norm = norm)
-plt.colorbar(mpl.cm.ScalarMappable(norm=norm, cmap=cmap),
-             cax=ax, orientation='horizontal', label='Some Units')
-plt.savefig(os.path.join("..", "figures", expname, "heatmap_structure_corr_%s.pdf"%modelname))
+
 
 from matplotlib.colors import Normalize
 import matplotlib.cm as cm
+import matplotlib as mpl
 norm = Normalize(vmin=-0.75, vmax=0.75)
 cmap = cm.get_cmap('RdBu_r')
 rgba_values = cmap(norm(structure_noise_matrix))
+
+
+fig, ax = plt.subplots()
+g = sns.heatmap(structure_noise_matrix, ax = ax, annot=True, square=True, linewidths=1, cmap = cmap, norm = norm, cbar = False) 
+cbar = fig.colorbar(mpl.cm.ScalarMappable(norm=norm, cmap=cmap), ticks=[-0.75, -0.50, -0.25, 0, 0.25, 0.50, 0.75], orientation='vertical', label='Correlation')
+plt.savefig(os.path.join("..", "figures", expname, "heatmap_structure_corr_%s.pdf"%modelname))
+
 
 
 plt.style.use('classic')
@@ -156,16 +171,18 @@ for (i, x), (j,y) in itertools.product(enumerate(paranames), enumerate(paranames
         axes[j,i].axvline(median_val, color = rgba_values[i, j, :], linewidth = 3)
         axes[j,i].text(0.2, 50, "%.2f"%median_val, color = "black")
         axes[j,i].axvline(0, color = "black") # "#238b45", 
-        axes[j,i].set_ylim([0, 95])
+        axes[j,i].set_ylim([0, 105])
     if i == (npara-1):
-       axes[i,j].set_xlabel(para_label_mapping[x])
+       axes[i,j].set_xlabel(para_label_mapping[y], fontsize=25)
     if i != (npara-1):
         axes[i,j].set_xticklabels([])
     if j == 0:
-        axes[i,j].set_ylabel(para_label_mapping[y])
-    if j != 0 or(i == 0 and j == 0):
+        axes[i,j].set_ylabel(para_label_mapping[x], fontsize=25)
+    if j != 0:
         axes[i,j].set_yticklabels([])
-fig.colorbar(cmap)
+    if j == 0:
+        axes[i,j].set_yticks([0, 50, 100])
+        axes[i,j].set_yticklabels([0, 50, 100])
 fig.savefig(os.path.join("..", "figures", expname, "para_structure_corr_%s.pdf"%modelname))
 
 
@@ -200,10 +217,44 @@ g.map(plt.hist, "cv")
 s1_paradf = loadFxs.load_parameter_estimates(expname, 1, hdrdata_sess1, modelname, fitMethod, stepsize)
 s2_paradf = loadFxs.load_parameter_estimates(expname, 2, hdrdata_sess2, modelname, fitMethod, stepsize)
 log_paradf = pd.concat([figFxs.log_transform_parameter(s1_paradf, ["alpha", "tau", "eta"]), figFxs.log_transform_parameter(s2_paradf, ["alpha", "tau", "eta"])])
-g = sns.pairplot(data = log_paradf.iloc[:,:npara], kind = "reg", diag_kind = "None", corner = True,\
-    diag_kws = {"color": "grey", "edgecolor": "black"}, plot_kws ={'line_kws':{'color':'red'}, "scatter_kws": {"color": "grey", "edgecolor": "black"}})
+# log_paradf = analysisFxs.agg_across_sessions(figFxs.log_transform_parameter(s1_paradf, ["alpha", "tau", "eta"]), figFxs.log_transform_parameter(s2_paradf, ["alpha", "tau", "eta"]))
+# g = sns.pairplot(data = log_paradf.iloc[:,1:(npara+1)], kind = "reg", diag_kind = "None", corner = True,diag_kws = {"color": "grey", "edgecolor": "black"}, plot_kws ={'line_kws':{'color':'red'}, "scatter_kws": {"color": "grey", "edgecolor": "black"}})
+g = sns.pairplot(data = log_paradf.iloc[:,npara], kind = "reg", diag_kind = "None", corner = True,diag_kws = {"color": "grey", "edgecolor": "black"}, plot_kws ={'line_kws':{'color':'red'}, "scatter_kws": {"color": "grey", "edgecolor": "black"}})
 g.map_lower(figFxs.annotate_reg)
 g.savefig(os.path.join("..", 'figures', expname, "%s_%s_stepsize%.2f_para_correlation.pdf"%(modelname, fitMethod, stepsize)))
+
+
+
+# plot the heatmap version
+
+
+
+log_paranames = log_paradf.columns[:5].values
+fig, axes = plt.subplots(len(log_paranames), len(log_paranames))
+for (i, x), (j,y) in itertools.product(enumerate(log_paranames), enumerate(log_paranames)):
+    if (x, y) in itertools.combinations(log_paranames, 2):
+        axes[j,i].scatter(log_paradf[x], log_paradf[y])
+
+        axes[j,i].set_xlim((-1.05, 1.05))
+        median_val = np.median(structure_noise_df.loc[structure_noise_df["pair"] == (x,y), "r"].values)
+        print(median_val)
+        axes[j,i].axvline(median_val, color = rgba_values[i, j, :], linewidth = 3)
+        axes[j,i].text(0.2, 50, "%.2f"%median_val, color = "black")
+        axes[j,i].axvline(0, color = "black") # "#238b45", 
+        axes[j,i].set_ylim([0, 105])
+    if i == (npara-1):
+       axes[i,j].set_xlabel(para_label_mapping[y], fontsize=25)
+    if i != (npara-1):
+        axes[i,j].set_xticklabels([])
+    if j == 0:
+        axes[i,j].set_ylabel(para_label_mapping[x], fontsize=25)
+    if j != 0:
+        axes[i,j].set_yticklabels([])
+    if j == 0:
+        axes[i,j].set_yticks([0, 50, 100])
+        axes[i,j].set_yticklabels([0, 50, 100])
+
+
 
 plt.style.use('classic')
 sns.set(font_scale = 2)
