@@ -79,12 +79,6 @@ s2_stats_rep_ = []
 for i, modelname in enumerate(modelnames):
     s1_paradf = s1_paradf_[i]
     s2_paradf = s2_paradf_[i]
-    #s1_stats_rep, s1_WTW_rep, s1_dist_vals_ = modelFxs.group_model_rep(trialdata_sess1_, s1_paradf, modelname, 'whole', stepsize, isTrct = True, plot_each = False)
-    #s2_stats_rep, s2_WTW_rep, s2_dist_vals_ = modelFxs.group_model_rep(trialdata_sess2_, s2_paradf, modelname, 'whole', stepsize, isTrct = True, plot_each = False)
-    #s1_stats_rep.to_csv(os.path.join('..', 'analysis_results', expname, 'taskstats', 'rep_%s_sess1_%s_stepsize%.2f.csv'%(modelname, fitMethod, stepsize)), index = None)
-    #s2_stats_rep.to_csv(os.path.join('..', 'analysis_results', expname, 'taskstats', 'rep_%s_sess2_%s_stepsize%.2f.csv'%(modelname, fitMethod, stepsize)), index = None)
-    #s1_WTW_rep_.append(s1_WTW_rep)
-    #s2_WTW_rep_.append(s2_WTW_rep)
     s1_stats_rep = pd.read_csv(os.path.join('..', 'analysis_results', expname, 'taskstats', 'rep_%s_sess1_%s_stepsize%.2f.csv'%(modelname, fitMethod, stepsize)))
     s2_stats_rep = pd.read_csv(os.path.join('..', 'analysis_results', expname, 'taskstats', 'rep_%s_sess2_%s_stepsize%.2f.csv'%(modelname, fitMethod, stepsize)))
     s1_stats_rep_.append(s1_stats_rep)
@@ -107,16 +101,103 @@ plt.savefig(os.path.join("..", "figures", expname, "emp_rep_para.pdf"))
 
 
 ##### load things ##
-for i in np.arange(len(modelnames)):
+for i, modelname in enumerate(modelnames):
     s1_paradf = s1_paradf_[i]
     s2_paradf = s2_paradf_[i]
     s1_paradf = s1_paradf[np.isin(s1_paradf["id"], s1_ids)]
     s2_paradf = s2_paradf[np.isin(s2_paradf["id"], s2_ids)]
-    s1_paradf_[i] = s1_paradf
-    s2_paradf_[i] = s2_paradf
+    if modelname == "QL2reset_slope_two_simple" or modelname == "QL2reset_slope_two":
+        s1_paradf = s1_paradf.rename(columns = dict(zip(["alphaU"], ["kappa/nu"])))
+        s2_paradf = s2_paradf.rename(columns = dict(zip(["alphaU"], ["kappa/nu"])))
+    else:
+        s1_paradf = s1_paradf.rename(columns = dict(zip(["nu"], ["kappa/nu"])))
+        s2_paradf = s2_paradf.rename(columns = dict(zip(["nu"], ["kappa/nu"])))
+    s1_paradf_[i] = copy.copy(s1_paradf)
+    s2_paradf_[i] = copy.copy(s2_paradf)
+
+
 s1_paradf = pd.concat([x for x in s1_paradf_])
 s2_paradf = pd.concat([x for x in s2_paradf_])
 paradf = pd.concat([s1_paradf, s2_paradf])
+log_paradf = figFxs.log_transform_parameter(paradf, ["alpha", "kappa/nu", "tau", "eta"])
+
+ 
+para_name_label_mapping = dict(zip(["log_alpha", "log_kappa/nu", "log_tau", "gamma", "log_eta"],[r"$log(\alpha)$", r"$log(\nu)/log(\kappa)$", r"$log(\tau)$", r"$log(\gamma)$", "$log(\eta)$"]))
+para_name_limits_mapping = dict(zip(["log_alpha", "log_kappa/nu", "log_tau", "gamma", "log_eta"],[r"$log(\alpha)$", r"$log(\nu)/log(\kappa)$", r"$log(\tau)$", r"$log(\gamma)$", "$log(\eta)$"]))
+################ compare gross correlation ##########
+# focused pairs 
+focused_pairs = [("log_alpha", "log_kappa/nu"), ("log_tau", "log_eta")]
+plotdf = pd.DataFrame({
+    "var1": np.concatenate([log_paradf[x[0]].values for x in focused_pairs]),
+    "var2": np.concatenate([log_paradf[x[1]].values for x in focused_pairs]), 
+    "modelname": np.tile(log_paradf["model"].values, len(focused_pairs)),
+    "pair": np.repeat(np.arange(len(focused_pairs)), log_paradf.shape[0])
+    })
+
+g = sns.FacetGrid(col = "modelname", row = "pair", data = plotdf, sharex = False, sharey = False)
+g.map(figFxs.my_regplot, "var1", "var2")
+for i, modelname in enumerate(modelnames):
+    for ax, pair in zip(g.axes[:,i], focused_pairs):
+        ax.set_xlabel(para_name_label_mapping[pair[0]])
+        ax.set_ylabel(para_name_label_mapping[pair[1]])
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+r_ = []
+var1_ = []
+var2_ = []
+model_ = []
+for modelname in modelnames:
+    this_paradf = paradf[paradf['model'] == modelname]
+    paranames = modelFxs.getModelParas('QL2reset')
+    if modelname == "QL2reset_slope_two" or modelname == "QL2reset_slope_two_simple":
+        this_paradf['nu'] = this_paradf['alphaU']
+    for x, y in itertools.combinations(paranames, 2):
+        print(x)
+        print(y)
+        r_.append(spearmanr(this_paradf[x], this_paradf[y])[0])
+        var1_.append(x)
+        var2_.append(y)
+        model_.append(modelname)
+
+
+paralabels = ['$\%s$'%x for x in modelFxs.getModelParas("QL2reset")]
+gross_corr_df = pd.DataFrame({
+    "r": r_,
+    "model": model_,
+    "var1": pd.Categorical(['$\%s$'%x for x in var1_], categories = paralabels, ordered = True),
+    "var2": pd.Categorical(['$\%s$'%x for x in var2_], categories = paralabels, ordered = True)
+    })
+
+sns.set_theme(style="white", font_scale = 1)
+fig, axes = plt.subplots(1, len(modelnames))
+for i in np.arange(len(modelnames)):
+    tmp = gross_corr_df[gross_corr_df["model"] == modelnames[i]].pivot_table(columns = "var2", index = "var1", values = "r", aggfunc='mean', margins_name = "None")
+    plotdf = pd.DataFrame(np.nan, columns = paralabels, index = paralabels)
+    plotdf.loc[tmp.index, tmp.columns] = tmp
+    if i == len(modelnames) - 1:
+        sns.heatmap(plotdf, annot=True, square=True, linewidths=1, ax = axes.flatten()[i], vmin=-1, vmax=1, center = 0, cmap = "RdBu_r")
+    else:
+        sns.heatmap(plotdf, annot=True, square=True, linewidths=1, ax = axes.flatten()[i], vmin=-1, vmax=1, center = 0, cmap = "RdBu_r", cbar = False)
+    axes.flatten()[i].set_xlabel("")
+    axes.flatten()[i].set_ylabel("")
+
+
+fig.set_size_inches(16, 6)
+fig.savefig(os.path.join("..", "figures", expname, "gross_corr_multi.pdf"))
+
+
 ################ compare structural correlation ##########
 r_ = []
 pair_ = []
@@ -170,51 +251,6 @@ fig.set_size_inches(16, 6)
 fig.savefig(os.path.join("..", "figures", expname, "structural_corr_multi.pdf"))
 
 
-################ compare gross correlation ##########
-r_ = []
-var1_ = []
-var2_ = []
-model_ = []
-for modelname in modelnames:
-    this_paradf = paradf[paradf['model'] == modelname]
-    paranames = modelFxs.getModelParas('QL2reset')
-    if modelname == "QL2reset_slope_two" or modelname == "QL2reset_slope_two_simple":
-        this_paradf['nu'] = this_paradf['alphaU']
-    for x, y in itertools.combinations(paranames, 2):
-        print(x)
-        print(y)
-        r_.append(spearmanr(this_paradf[x], this_paradf[y])[0])
-        var1_.append(x)
-        var2_.append(y)
-        model_.append(modelname)
-
-
-paralabels = ['$\%s$'%x for x in modelFxs.getModelParas("QL2reset")]
-gross_corr_df = pd.DataFrame({
-    "r": r_,
-    "model": model_,
-    "var1": pd.Categorical(['$\%s$'%x for x in var1_], categories = paralabels, ordered = True),
-    "var2": pd.Categorical(['$\%s$'%x for x in var2_], categories = paralabels, ordered = True)
-    })
-
-sns.set_theme(style="white", font_scale = 1)
-fig, axes = plt.subplots(1, len(modelnames))
-for i in np.arange(len(modelnames)):
-    tmp = gross_corr_df[gross_corr_df["model"] == modelnames[i]].pivot_table(columns = "var2", index = "var1", values = "r", aggfunc='mean', margins_name = "None")
-    plotdf = pd.DataFrame(np.nan, columns = paralabels, index = paralabels)
-    plotdf.loc[tmp.index, tmp.columns] = tmp
-    if i == len(modelnames) - 1:
-        sns.heatmap(plotdf, annot=True, square=True, linewidths=1, ax = axes.flatten()[i], vmin=-1, vmax=1, center = 0, cmap = "RdBu_r")
-    else:
-        sns.heatmap(plotdf, annot=True, square=True, linewidths=1, ax = axes.flatten()[i], vmin=-1, vmax=1, center = 0, cmap = "RdBu_r", cbar = False)
-    axes.flatten()[i].set_xlabel("")
-    axes.flatten()[i].set_ylabel("")
-
-
-fig.set_size_inches(16, 6)
-fig.savefig(os.path.join("..", "figures", expname, "gross_corr_multi.pdf"))
-
-
 ################ compare test-retest reliability ##########
 r_ = []
 var_ = []
@@ -253,13 +289,10 @@ plotdf = pd.DataFrame({
     })
 g = sns.FacetGrid(data = plotdf, col = "var")
 g.map(sns.barplot, "model", "r")
-
 g.savefig(os.path.join("..", "figures", expname, "reliability_multi.pdf"))
 
 
 ######### compare WAIC ##############
-
-
 fig, ax = plt.subplots()
 sns.barplot(data = paradf, x = "model", y = "waic", ax = ax, palette = sns.color_palette("tab10"))
 fig.savefig(os.path.join("..", "figures", expname, "waic_multi.pdf"))

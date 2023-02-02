@@ -331,21 +331,21 @@ def log_transform_parameter(paradf, selected_paranames):
             paradf = paradf.rename(columns = {paraname : 'log_' + paraname})
     return paradf
 
-def plot_parameter_reliability(modelname, paradf_sess1, paradf_sess2, subtitles):
+def plot_parameter_reliability(modelname, paradf_sess1, paradf_sess2, subtitles, **kwargs):
     # log transform parameter data
-    paradf_sess1 = log_transform_parameter(paradf_sess1, ['alpha', 'nu', 'eta'])
-    paradf_sess2 = log_transform_parameter(paradf_sess2, ['alpha', 'nu', 'eta'])
+    #paradf_sess1 = log_transform_parameter(paradf_sess1, ['alpha', 'nu', "tau", 'eta'])
+    #paradf_sess2 = log_transform_parameter(paradf_sess2, ['alpha', 'nu', "tau", 'eta'])
     plt.style.use('classic')
     sns.set(font_scale=1.5)
     sns.set_style("white")
     paranames = modelFxs.getModelParas(modelname)
-    labelnames = ["log_" + x if x in ['alpha', 'nu', 'eta'] else x for x in paranames]
+    labelnames = ["log_" + x if x in ['alpha', "tau", 'nu', 'eta'] else x for x in paranames]
     # reorganize and merge sess1 and sess2 data
     paradf_sess1 = pd.melt(paradf_sess1, id_vars = ('id', 'sess'), value_vars = labelnames)
     paradf_sess2 = pd.melt(paradf_sess2, id_vars = ('id', 'sess'), value_vars = labelnames)
     paradf = paradf_sess1.merge(paradf_sess2, left_on = ("id", "variable"), right_on = ("id", "variable"), suffixes = ['_sess1', '_sess2'])
-    g = sns.FacetGrid(paradf, col= "variable", sharex = False, sharey = False)
-    g.map(my_regplot, 'value_sess1', "value_sess2")
+    g = sns.FacetGrid(paradf, col = "variable", sharex = False, sharey = False, **kwargs)
+    g.map(my_regplot, 'value_sess1', "value_sess2", equal_aspect = False)
     g.set(xlabel ="SESS1", ylabel = "SESS2")
     for i, ax in enumerate(g.axes_dict.values()):
         ax.set_title(subtitles[i], fontdict= { 'fontsize': 24, 'weight':'bold'})
@@ -584,10 +584,10 @@ def my_regplot(x, y, ax = None, exclude_outliers = False, equal_aspect = True, r
     # code.interact(local = dict(locals(), **globals()))
     # ax.text(0.4, 0.1, 'ICC = %.3f\n'%abs_icc, size=16, color='red', transform=ax.transAxes)
     if not rsquared:
-        ax.text(0.4, 0.1, r'$\rho$ = %.3f\n'%spearman_rho, size=20, color='red', transform=ax.transAxes)
+        ax.text(0.3, 0.1, r'$\rho$ = %.3f'%spearman_rho, size=20, color='red', transform=ax.transAxes)
     else:
         r2 = pearson_rho ** 2
-        ax.text(0.4, 0.1, r'$R^2$ = %.3f'%r2, size=16, color='red', transform=ax.transAxes)
+        ax.text(0.3, 0.1, r'$R^2$ = %.3f'%r2, size=16, color='red', transform=ax.transAxes)
     # print('ci = (%.3f, %.3f)'%ci)
     # ax.text(0.7, 0.1, 'n_o = %d'%n_outlier, size=15, color='red', transform=ax.transAxes)
 
