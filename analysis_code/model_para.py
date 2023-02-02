@@ -144,14 +144,14 @@ structure_noise_matrix.loc[paranames[:5], paranames[1:]] = structure_noise_df.pi
 from matplotlib.colors import Normalize
 import matplotlib.cm as cm
 import matplotlib as mpl
-norm = Normalize(vmin=-0.75, vmax=0.75)
+norm = Normalize(vmin=-0.80, vmax=0.80)
 cmap = cm.get_cmap('RdBu_r')
 rgba_values = cmap(norm(structure_noise_matrix))
 
 
 fig, ax = plt.subplots()
-g = sns.heatmap(structure_noise_matrix, ax = ax, annot=True, square=True, linewidths=1, cmap = cmap, norm = norm, cbar = False) 
-cbar = fig.colorbar(mpl.cm.ScalarMappable(norm=norm, cmap=cmap), ticks=[-0.75, -0.50, -0.25, 0, 0.25, 0.50, 0.75], orientation='vertical', label='Correlation')
+g = sns.heatmap(structure_noise_matrix, ax = ax, annot=True, square=True, linewidths=1, cmap = cmap, norm = norm, cbar = True) 
+#cbar = fig.colorbar(mpl.cm.ScalarMappable(norm=norm, cmap=cmap), ticks=[-0.80, -0.40, 0, 0.40, 0.80], orientation='vertical', label='Correlation')
 plt.savefig(os.path.join("..", "figures", expname, "heatmap_structure_corr_%s.pdf"%modelname))
 
 
@@ -216,43 +216,64 @@ g.map(plt.hist, "cv")
 # maybe I want to log transform first ....
 s1_paradf = loadFxs.load_parameter_estimates(expname, 1, hdrdata_sess1, modelname, fitMethod, stepsize)
 s2_paradf = loadFxs.load_parameter_estimates(expname, 2, hdrdata_sess2, modelname, fitMethod, stepsize)
-log_paradf = pd.concat([figFxs.log_transform_parameter(s1_paradf, ["alpha", "tau", "eta"]), figFxs.log_transform_parameter(s2_paradf, ["alpha", "tau", "eta"])])
+log_paradf = pd.concat([figFxs.log_transform_parameter(s1_paradf, ["alpha", "nu", "tau", "eta"]), figFxs.log_transform_parameter(s2_paradf, ["alpha", "nu", "tau", "eta"])])
+log_paranames = log_paradf.columns[:5].values
+log_paralabels = [r'$log(\alpha)$', r'$log(\nu)$', r'$log(\tau)$', r'$\gamma$', r'$log(\eta)$']
+para_label_mapping = dict(zip(log_paranames, log_paralabels))
+para_limits = dict(zip(log_paranames, [(-12, 2), (-8, 4), (-3, 5), (0.4, 1.1), (-4, 4)]))
+para_ticks = dict(zip(log_paranames, [(-12, -6, 0), (-8, 0, 4), (-3, 0, 3), (0.5, 1), (-4, 0, 4)]))
 # log_paradf = analysisFxs.agg_across_sessions(figFxs.log_transform_parameter(s1_paradf, ["alpha", "tau", "eta"]), figFxs.log_transform_parameter(s2_paradf, ["alpha", "tau", "eta"]))
 # g = sns.pairplot(data = log_paradf.iloc[:,1:(npara+1)], kind = "reg", diag_kind = "None", corner = True,diag_kws = {"color": "grey", "edgecolor": "black"}, plot_kws ={'line_kws':{'color':'red'}, "scatter_kws": {"color": "grey", "edgecolor": "black"}})
-g = sns.pairplot(data = log_paradf.iloc[:,npara], kind = "reg", diag_kind = "None", corner = True,diag_kws = {"color": "grey", "edgecolor": "black"}, plot_kws ={'line_kws':{'color':'red'}, "scatter_kws": {"color": "grey", "edgecolor": "black"}})
+g = sns.pairplot(data = log_paradf.iloc[:,:npara], kind = "reg", diag_kind = "None", corner = True,diag_kws = {"color": "grey", "edgecolor": "black"}, plot_kws ={'line_kws':{'color':'red'}, "scatter_kws": {"color": "grey", "edgecolor": "black"}})
 g.map_lower(figFxs.annotate_reg)
 g.savefig(os.path.join("..", 'figures', expname, "%s_%s_stepsize%.2f_para_correlation.pdf"%(modelname, fitMethod, stepsize)))
 
 
 
 # plot the heatmap version
+gross_corr_matrix = pd.DataFrame(np.full((len(paranames), len(paranames)), np.nan), columns = paranames, index = paranames)
+for (i, x), (j,y) in itertools.product(enumerate(log_paranames), enumerate(log_paranames)):
+    if i > j:
+        gross_corr_matrix.iloc[i, j] = spearmanr(log_paradf[x], log_paradf[y])[0]
+
+
+norm = Normalize(vmin=-0.80, vmax=0.80)
+cmap = cm.get_cmap('RdBu_r')
+rgba_values = cmap(norm(gross_corr_matrix))
+fig, ax = plt.subplots()
+g = sns.heatmap(gross_corr_matrix, ax = ax, annot=True, square=True, linewidths=1, cmap = cmap, norm = norm, cbar = True) 
+#cbar = fig.colorbar(mpl.cm.ScalarMappable(norm=norm, cmap=cmap), ticks=[-0.80, -0.40, 0, 0.40, 0.80], orientation='vertical', label='Correlation')
+plt.savefig(os.path.join("..", "figures", expname, "heatmap_gross_corr_%s.pdf"%modelname))
 
 
 
-log_paranames = log_paradf.columns[:5].values
 fig, axes = plt.subplots(len(log_paranames), len(log_paranames))
 for (i, x), (j,y) in itertools.product(enumerate(log_paranames), enumerate(log_paranames)):
     if (x, y) in itertools.combinations(log_paranames, 2):
-        axes[j,i].scatter(log_paradf[x], log_paradf[y])
-
-        axes[j,i].set_xlim((-1.05, 1.05))
-        median_val = np.median(structure_noise_df.loc[structure_noise_df["pair"] == (x,y), "r"].values)
-        print(median_val)
-        axes[j,i].axvline(median_val, color = rgba_values[i, j, :], linewidth = 3)
-        axes[j,i].text(0.2, 50, "%.2f"%median_val, color = "black")
-        axes[j,i].axvline(0, color = "black") # "#238b45", 
-        axes[j,i].set_ylim([0, 105])
+        sns.regplot(log_paradf[x], log_paradf[y], ax = axes[j,i], line_kws={"color": rgba_values[j, i, :], "linestyle":"--"}, \
+            scatter_kws={"color": "#bdbdbd", "s": 40, "alpha":0.7, "edgecolor":'black'})
+        axes[j,i].text(0.2, 0.1, r"$\rho$ = %.3f"%gross_corr_matrix.iloc[j,i], size=12, color='black', transform=axes[j,i].transAxes)
+        axes[j,i].set_xlim(para_limits[x])
+        axes[j,i].set_ylim(para_limits[y])
+        #figFxs.annotate_reg(log_paradf[x], log_paradf[y], ax = , color = "black")
     if i == (npara-1):
-       axes[i,j].set_xlabel(para_label_mapping[y], fontsize=25)
-    if i != (npara-1):
+        axes[i,j].set_xlabel(para_label_mapping[y], fontsize=18)
+        axes[i,j].set_xticks(para_ticks[y])
+        axes[i,j].set_xticklabels(para_ticks[y])
+    else:
         axes[i,j].set_xticklabels([])
+        axes[i,j].set_xlabel("")
     if j == 0:
-        axes[i,j].set_ylabel(para_label_mapping[x], fontsize=25)
-    if j != 0:
+        axes[i,j].set_ylabel(para_label_mapping[x], fontsize=18)
+        axes[i,j].set_yticks(para_ticks[x])
+        axes[i,j].set_yticklabels(para_ticks[x])
+    else:
         axes[i,j].set_yticklabels([])
-    if j == 0:
-        axes[i,j].set_yticks([0, 50, 100])
-        axes[i,j].set_yticklabels([0, 50, 100])
+        axes[i,j].set_ylabel("")
+
+fig.tight_layout()
+fig.savefig(os.path.join("..", "figures", expname, "scatter_gross_corr_%s.pdf"%modelname))
+
 
 
 
