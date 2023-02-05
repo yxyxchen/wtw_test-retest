@@ -35,7 +35,7 @@ sns.set_style("white")
 condition_palette = ["#762a83", "#1b7837"]
 
 
-expname = "passive"
+expname = "active"
 
 # load data 
 hdrdata_sess1, trialdata_sess1_ = loadFxs.group_quality_check(expname, 1, plot_quality_check = False)
