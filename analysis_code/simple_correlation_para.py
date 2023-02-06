@@ -79,7 +79,7 @@ df["exp"] = pd.Categorical(df["exp"], categories = ["passive", "active"], ordere
 
 
 paranames = modelFxs.getModelParas(modelname)
-self_vars = ["BIS", "UPPS", "discount_logk"] + BIS_l2_subscales + UPPS_subscales
+self_vars = ["BIS", "UPPS", "discount_logk"] + BIS_l1_subscales + UPPS_subscales
 npara = len(paranames)
 nselfvar = len(self_vars)
 # record whether there is an interaction of exp 
@@ -100,6 +100,19 @@ for para, self_var in itertools.product(paranames, self_vars):
 
 cb_p_df[interaction_pvals < 0.05] = np.nan
 cb_p_df[cb_p_df > 0.01] = np.nan
+
+########## visualize 
+plt.style.use('classic')
+sns.set(font_scale = 2)
+sns.set_style("white")
+fig, ax  = plt.subplots()
+ax.hist(cb_r_df.values.reshape(-1), color = "grey", edgecolor = "black")
+ax.set_xlim([-0.5, 0.5])
+ax.set_xticks([ -0.4, -0.2, 0, 0.2, 0.4])
+ax.set_xlabel("Spearman's correlation")
+fig.tight_layout()
+fig.savefig(os.path.join("../figures/combined/rho_dist_para.pdf"))
+
 
 
 ##### permutation tests #######

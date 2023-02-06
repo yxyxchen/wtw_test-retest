@@ -98,7 +98,7 @@ df.to_csv("~/Downloads/measures.csv")
 self_vars = ["discount_logk"] + BIS_l1_subscales + UPPS_subscales 
 
 # self_vars = ["BIS", "UPPS", "discount_logk"] 
-task_vars = ["auc", "auc_delta", "std_wtw", "behavioral"]
+task_vars = ["auc", "auc_delta", "std_wtw"]
 nselfvar = len(self_vars)
 ntaskvar = len(task_vars)
 
@@ -119,9 +119,32 @@ for self_var, task_var in itertools.product(self_vars, task_vars):
 	# ps_r_df.loc[task_var, self_var],ps_p_df.loc[task_var, self_var] = pearsonr(df.loc[df["exp"]=="passive", self_var], df.loc[df["exp"]=="passive", task_var])
 	# ac_r_df.loc[task_var, self_var],ac_p_df.loc[task_var, self_var]  = pearsonr(df.loc[df["exp"]=="active", self_var], df.loc[df["exp"]=="active", task_var])
 
+
+
+########## visualize 
+plt.style.use('classic')
+sns.set(font_scale = 2)
+sns.set_style("white")
+fig, ax  = plt.subplots()
+ax.hist(cb_r_df.values.reshape(-1), color = "grey", edgecolor = "black")
+ax.set_xlim([-0.5, 0.5])
+ax.set_xticks([ -0.4, -0.2, 0, 0.2, 0.4])
+ax.set_xlabel("Spearman's correlation")
+fig.tight_layout()
+fig.savefig(os.path.join("../figures/combined/rho_dist_task.pdf"))
+
+
+df = statsdf.merge(selfdf, on = "id")
+fig, ax  = plt.subplots()
+figFxs.my_regplot(df["PU"], df["std_wtw"], ax = ax, equal_aspect = False)
+ax.set_ylabel(r"$\sigma_{wtw}$")
+fig.tight_layout()
+fig.set_size_inches(w = 6, h = 6)
+fig.savefig(os.path.join("../figures/combined/rho_pu_sigma-wtw.pdf"))
+
+
 cb_p_df[interaction_pvals < 0.05] = np.nan
 cb_p_df[cb_p_df > 0.01] = np.nan
-
 cb_sig_r_df = []
 for self_var, task_var in itertools.product(self_vars, task_vars):
 	if  ~np.isnan(cb_p_df.loc[task_var, self_var]):

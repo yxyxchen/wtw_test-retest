@@ -34,37 +34,34 @@ sns.set(font_scale = 1)
 sns.set_style("white")
 condition_palette = ["#762a83", "#1b7837"]
 
-log_paradf_ = []
-s1_logparadf_ = []
-s2_logparadf_ = []
-for expname in ["active", "passive"]:
-    # load data 
-    hdrdata_sess1, trialdata_sess1_ = loadFxs.group_quality_check(expname, 1, plot_quality_check = False)
-    hdrdata_sess2, trialdata_sess2_ = loadFxs.group_quality_check(expname, 2, plot_quality_check = False)
-    ## only exclude valid participants 
-    hdrdata_sess1 = hdrdata_sess1[np.isin(hdrdata_sess1["id"], hdrdata_sess2["id"])]
-    trialdata_sess1_ = {x: y for x,y in trialdata_sess1_.items() if x[0] in hdrdata_sess2["id"].values}
-    # for modelname in ['QL2', 'QL2reset']:
-    modelname = 'QL2reset'
-    fitMethod = "whole"
-    stepsize = 0.5
-    # subtitles = [r'$\mathbf{log(\alpha)}$', r'$\mathbf{log(\nu)}$', r'$\mathbf{\tau}$', r'$\mathbf{\gamma}$', r'$\mathbf{log(\eta)}$']
-    paranames = modelFxs.getModelParas(modelname)
-    npara = len(paranames)
-    # load model parameters
-    s1_paradf = loadFxs.load_parameter_estimates(expname, 1, hdrdata_sess1, modelname, fitMethod, stepsize)
-    s2_paradf = loadFxs.load_parameter_estimates(expname, 2, hdrdata_sess2, modelname, fitMethod, stepsize)
-    s1_logparadf = figFxs.log_transform_parameter(s1_paradf, ["alpha", "nu", "tau", "eta"])
-    s1_logparadf_.append(s1_logparadf)
-    s2_logparadf_.append(s2_logparadf)
-    s2_logparadf = figFxs.log_transform_parameter(s2_paradf, ["alpha", "nu", "tau", "eta"])
-    # log transform 
-    log_paradf = pd.concat([s1_logparadf, s2_logparadf])
-    log_paradf_.append(log_paradf)
 
-log_paradf = pd.concat(log_paradf_)
-s1_logparadf = pd.concat(s1_logparadf_)
-s2_logparadf = pd.concat(s2_logparadf_)
+expname = "active"
+
+# load data 
+hdrdata_sess1, trialdata_sess1_ = loadFxs.group_quality_check(expname, 1, plot_quality_check = False)
+hdrdata_sess2, trialdata_sess2_ = loadFxs.group_quality_check(expname, 2, plot_quality_check = False)
+
+## only exclude valid participants 
+hdrdata_sess1 = hdrdata_sess1[np.isin(hdrdata_sess1["id"], hdrdata_sess2["id"])]
+trialdata_sess1_ = {x: y for x,y in trialdata_sess1_.items() if x[0] in hdrdata_sess2["id"].values}
+
+
+# for modelname in ['QL2', 'QL2reset']:
+modelname = 'QL2reset'
+fitMethod = "whole"
+stepsize = 0.5
+
+# subtitles = [r'$\mathbf{log(\alpha)}$', r'$\mathbf{log(\nu)}$', r'$\mathbf{\tau}$', r'$\mathbf{\gamma}$', r'$\mathbf{log(\eta)}$']
+paranames = modelFxs.getModelParas(modelname)
+npara = len(paranames)
+# load model parameters
+s1_paradf = loadFxs.load_parameter_estimates(expname, 1, hdrdata_sess1, modelname, fitMethod, stepsize)
+s2_paradf = loadFxs.load_parameter_estimates(expname, 2, hdrdata_sess2, modelname, fitMethod, stepsize)
+s1_logparadf = figFxs.log_transform_parameter(s1_paradf, ["alpha", "nu", "tau", "eta"])
+s2_logparadf = figFxs.log_transform_parameter(s2_paradf, ["alpha", "nu", "tau", "eta"])
+# log transform 
+log_paradf = pd.concat([s1_logparadf, s2_logparadf])
+
 
 log_paranames = log_paradf.columns[:5].values
 log_paralabels = [r'$log(\alpha)$', r'$log(\nu)$', r'$log(\tau)$', r'$\gamma$', r'$log(\eta)$']
@@ -83,7 +80,7 @@ npara = len(paranames)
 ######## plot parameter distributions ########
 figFxs.plot_parameter_distribution(modelname, s1_paradf.iloc[:,:-1], s2_paradf.iloc[:,:-1], color = "grey", edgecolor = "black")
 plt.gcf().set_size_inches(5 * npara, 5 * 2)
-plt.savefig(os.path.join("..", 'figures', "combined", "%s_%s_stepsize%.2f_para_dist.pdf"%(modelname, fitMethod, stepsize)))
+plt.savefig(os.path.join("..", 'figures', expname, "%s_%s_stepsize%.2f_para_dist.pdf"%(modelname, fitMethod, stepsize)))
 
 # parameter reliability
 g = figFxs.plot_parameter_reliability(modelname, s1_logparadf.iloc[:, :(npara+2)], s2_logparadf.iloc[:, :(npara+2)], log_paralabels)
@@ -92,8 +89,7 @@ for para, ax in zip(log_paranames, g.axes.flatten()):
     ax.set_xticks(log_paraticks[para])
     ax.set_ylim(log_paralimits[para])
     ax.set_yticks(log_paraticks[para])
-plt.savefig(os.path.join("..", 'figures', "combined", "%s_para_reliability.pdf"%(modelname)))
-
+plt.savefig(os.path.join("..", 'figures', expname, "%s_para_reliability.pdf"%(modelname)))
 ########## bootstrapped structural noise ########
 ########## should I combine data here???? #### rethink
 r_ = []
@@ -104,26 +100,23 @@ std_ = []
 para_ = []
 id_para_ = []
 sess_ = []
-for i, expname in enumerate(["active", "passive"]):
-    s1_paradf = s1_paradf_[i]
-    s2_paradf = s2_paradf_[i]
-    for sess in [1, 2]:
-        paradf = s1_paradf if sess == 1 else s2_paradf
-        for id in paradf["id"]:
-            parafile = os.path.join("../analysis_results", expname, "modelfit", fitMethod, "stepsize%.2f"%stepsize, modelname, "%s_sess%d_sample.txt"%(id, sess))
-            parasamples = pd.read_csv(parafile, header = None)
-            parasamples = parasamples.iloc[:, :npara]
-            parasamples =  parasamples.rename(columns = dict(zip(parasamples.columns, paranames)))
-            for x, y in itertools.combinations(paranames, 2):
-                pair_.append((log_paralabels[paranames.index(x)], log_paralabels[paranames.index(y)]))
-                id_.append(id)
-                r_.append(spearmanr(parasamples[x], parasamples[y])[0])
-                sess_.append(sess)
-            for x in paranames:
-                cv_.append(parasamples[x].std()/parasamples[x].mean())
-                std_.append(parasamples[x].std())
-                para_.append(x)
-                id_para_.append(x)
+for sess in [1, 2]:
+    paradf = s1_paradf if sess == 1 else s2_paradf
+    for id in paradf["id"]:
+        parafile = os.path.join("../analysis_results", expname, "modelfit", fitMethod, "stepsize%.2f"%stepsize, modelname, "%s_sess%d_sample.txt"%(id, sess))
+        parasamples = pd.read_csv(parafile, header = None)
+        parasamples = parasamples.iloc[:, :npara]
+        parasamples =  parasamples.rename(columns = dict(zip(parasamples.columns, paranames)))
+        for x, y in itertools.combinations(paranames, 2):
+            pair_.append((log_paralabels[paranames.index(x)], log_paralabels[paranames.index(y)]))
+            id_.append(id)
+            r_.append(spearmanr(parasamples[x], parasamples[y])[0])
+            sess_.append(sess)
+        for x in paranames:
+            cv_.append(parasamples[x].std()/parasamples[x].mean())
+            std_.append(parasamples[x].std())
+            para_.append(x)
+            id_para_.append(x)
 
 structure_noise_df = pd.DataFrame({
     "r": r_,
@@ -139,12 +132,12 @@ structure_noise_summary_df = structure_noise_df.groupby(["pair", "sess"]).agg({"
 
 # plot one participant example 
 fig, ax = plt.subplots()
-figFxs.my_regplot(np.log(parasamples['tau']), parasamples['gamma'], equal_aspect = False, ax = ax)
+figFxs.my_regplot(np.log(parasamples['tau']), np.log(parasamples['eta']), equal_aspect = False, ax = ax)
 ax.set_xlabel(r"$log(\tau)$", fontsize = 25)
-ax.set_ylabel(r"$\gamma$", fontsize = 25)
+ax.set_ylabel(r"$log(\eta)$", fontsize = 25)
 fig.set_size_inches(w = 6, h = 6)
 fig.tight_layout()
-fig.savefig(os.path.join("..", "figures", "combined", "sample_structure_corr_%s.pdf"%modelname))
+fig.savefig(os.path.join("..", "figures", expname, "sample_structure_corr_%s.pdf"%modelname))
 
 
 # plot the heatmap version 
@@ -165,7 +158,7 @@ rgba_values = cmap(norm(structure_noise_matrix))
 fig, ax = plt.subplots()
 g = sns.heatmap(structure_noise_matrix, ax = ax, annot=True, square=True, linewidths=1, cmap = cmap, norm = norm, cbar = True) 
 #cbar = fig.colorbar(mpl.cm.ScalarMappable(norm=norm, cmap=cmap), ticks=[-0.80, -0.40, 0, 0.40, 0.80], orientation='vertical', label='Correlation')
-plt.savefig(os.path.join("..", "figures", "combined", "heatmap_structure_corr_%s.pdf"%modelname))
+plt.savefig(os.path.join("..", "figures", expname, "heatmap_structure_corr_%s.pdf"%modelname))
 
 
 plt.style.use('classic')
@@ -204,7 +197,7 @@ for (i, x), (j,y) in itertools.product(enumerate(log_paralabels), enumerate(log_
 
 fig.tight_layout()
 fig.set_size_inches(w = 5 * 1.5, h = 5 * 1.7)
-fig.savefig(os.path.join("..", "figures", "combined", "para_structure_corr_%s_v2.pdf"%modelname))
+fig.savefig(os.path.join("..", "figures", expname, "para_structure_corr_%s_v2.pdf"%modelname))
 
 
 
@@ -223,17 +216,21 @@ g = sns.FacetGrid(plotdf, col = "para")
 g.map(plt.hist, "cv") 
 
 ####### among participant correlations ####
+# log_paradf = analysisFxs.agg_across_sessions(figFxs.log_transform_parameter(s1_paradf, ["alpha", "tau", "eta"]), figFxs.log_transform_parameter(s2_paradf, ["alpha", "tau", "eta"]))
+# g = sns.pairplot(data = log_paradf.iloc[:,1:(npara+1)], kind = "reg", diag_kind = "None", corner = True,diag_kws = {"color": "grey", "edgecolor": "black"}, plot_kws ={'line_kws':{'color':'red'}, "scatter_kws": {"color": "grey", "edgecolor": "black"}})
+g = sns.pairplot(data = log_paradf.iloc[:,:npara], kind = "reg", diag_kind = "None", corner = True,diag_kws = {"color": "grey", "edgecolor": "black"}, plot_kws ={'line_kws':{'color':'red'}, "scatter_kws": {"color": "grey", "edgecolor": "black"}})
+g.map_lower(figFxs.annotate_reg)
+
+
 
 # plot the heatmap version
 plt.style.use('classic')
 sns.set(font_scale = 1.5)
 sns.set_style("white")
-# if one subject only have one valid session, using one session only
-log_paradf_agg = analysisFxs.agg_across_sessions(log_paradf[log_paradf["sess"] == 1], log_paradf[log_paradf["sess"] == 2])
 gross_corr_matrix = pd.DataFrame(np.full((len(paranames), len(paranames)), np.nan), columns = log_paralabels, index = log_paralabels)
 for (i, x), (j,y) in itertools.product(enumerate(log_paranames), enumerate(log_paranames)):
     if i > j:
-        gross_corr_matrix.iloc[i, j] = spearmanr(log_paradf_agg[x], log_paradf_agg[y])[0]
+        gross_corr_matrix.iloc[i, j] = spearmanr(log_paradf[x], log_paradf[y])[0]
 
 norm = Normalize(vmin=-0.90, vmax=0.90)
 cmap = cm.get_cmap('RdBu_r')
@@ -241,7 +238,7 @@ rgba_values = cmap(norm(gross_corr_matrix))
 fig, ax = plt.subplots()
 g = sns.heatmap(gross_corr_matrix, ax = ax, annot=True, square=True, linewidths=1, cmap = cmap, norm = norm, cbar = True) 
 #cbar = fig.colorbar(mpl.cm.ScalarMappable(norm=norm, cmap=cmap), ticks=[-0.80, -0.40, 0, 0.40, 0.80], orientation='vertical', label='Correlation')
-plt.savefig(os.path.join("..", "figures", "combined", "heatmap_gross_corr_%s.pdf"%modelname))
+plt.savefig(os.path.join("..", "figures", expname, "heatmap_gross_corr_%s.pdf"%modelname))
 
 
 plt.style.use('classic')
@@ -250,7 +247,7 @@ sns.set_style("white")
 fig, axes = plt.subplots(len(log_paranames), len(log_paranames))
 for (i, x), (j,y) in itertools.product(enumerate(log_paranames), enumerate(log_paranames)):
     if (x, y) in itertools.combinations(log_paranames, 2):
-        sns.regplot(log_paradf_agg[x], log_paradf_agg[y], ax = axes[j,i], line_kws={"color": rgba_values[j, i, :], "linestyle":"--"}, \
+        sns.regplot(log_paradf[x], log_paradf[y], ax = axes[j,i], line_kws={"color": rgba_values[j, i, :], "linestyle":"--"}, \
             scatter_kws={"color": "#bdbdbd", "s": 40, "alpha":0.7, "edgecolor":'black'})
         axes[j,i].text(0.2, 0.1, r"$\rho$ = %.3f"%gross_corr_matrix.iloc[j,i], size=12, color='black', transform=axes[j,i].transAxes)
         axes[j,i].set_xlim(log_paralimits[x])
@@ -278,7 +275,7 @@ for (i, x), (j,y) in itertools.product(enumerate(log_paranames), enumerate(log_p
 
 fig.tight_layout()
 fig.set_size_inches(w = 5 * 1.5, h = 5 * 1.7)
-fig.savefig(os.path.join("..", "figures", "combined", "scatter_gross_corr_%s.pdf"%modelname))
+fig.savefig(os.path.join("..", "figures", expname, "scatter_gross_corr_%s.pdf"%modelname))
 
 
 # #####################################################

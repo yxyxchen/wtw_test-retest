@@ -37,68 +37,57 @@ from plotnine import ggplot, aes, geom_bar, geom_errorbar
 # plot styles
 sns.set_theme(style="white", font_scale = 1)
 condition_palette = ["#762a83", "#1b7837"]
-expname = 'passive'
-
-# load data 
-hdrdata_sess1, trialdata_sess1_ = loadFxs.group_quality_check(expname, 1, plot_quality_check = False)
-hdrdata_sess2, trialdata_sess2_ = loadFxs.group_quality_check(expname, 2, plot_quality_check = False)
 
 
-## only exclude valid participants 
-hdrdata_sess1 = hdrdata_sess1[np.isin(hdrdata_sess1["id"], hdrdata_sess2["id"])]
-trialdata_sess1_ = {x: y for x,y in trialdata_sess1_.items() if x[0] in hdrdata_sess2["id"].values}
-
-
-###
-s1_stats, s1_Psurv_b1_, s1_Psurv_b2_, s1_WTW_emp = analysisFxs.group_MF(trialdata_sess1_, plot_each = False)   
-s2_stats, s2_Psurv_b1_, s2_Psurv_b2_, s2_WTW_emp = analysisFxs.group_MF(trialdata_sess2_, plot_each = False)   
-
-
-modelnames = ['QL2reset', 'QL2reset_slope', 'QL2reset_slope_two', 'QL2reset_slope_two_simple']
-modellabels = ["M1", "M2", "M3", "M4"]
-fitMethod = "whole"
-stepsize = 0.5
 
 ### load model parameters ##
-s1_paradf_ = []
-s2_paradf_ = []
-for modelname in modelnames:
-    s1_paradf = loadFxs.load_parameter_estimates(expname, 1, hdrdata_sess1, modelname, fitMethod, stepsize)
-    s2_paradf = loadFxs.load_parameter_estimates(expname, 2, hdrdata_sess2, modelname, fitMethod, stepsize)
-    s1_paradf["model"] = modelname
-    s2_paradf["model"] = modelname
-    s1_paradf_.append(s1_paradf)
-    s2_paradf_.append(s2_paradf)
+log_paradf_ = []
+for expname in ['passive', "active"]:
+    s1_paradf_ = []
+    s2_paradf_ = []
+    # load data 
+    hdrdata_sess1, trialdata_sess1_ = loadFxs.group_quality_check(expname, 1, plot_quality_check = False)
+    hdrdata_sess2, trialdata_sess2_ = loadFxs.group_quality_check(expname, 2, plot_quality_check = False)
+    ## only exclude valid participants 
+    hdrdata_sess1 = hdrdata_sess1[np.isin(hdrdata_sess1["id"], hdrdata_sess2["id"])]
+    trialdata_sess1_ = {x: y for x,y in trialdata_sess1_.items() if x[0] in hdrdata_sess2["id"].values}
+    modelnames = ['QL2reset', 'QL2reset_slope', 'QL2reset_slope_two', 'QL2reset_slope_two_simple']
+    modellabels = ["M1", "M2", "M3", "M4"]
+    fitMethod = "whole"
+    stepsize = 0.5
+    for modelname in modelnames:
+        s1_paradf = loadFxs.load_parameter_estimates(expname, 1, hdrdata_sess1, modelname, fitMethod, stepsize)
+        s2_paradf = loadFxs.load_parameter_estimates(expname, 2, hdrdata_sess2, modelname, fitMethod, stepsize)
+        s1_paradf["model"] = modelname
+        s2_paradf["model"] = modelname
+        s1_paradf_.append(s1_paradf)
+        s2_paradf_.append(s2_paradf)
+    from functools import reduce
+    s1_ids = reduce(np.intersect1d, [paradf.id for paradf in s1_paradf_])
+    s2_ids = reduce(np.intersect1d, [paradf.id for paradf in s2_paradf_])
+    for i in np.arange(len(s1_paradf_)):
+        s1_paradf = copy.copy(s1_paradf_[i])
+        s2_paradf = copy.copy(s2_paradf_[i])
+        s1_paradf = s1_paradf[np.isin(s1_paradf["id"], s1_ids)]
+        s2_paradf = s2_paradf[np.isin(s2_paradf["id"], s2_ids)]
+        modelname = np.unique(s1_paradf["model"])[0]
+        if modelname == "QL2reset_slope_two_simple" or modelname == "QL2reset_slope_two":
+            s1_paradf = s1_paradf.rename(columns = dict(zip(["alphaU"], ["kappa/nu"])))
+            s2_paradf = s2_paradf.rename(columns = dict(zip(["alphaU"], ["kappa/nu"])))
+        else:
+            s1_paradf = s1_paradf.rename(columns = dict(zip(["nu"], ["kappa/nu"])))
+            s2_paradf = s2_paradf.rename(columns = dict(zip(["nu"], ["kappa/nu"])))
+        s1_paradf_[i] = copy.copy(s1_paradf)
+        s2_paradf_[i] = copy.copy(s2_paradf)
+    s1_paradf = pd.concat([x for x in s1_paradf_])
+    s2_paradf = pd.concat([x for x in s2_paradf_])
+    paradf = pd.concat([s1_paradf, s2_paradf])
+    log_paradf = figFxs.log_transform_parameter(paradf, ["alpha", "kappa/nu", "tau", "eta"])
+    log_paradf_.append(log_paradf)
 
-
-##### common ids ###
-from functools import reduce
-s1_ids = reduce(np.intersect1d, [paradf.id for paradf in s1_paradf_])
-s2_ids = reduce(np.intersect1d, [paradf.id for paradf in s2_paradf_])
-
+log_paradf = pd.concat(log_paradf_)
 
 ##### load things ##
-for i, modelname in enumerate(modelnames):
-    s1_paradf = s1_paradf_[i]
-    s2_paradf = s2_paradf_[i]
-    s1_paradf = s1_paradf[np.isin(s1_paradf["id"], s1_ids)]
-    s2_paradf = s2_paradf[np.isin(s2_paradf["id"], s2_ids)]
-    if modelname == "QL2reset_slope_two_simple" or modelname == "QL2reset_slope_two":
-        s1_paradf = s1_paradf.rename(columns = dict(zip(["alphaU"], ["kappa/nu"])))
-        s2_paradf = s2_paradf.rename(columns = dict(zip(["alphaU"], ["kappa/nu"])))
-    else:
-        s1_paradf = s1_paradf.rename(columns = dict(zip(["nu"], ["kappa/nu"])))
-        s2_paradf = s2_paradf.rename(columns = dict(zip(["nu"], ["kappa/nu"])))
-    s1_paradf_[i] = copy.copy(s1_paradf)
-    s2_paradf_[i] = copy.copy(s2_paradf)
-
-
-s1_paradf = pd.concat([x for x in s1_paradf_])
-s2_paradf = pd.concat([x for x in s2_paradf_])
-paradf = pd.concat([s1_paradf, s2_paradf])
-log_paradf = figFxs.log_transform_parameter(paradf, ["alpha", "kappa/nu", "tau", "eta"])
-
-
 log_paranames = ["log_alpha", "log_kappa/nu", "log_tau", "gamma", "log_eta"]
 log_paralabels = [r"$log(\alpha)$", r"$log(\nu)/log(\kappa)$", r"$log(\tau)$", r"$\gamma$", "$log(\eta)$"]
 para_name_label_mapping = dict(zip(log_paranames, log_paralabels))
@@ -150,7 +139,7 @@ for i, modelname in enumerate(modelnames):
 
 plt.tight_layout(h_pad = 2, w_pad = 1)
 fig.set_size_inches(w = 3 * 4, h = 2 * 3)
-fig.savefig(os.path.join("..", "figures", expname, "gross_corr_M1-4.pdf"))
+fig.savefig(os.path.join("..", "figures", "combined", "gross_corr_M1-4.pdf"))
 
 
 # plot the heatmap for all the pairs 
@@ -168,7 +157,7 @@ for i, modelname in enumerate(modelnames):
     axes.flatten()[i].set_ylabel("")
 
 fig.set_size_inches(16, 6)
-fig.savefig(os.path.join("..", "figures", expname, "gross_corr_all_M1-4.pdf"))
+fig.savefig(os.path.join("..", "figures", "combined", "gross_corr_all_M1-4.pdf"))
 
 
 ################ compare structural correlation ##########
@@ -240,7 +229,7 @@ for i in np.arange(len(modelnames)):
 
 fig.suptitle('Median correlation')
 fig.set_size_inches(16, 6)
-fig.savefig(os.path.join("..", "figures", expname, "structural_corr_all_M1-4.pdf.pdf"))
+fig.savefig(os.path.join("..", "figures", "combined", "structural_corr_all_M1-4.pdf.pdf"))
 
 
 # plot only focused pairs
@@ -259,11 +248,11 @@ for i, modelname in enumerate(modelnames):
 
 plt.tight_layout(h_pad = 2, w_pad = 1)
 fig.set_size_inches(w = 3 * 4, h = 2 * 3)
-fig.savefig(os.path.join("..", "figures", expname, "structure_corr_M1-4.pdf"))
+fig.savefig(os.path.join("..", "figures", "combined", "structure_corr_M1-4.pdf"))
 
 ################################ plot the circle version for focused pairs 
 
-
+focused_pairs = [("log_alpha", "log_kappa/nu"), ("log_tau", "log_eta")]
 structural_corr_summary_df["type"] = "structure"
 gross_corr_summary_df["type"] = "gross"
 tmp = pd.concat([structural_corr_summary_df, gross_corr_summary_df], axis = 0)
@@ -293,7 +282,7 @@ for i in np.arange(len(focused_pairs)):
     fig.colorbar(col)
     ax.set_aspect("equal")
     fig.set_size_inches(w = M * 3, h = N * 3)
-    fig.savefig(os.path.join("..", "figures", expname, "pair%d_corr_circle_M1-4.pdf"%i))
+    fig.savefig(os.path.join("..", "figures", "combined", "pair%d_corr_circle_M1-4.pdf"%i))
 
 
 ################ compare test-retest reliability ##########
@@ -326,10 +315,12 @@ plotdf["upper_r"] = [(np.exp(2*z)-1)/(np.exp(2*z)+1) for z in plotdf["upper_z"]]
 plotdf["lower_r"] = [(np.exp(2*z)-1)/(np.exp(2*z)+1) for z in plotdf["lower_z"]]
 
 
-from plotnine import ggplot, aes, geom_bar, geom_errorbar, facet_grid, position_dodge, theme, theme_classic, ylim
-ggplot(plotdf) + facet_grid(facets="~var") + aes(x="model", y="r") + geom_bar(stat = "identity") +\
+from plotnine import ggplot, aes, geom_bar, geom_errorbar, facet_grid, position_dodge, theme, theme_classic, ylim, labs
+p = ggplot(plotdf) + facet_grid(facets="~var") + aes(x="model", y="r") + geom_bar(stat = "identity") +\
 geom_errorbar(aes(ymin = "lower_r", ymax = "upper_r"), width=.2, position=position_dodge(.9)) +\
-theme_classic() + ylim([0, 1])
+theme_classic() + ylim([0, 1]) + labs( y="Test-retest reliability", x = "")
+p.save(os.path.join("..", "figures", "combined", "test-retest_reliability_M1-4.pdf"))
+
 
 
 
