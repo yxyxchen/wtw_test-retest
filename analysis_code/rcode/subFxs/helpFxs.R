@@ -26,6 +26,7 @@ getGroupParaNames = function(modelName){
     groupParaNames = c("alpha","nu", "tau", "gamma", "eta")
   }
 }
+
 # check MCMC fitting results 
 checkFit = function(paraNames, expPara){
   ids = expPara$id
