@@ -49,7 +49,7 @@ stepsize = 0.5
 paradf_ = [] 
 selfdf_ = []
 statsdf_ = []
-for expname in ["active", "passive"]:
+for expname in ["active"]:
 	hdrdata_sess1, trialdata_sess1_ = loadFxs.group_quality_check(expname, 1, plot_quality_check = True)
 	hdrdata_sess2, trialdata_sess2_ = loadFxs.group_quality_check(expname, 2, plot_quality_check = True)
 	########### let me only include participants complete both sessions

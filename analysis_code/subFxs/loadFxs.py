@@ -30,6 +30,7 @@ def loaddata(expname, sess = 1):
         hdrdata  = pd.read_csv(os.path.join(datadir, expname, "hdrdata_sess%d.csv"%sess))
         print("Load %d files"%hdrdata.shape[0])
         print("Exclude %d participants who quit midway"%sum(hdrdata.quit_midway))
+        print(hdrdata.loc[hdrdata.quit_midway])
         print("\n")
         hdrdata = hdrdata.loc[np.logical_not(hdrdata.quit_midway)].reset_index(drop=True)
         hdrdata["key"] = [(x,y) for x,y in zip(hdrdata["id"], hdrdata["sess"])]
