@@ -273,6 +273,11 @@ def parse_group_selfreport(expname, sess, isplot):
     # read the input file
     selfreportfile = os.path.join(datadir, expname, 'selfreport_sess%d.csv'%sess)
     selfreport = pd.read_csv(selfreportfile)
+
+    # I should load sess2 hdrdata 
+    hdrdata_sess2, trialdata_sess2_ = group_quality_check(expname, 2, plot_quality_check = True)
+    selfreport = selfreport[np.isin(selfreport["id"], hdrdata_sess2["id"])]
+    selfreport.reset_index(inplace = True, drop = True)
     # score all other questionaires except MCQ
     selfdata = pd.DataFrame()
     for i, row in selfreport.iterrows():
@@ -289,10 +294,10 @@ def parse_group_selfreport(expname, sess, isplot):
         mcqdata = pd.read_csv(mcqfile)
         # k_filter = np.logical_and.reduce([mcqdata.SmlCons >= 0.8, mcqdata.MedCons >= 0.8, mcqdata.LrgCons > 0.8])
         k_filter = mcqdata[['SmlCons', 'MedCons', 'LrgCons']].mean(axis = 1) >= 0.8
-        n_nonvalid_k = (~k_filter).sum()
-        print("k estimates for %d participants are not valid! Didn't record them."%n_nonvalid_k)
-        mcqdata = mcqdata.loc[k_filter,:] 
-        selfdata = selfdata.merge(mcqdata[['GMK', 'SubjID']], how = 'outer', right_on = 'SubjID', left_on = 'id').drop("SubjID", axis = 1)
+        mcqdata.loc[~k_filter, "GMK"] = np.nan
+        selfdata = selfdata.merge(mcqdata[['GMK', 'SubjID']], how = 'left', right_on = 'SubjID', left_on = 'id').drop("SubjID", axis = 1)
+        n_nonvalid_k = np.isnan(selfdata['GMK']).sum()
+        print("k estimates for %d participants are not valid! Record them as NaN."%n_nonvalid_k)
     selfdata.reset_index(inplace = True, drop = True)
     if expname != "active" or sess != 2:
         selfdata = selfdata.rename(columns = {"GMK":"discount_k"})

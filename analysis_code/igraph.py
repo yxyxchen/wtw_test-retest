@@ -49,7 +49,7 @@ stepsize = 0.5
 paradf_ = [] 
 selfdf_ = []
 statsdf_ = []
-for expname in ["active"]:
+for expname in ["active", "passive"]:
 	hdrdata_sess1, trialdata_sess1_ = loadFxs.group_quality_check(expname, 1, plot_quality_check = True)
 	hdrdata_sess2, trialdata_sess2_ = loadFxs.group_quality_check(expname, 2, plot_quality_check = True)
 	########### let me only include participants complete both sessions
@@ -63,6 +63,8 @@ for expname in ["active"]:
 	statsdf = analysisFxs.agg_across_sessions(s1_df, s2_df)
 	statsdf["exp"] = expname
 	statsdf_.append(statsdf)
+
+for expname in ["active", "passive"]:
 	############ conduct behavioral analysis ######
 	if expname == "passive":
 		s1_selfdf = loadFxs.parse_group_selfreport(expname, 1, isplot = False)
@@ -71,7 +73,8 @@ for expname in ["active"]:
 		selfdf = analysisFxs.agg_across_sessions(s1_selfdf, s2_selfdf)
 	else:
 		selfdf = loadFxs.parse_group_selfreport(expname, 1, isplot = False)
-		s1_selfdf = selfdf
+	# exclude those without valid selfreport values in both sessions in Passive or in the first session in Active
+	selfdf = selfdf[~np.apply_over_axes(np.any, np.isnan(selfdf.select_dtypes('float').values), 1)]
 	selfdf["exp"] = expname
 	selfdf_.append(selfdf)
 	s1_paradf = loadFxs.load_parameter_estimates(expname, 1, hdrdata_sess1, modelname, fitMethod, stepsize)
@@ -88,7 +91,10 @@ df = paradf.merge(selfdf, on = ["id", "exp"]).merge(statsdf, on = ["id", "exp"])
 df["exp"] = pd.Categorical(df["exp"], categories = ["passive", "active"], ordered = True)
 
 
+a = selfdf.merge(statsdf, on = ["id", "exp"])
 
+# save the combined dataframe
+# it only includes participants who have complete task, model and survey data  
 UPPS_subscales = ["NU", "PU", "PM", "PS", "SS"]
 BIS_l1_subscales = ["Attentional", "Motor", "Nonplanning"]
 BIS_l2_subscales = ["attention", "cogstable", "motor", "perseverance", "selfcontrol", "cogcomplex"]
@@ -96,11 +102,10 @@ self_vars = UPPS_subscales + BIS_l1_subscales + ["discount_logk"]
 task_vars = ["auc", "std_wtw", "auc_delta"]
 paranames = ["alpha", "alphaU", "tau","eta"]
 vars = self_vars + task_vars + paranames
-
-
 df.loc[:,vars].to_csv(os.path.join("../figures", "combined", "all_measures.csv"))
 
-################### get reliability 
+
+################### get reliability ######
 s1_taskdf_ = []
 s2_taskdf_ = []
 s1_paradf_ = []
