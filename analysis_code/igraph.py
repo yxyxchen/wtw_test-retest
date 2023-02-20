@@ -65,14 +65,14 @@ for expname in ["active", "passive"]:
 	statsdf_.append(statsdf)
 	############ conduct behavioral analysis ######
 	if expname == "passive":
-		s1_selfdf = loadFxs.parse_group_selfreport(expname, 1, isplot = False)
+		s1_selfdf = loadFxs.parse_group_selfreport(expname, 1, isplot = False) # one person skipped one question in UPPS 
 		s2_selfdf = loadFxs.parse_group_selfreport(expname, 2, isplot = False)
 		s1_selfdf = s1_selfdf[np.isin(s1_selfdf["id"], s2_selfdf["id"])]
 		selfdf = analysisFxs.agg_across_sessions(s1_selfdf, s2_selfdf)
 	else:
 		selfdf = loadFxs.parse_group_selfreport(expname, 1, isplot = False)
 	# exclude those without valid selfreport values in both sessions in Passive or in the first session in Active
-	selfdf = selfdf[~np.apply_over_axes(np.any, np.isnan(selfdf.select_dtypes('float').values), 1)]
+	selfdf = selfdf[np.logical_and(selfdf["discount_logk"], selfdf["UPPS"])] # eventually one participant in Passive was excluded because lack of k in both sessions 
 	selfdf["exp"] = expname
 	selfdf_.append(selfdf)
 	s1_paradf = loadFxs.load_parameter_estimates(expname, 1, hdrdata_sess1, modelname, fitMethod, stepsize)
@@ -88,8 +88,6 @@ df = paradf.merge(selfdf, on = ["id", "exp"]).merge(statsdf, on = ["id", "exp"])
 #df.loc[:, df.dtypes == "float64"] = df.select_dtypes("number") - df.select_dtypes("number").apply(np.mean, axis = 0)
 df["exp"] = pd.Categorical(df["exp"], categories = ["passive", "active"], ordered = True)
 
-
-a = selfdf.merge(statsdf, on = ["id", "exp"])
 
 # save the combined dataframe
 # it only includes participants who have complete task, model and survey data  
