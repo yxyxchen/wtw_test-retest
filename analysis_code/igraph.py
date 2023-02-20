@@ -63,8 +63,6 @@ for expname in ["active", "passive"]:
 	statsdf = analysisFxs.agg_across_sessions(s1_df, s2_df)
 	statsdf["exp"] = expname
 	statsdf_.append(statsdf)
-
-for expname in ["active", "passive"]:
 	############ conduct behavioral analysis ######
 	if expname == "passive":
 		s1_selfdf = loadFxs.parse_group_selfreport(expname, 1, isplot = False)

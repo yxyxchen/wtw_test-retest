@@ -268,43 +268,43 @@ def parse_ind_selfreport(sess, row, isplot):
     return out
 
 def parse_group_selfreport(expname, sess, isplot):
-    """ parse selfreport data for the group
-    """
-    # read the input file
-    selfreportfile = os.path.join(datadir, expname, 'selfreport_sess%d.csv'%sess)
-    selfreport = pd.read_csv(selfreportfile)
+""" parse selfreport data for the group
+"""
+# read the input file
+selfreportfile = os.path.join(datadir, expname, 'selfreport_sess%d.csv'%sess)
+selfreport = pd.read_csv(selfreportfile)
 
-    # I should load sess2 hdrdata 
-    hdrdata_sess2, trialdata_sess2_ = group_quality_check(expname, 2, plot_quality_check = True)
-    selfreport = selfreport[np.isin(selfreport["id"], hdrdata_sess2["id"])]
-    selfreport.reset_index(inplace = True, drop = True)
-    # score all other questionaires except MCQ
-    selfdata = pd.DataFrame()
-    for i, row in selfreport.iterrows():
-        out  = parse_ind_selfreport(sess, row, isplot)
-        selfdata = pd.concat([selfdata, out])
-        if isplot and (sess == 1 or (sess == 2 and not np.isnan(row[4]))):
-            plt.show()
-            input("Press Enter to continue...")
-            plt.clf()
-    # read the MCQ file
-    mcqfile = os.path.join("..", "analysis_results", expname, "selfreport", 'MCQ_sess%d.csv'%sess)
-    if os.path.exists(mcqfile):
-        # code.interact(local = dict(locals(), **globals()))
-        mcqdata = pd.read_csv(mcqfile)
-        # k_filter = np.logical_and.reduce([mcqdata.SmlCons >= 0.8, mcqdata.MedCons >= 0.8, mcqdata.LrgCons > 0.8])
-        k_filter = mcqdata[['SmlCons', 'MedCons', 'LrgCons']].mean(axis = 1) >= 0.8
-        mcqdata.loc[~k_filter, "GMK"] = np.nan
-        selfdata = selfdata.merge(mcqdata[['GMK', 'SubjID']], how = 'left', right_on = 'SubjID', left_on = 'id').drop("SubjID", axis = 1)
-        n_nonvalid_k = np.isnan(selfdata['GMK']).sum()
-        print("k estimates for %d participants are not valid! Record them as NaN."%n_nonvalid_k)
-    selfdata.reset_index(inplace = True, drop = True)
-    if expname != "active" or sess != 2:
-        selfdata = selfdata.rename(columns = {"GMK":"discount_k"})
-        selfdata["discount_logk"] = np.log(selfdata["discount_k"])
-    selfdata["survey_impulsivity"] = scipy.stats.zscore(selfdata["UPPS"], nan_policy = "omit") + scipy.stats.zscore(selfdata["BIS"], nan_policy = "omit")
-    selfdata = pd.concat([selfdata, selfreport.filter(like = "UP"), selfreport.filter(like = "BIS")], axis = 1)
-    return selfdata 
+# I should load sess2 hdrdata 
+hdrdata_sess2, trialdata_sess2_ = loadFxs.group_quality_check(expname, 2, plot_quality_check = True)
+selfreport = selfreport[np.isin(selfreport["id"], hdrdata_sess2["id"])]
+selfreport.reset_index(inplace = True, drop = True)
+# score all other questionaires except MCQ
+selfdata = pd.DataFrame()
+for i, row in selfreport.iterrows():
+    out  = parse_ind_selfreport(sess, row, isplot)
+    selfdata = pd.concat([selfdata, out])
+    if isplot and (sess == 1 or (sess == 2 and not np.isnan(row[4]))):
+        plt.show()
+        input("Press Enter to continue...")
+        plt.clf()
+# read the MCQ file
+mcqfile = os.path.join("..", "analysis_results", expname, "selfreport", 'MCQ_sess%d.csv'%sess)
+if os.path.exists(mcqfile):
+    # code.interact(local = dict(locals(), **globals()))
+    mcqdata = pd.read_csv(mcqfile)
+    # k_filter = np.logical_and.reduce([mcqdata.SmlCons >= 0.8, mcqdata.MedCons >= 0.8, mcqdata.LrgCons > 0.8])
+    k_filter = mcqdata[['SmlCons', 'MedCons', 'LrgCons']].mean(axis = 1) >= 0.8
+    mcqdata.loc[~k_filter, "GMK"] = np.nan
+    selfdata = selfdata.merge(mcqdata[['GMK', 'SubjID']], how = 'left', right_on = 'SubjID', left_on = 'id').drop("SubjID", axis = 1)
+    n_nonvalid_k = np.isnan(selfdata['GMK']).sum()
+    print("k estimates for %d participants are not valid! Record them as NaN."%n_nonvalid_k)
+selfdata.reset_index(inplace = True, drop = True)
+if expname != "active" or sess != 2:
+    selfdata = selfdata.rename(columns = {"GMK":"discount_k"})
+    selfdata["discount_logk"] = np.log(selfdata["discount_k"])
+selfdata["survey_impulsivity"] = scipy.stats.zscore(selfdata["UPPS"], nan_policy = "omit") + scipy.stats.zscore(selfdata["BIS"], nan_policy = "omit")
+selfdata = pd.concat([selfdata, selfreport.filter(like = "UP"), selfreport.filter(like = "BIS")], axis = 1)
+return selfdata 
 
 # Maybe I need a function to load MCQ
 ############################## load model parameter estimates######################
