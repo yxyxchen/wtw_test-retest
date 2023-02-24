@@ -6,10 +6,11 @@ library(ggplot2)
 library(igraph)
 library("ggpubr")
 source("plotThemes.R")
-data = read.csv("measures.csv")
+data = read.csv("all_measures.csv")
 
 
-self_vars =  c("discount_logk","NU", "PU", "PM", "PS", "Attentional", "Nonplanning", "Motor")
+# self_vars =  c("discount_logk","NU", "PU", "PM", "PS", "Attentional", "Nonplanning", "Motor")
+self_vars =  c("discount_logk","NU", "PU", "PM", "PS", "attention", "cogstable", "motor", "perseverance", "selfcontrol", "cogcomplex")
 task_vars = c('auc', "std_wtw", "auc_delta")
 paranames = c("alpha", "alphaU", "eta", "tau")
 n_selfv = length(self_vars)

@@ -94,7 +94,7 @@ df["exp"] = pd.Categorical(df["exp"], categories = ["passive", "active"], ordere
 UPPS_subscales = ["NU", "PU", "PM", "PS", "SS"]
 BIS_l1_subscales = ["Attentional", "Motor", "Nonplanning"]
 BIS_l2_subscales = ["attention", "cogstable", "motor", "perseverance", "selfcontrol", "cogcomplex"]
-self_vars = UPPS_subscales + BIS_l1_subscales + ["discount_logk"]
+self_vars = UPPS_subscales + BIS_l1_subscales + BIS_l2_subscales + ["discount_logk"]
 task_vars = ["auc", "std_wtw", "auc_delta"]
 paranames = ["alpha", "alphaU", "tau","eta"]
 vars = self_vars + task_vars + paranames
@@ -106,7 +106,6 @@ s1_taskdf_ = []
 s2_taskdf_ = []
 s1_paradf_ = []
 s2_paradf_ = []
-
 for expname in ["active", "passive"]:
 	hdrdata_sess1, trialdata_sess1_ = loadFxs.group_quality_check(expname, 1, plot_quality_check = True)
 	hdrdata_sess2, trialdata_sess2_ = loadFxs.group_quality_check(expname, 2, plot_quality_check = True)
@@ -127,35 +126,32 @@ for expname in ["active", "passive"]:
 	if expname == "passive":
 		s1_selfdf = loadFxs.parse_group_selfreport(expname, 1, isplot = False)
 		s2_selfdf = loadFxs.parse_group_selfreport(expname, 2, isplot = False)
-
-
+		s1_selfdf = s1_selfdf[np.logical_and(s1_selfdf["discount_logk"], s1_selfdf["UPPS"])]
+		s2_selfdf = s2_selfdf[np.logical_and(s2_selfdf["discount_logk"], s2_selfdf["UPPS"])]
+		
 s1_taskdf = pd.concat(s1_taskdf_)
 s2_taskdf = pd.concat(s2_taskdf_)
 s1_paradf = pd.concat(s1_paradf_)
 s2_paradf = pd.concat(s2_paradf_)
 # find common ids 
 from functools import reduce
-common_ids = reduce(np.intersect1d, [s1_taskdf["id"], s2_taskdf["id"], s1_paradf["id"], s2_paradf["id"]])
-common_self_ids = np.intersect1d(s1_selfdf["id"], s2_selfdf["id"])
+common_para_ids = reduce(np.intersect1d, [s1_paradf["id"], s2_paradf["id"]])
+common_self_ids = reduce(np.intersect1d, [s1_selfdf["id"], s2_selfdf["id"]])
 
 # so far I am not sure about that ...
 task_rhos = []
 for var in task_vars:
-	task_rhos.append(spearmanr(s1_taskdf.loc[np.isin(s1_taskdf["id"], common_ids), var], s2_taskdf.loc[np.isin(s2_taskdf["id"], common_ids), var])[0])
+	task_rhos.append(spearmanr(s1_taskdf.loc[:, var], s2_taskdf.loc[:, var])[0])
 
 
 para_rhos = []
 for var in paranames:
-	para_rhos.append(spearmanr(s1_paradf.loc[np.isin(s1_paradf["id"], common_ids), var], s2_paradf.loc[np.isin(s2_paradf["id"], common_ids), var])[0])
+	para_rhos.append(spearmanr(s1_paradf.loc[np.isin(s1_paradf["id"], common_para_ids), var], s2_paradf.loc[np.isin(s2_paradf["id"], common_para_ids), var])[0])
 
 
-# I still haven't include that participant who didn't fill the questionaire !!!!! 
 self_rhos = []
-self_ns = []
 for var in self_vars:
 	self_rhos.append(spearmanr(s1_selfdf.loc[np.isin(s1_selfdf["id"], common_self_ids), var], s2_selfdf.loc[np.isin(s2_selfdf["id"], common_self_ids), var], nan_policy = "omit")[0])
-	self_ns.append(len(np.intersect1d(s1_selfdf.loc[~np.isnan(s1_selfdf[var]), "id"], s2_selfdf.loc[~np.isnan(s2_selfdf[var]), "id"])))
-
 
 # ok so I am
 reliability_df = pd.DataFrame({
