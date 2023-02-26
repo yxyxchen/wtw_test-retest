@@ -1,4 +1,4 @@
-import pandas as pd
+cimport pandas as pd
 import numpy as np
 import os
 import glob
@@ -72,30 +72,30 @@ for expname in ['passive', "active"]:
         s2_paradf = s2_paradf[np.isin(s2_paradf["id"], s2_ids)]
         modelname = np.unique(s1_paradf["model"])[0]
         if modelname == "QL2reset_slope_two_simple" or modelname == "QL2reset_slope_two":
-            s1_paradf = s1_paradf.rename(columns = dict(zip(["alphaU"], ["kappa/nu"])))
-            s2_paradf = s2_paradf.rename(columns = dict(zip(["alphaU"], ["kappa/nu"])))
+            s1_paradf = s1_paradf.rename(columns = dict(zip(["alphaU"], ["phi/nu"])))
+            s2_paradf = s2_paradf.rename(columns = dict(zip(["alphaU"], ["phi/nu"])))
         else:
-            s1_paradf = s1_paradf.rename(columns = dict(zip(["nu"], ["kappa/nu"])))
-            s2_paradf = s2_paradf.rename(columns = dict(zip(["nu"], ["kappa/nu"])))
+            s1_paradf = s1_paradf.rename(columns = dict(zip(["nu"], ["phi/nu"])))
+            s2_paradf = s2_paradf.rename(columns = dict(zip(["nu"], ["phi/nu"])))
         s1_paradf_[i] = copy.copy(s1_paradf)
         s2_paradf_[i] = copy.copy(s2_paradf)
     s1_paradf = pd.concat([x for x in s1_paradf_])
     s2_paradf = pd.concat([x for x in s2_paradf_])
     paradf = pd.concat([s1_paradf, s2_paradf])
-    log_paradf = figFxs.log_transform_parameter(paradf, ["alpha", "kappa/nu", "tau", "eta"])
+    log_paradf = figFxs.log_transform_parameter(paradf, ["alpha", "phi/nu", "tau", "eta"])
     log_paradf_.append(log_paradf)
 
 log_paradf = pd.concat(log_paradf_)
 
 ##### load things ##
 log_paranames = ["log_alpha", "log_kappa/nu", "log_tau", "gamma", "log_eta"]
-log_paralabels = [r"$log(\alpha)$", r"$log(\nu)/log(\kappa)$", r"$log(\tau)$", r"$\gamma$", "$log(\eta)$"]
+log_paralabels = [r"$log(\alpha)$", r"$log(\nu)/log(\phi)$", r"$log(\tau)$", r"$\gamma$", "$log(\eta)$"]
 para_name_label_mapping = dict(zip(log_paranames, log_paralabels))
 para_name_limits_mapping = dict(zip(log_paranames, [(-12, 2), (-8, 4), (-3, 5), (0.4, 1.1), (-4, 4)]))
 para_name_ticks_mapping = dict(zip(log_paranames, [(-12, -6, 0), (-8, 0, 4), (-3, 0, 3), (0.5, 1), (-4, 0, 4)]))
 
 # focused pairs 
-focused_pairs = [("log_alpha", "log_kappa/nu"), ("log_tau", "log_eta")]
+focused_pairs = [("log_tau", "log_eta"), ("log_alpha", "log_kappa/nu")]
 
 
 # color bar settings 
@@ -252,7 +252,7 @@ fig.savefig(os.path.join("..", "figures", "combined", "structure_corr_M1-4.pdf")
 
 ################################ plot the circle version for focused pairs 
 
-focused_pairs = [("log_alpha", "log_kappa/nu"), ("log_tau", "log_eta")]
+focused_pairs = [("log_tau", "log_eta"), ("log_alpha", "log_kappa/nu")]
 structural_corr_summary_df["type"] = "structure"
 gross_corr_summary_df["type"] = "gross"
 tmp = pd.concat([structural_corr_summary_df, gross_corr_summary_df], axis = 0)
