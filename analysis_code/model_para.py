@@ -37,6 +37,8 @@ condition_palette = ["#762a83", "#1b7837"]
 log_paradf_ = []
 s1_logparadf_ = []
 s2_logparadf_ = []
+s1_paradf_ = []
+s2_paradf_ = []
 for expname in ["active", "passive"]:
     # load data 
     hdrdata_sess1, trialdata_sess1_ = loadFxs.group_quality_check(expname, 1, plot_quality_check = False)
@@ -54,10 +56,12 @@ for expname in ["active", "passive"]:
     # load model parameters
     s1_paradf = loadFxs.load_parameter_estimates(expname, 1, hdrdata_sess1, modelname, fitMethod, stepsize)
     s2_paradf = loadFxs.load_parameter_estimates(expname, 2, hdrdata_sess2, modelname, fitMethod, stepsize)
+    s1_paradf_.append(s1_paradf)
+    s2_paradf_.append(s2_paradf)
     s1_logparadf = figFxs.log_transform_parameter(s1_paradf, ["alpha", "nu", "tau", "eta"])
+    s2_logparadf = figFxs.log_transform_parameter(s2_paradf, ["alpha", "nu", "tau", "eta"])
     s1_logparadf_.append(s1_logparadf)
     s2_logparadf_.append(s2_logparadf)
-    s2_logparadf = figFxs.log_transform_parameter(s2_paradf, ["alpha", "nu", "tau", "eta"])
     # log transform 
     log_paradf = pd.concat([s1_logparadf, s2_logparadf])
     log_paradf_.append(log_paradf)
@@ -139,10 +143,10 @@ structure_noise_summary_df = structure_noise_df.groupby(["pair", "sess"]).agg({"
 
 # plot one participant example 
 fig, ax = plt.subplots()
-figFxs.my_regplot(np.log(parasamples['tau']), parasamples['gamma'], equal_aspect = False, ax = ax)
+figFxs.my_regplot(np.log(parasamples['tau']), np.log(parasamples['eta']), equal_aspect = False, ax = ax)
 ax.set_xlabel(r"$log(\tau)$", fontsize = 25)
-ax.set_ylabel(r"$\gamma$", fontsize = 25)
-fig.set_size_inches(w = 6, h = 6)
+ax.set_ylabel(r"$log(\eta)$", fontsize = 25)
+fig.set_size_inches(w = 4, h = 4)
 fig.tight_layout()
 fig.savefig(os.path.join("..", "figures", "combined", "sample_structure_corr_%s.pdf"%modelname))
 

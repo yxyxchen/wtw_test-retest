@@ -1,4 +1,4 @@
-cimport pandas as pd
+import pandas as pd
 import numpy as np
 import os
 import glob
@@ -65,6 +65,9 @@ for expname in ['passive', "active"]:
     from functools import reduce
     s1_ids = reduce(np.intersect1d, [paradf.id for paradf in s1_paradf_])
     s2_ids = reduce(np.intersect1d, [paradf.id for paradf in s2_paradf_])
+    print(expname)
+    print(len(s1_ids))
+    print(len(s2_ids))
     for i in np.arange(len(s1_paradf_)):
         s1_paradf = copy.copy(s1_paradf_[i])
         s2_paradf = copy.copy(s2_paradf_[i])
@@ -72,17 +75,17 @@ for expname in ['passive', "active"]:
         s2_paradf = s2_paradf[np.isin(s2_paradf["id"], s2_ids)]
         modelname = np.unique(s1_paradf["model"])[0]
         if modelname == "QL2reset_slope_two_simple" or modelname == "QL2reset_slope_two":
-            s1_paradf = s1_paradf.rename(columns = dict(zip(["alphaU"], ["phi/nu"])))
-            s2_paradf = s2_paradf.rename(columns = dict(zip(["alphaU"], ["phi/nu"])))
+            s1_paradf = s1_paradf.rename(columns = dict(zip(["alphaU"], ["kappa/nu"])))
+            s2_paradf = s2_paradf.rename(columns = dict(zip(["alphaU"], ["kappa/nu"])))
         else:
-            s1_paradf = s1_paradf.rename(columns = dict(zip(["nu"], ["phi/nu"])))
-            s2_paradf = s2_paradf.rename(columns = dict(zip(["nu"], ["phi/nu"])))
+            s1_paradf = s1_paradf.rename(columns = dict(zip(["nu"], ["kappa/nu"])))
+            s2_paradf = s2_paradf.rename(columns = dict(zip(["nu"], ["kappa/nu"])))
         s1_paradf_[i] = copy.copy(s1_paradf)
         s2_paradf_[i] = copy.copy(s2_paradf)
     s1_paradf = pd.concat([x for x in s1_paradf_])
     s2_paradf = pd.concat([x for x in s2_paradf_])
     paradf = pd.concat([s1_paradf, s2_paradf])
-    log_paradf = figFxs.log_transform_parameter(paradf, ["alpha", "phi/nu", "tau", "eta"])
+    log_paradf = figFxs.log_transform_parameter(paradf, ["alpha", "kappa/nu", "tau", "eta"])
     log_paradf_.append(log_paradf)
 
 log_paradf = pd.concat(log_paradf_)
@@ -123,13 +126,14 @@ gross_corr_summary_df = pd.DataFrame({
     })
 
 # plot the scatter plot for only the focused pairs 
+sns.set_theme(style="white", font_scale = 1.2)
 fig, axes = plt.subplots(len(focused_pairs), len(modelnames))
 for i, modelname in enumerate(modelnames):
     plotdf = log_paradf.loc[log_paradf["model"] == modelname]
     for j, pair in enumerate(focused_pairs):
         rho = spearmanr(plotdf[pair[0]], plotdf[pair[1]])[0]
         sns.regplot(plotdf[pair[0]], plotdf[pair[1]], ax = axes[j, i], scatter_kws = {"color":"grey", "edgecolor":"black", "alpha": 0.8},line_kws = {"color": cmap(norm(rho))})
-        axes[j,i].text(0.2, 0.2, r"$\rho = $%.2f"%rho, fontsize = 15, color = "orange", transform = axes[j,i].transAxes)
+        axes[j,i].text(0.2, 0.2, r"$\rho = $%.2f"%rho, fontsize = 15, color = "#fc4e2a", transform = axes[j,i].transAxes)
         axes[j,i].set_title(modellabels[i])
         axes[j,i].set_xlabel(para_name_label_mapping[pair[0]])
         axes[j,i].set_ylabel(para_name_label_mapping[pair[1]])
@@ -143,7 +147,7 @@ fig.savefig(os.path.join("..", "figures", "combined", "gross_corr_M1-4.pdf"))
 
 
 # plot the heatmap for all the pairs 
-sns.set_theme(style="white", font_scale = 1)
+sns.set_theme(style="white", font_scale = 1.2)
 fig, axes = plt.subplots(1, len(modelnames))
 for i, modelname in enumerate(modelnames):
     plotdf = pd.DataFrame(np.nan, columns = log_paralabels, index = log_paralabels)
@@ -214,23 +218,26 @@ structural_corr_summary_df = pd.DataFrame({
     })
 
 ###### plot the  heatmap for all pairs 
-sns.set_theme(style="white", font_scale = 1)
+sns.set_theme(style="white", font_scale = 1.2)
 fig, axes = plt.subplots(1, len(modelnames))
 for i in np.arange(len(modelnames)):
     tmp = structural_corr_df[structural_corr_df["model"] == modelnames[i]].pivot_table(columns = "var1", index = "var2", values = "r", aggfunc='mean', margins_name = "None")
     plotdf = pd.DataFrame(np.nan, columns = log_paralabels, index = log_paralabels)
     plotdf.loc[tmp.index, tmp.columns] = tmp
     if i == len(modelnames) - 1:
-        sns.heatmap(plotdf, annot=True, square=True, linewidths=1, ax = axes.flatten()[i], vmin=-1, vmax=1, center = 0, cmap = "RdBu_r", cbar = False)
+        sns.heatmap(plotdf, annot=True, square=True, linewidths=1, ax = axes.flatten()[i], vmin=-0.9, vmax=0.9, center = 0, cmap = "RdBu_r", cbar = False)
     else:
-        sns.heatmap(plotdf, annot=True, square=True, linewidths=1, ax = axes.flatten()[i], vmin=-1, vmax=1, center = 0, cmap = "RdBu_r", cbar = False)
+        sns.heatmap(plotdf, annot=True, square=True, linewidths=1, ax = axes.flatten()[i], vmin=-0.9, vmax=0.9, center = 0, cmap = "RdBu_r", cbar = False)
     axes.flatten()[i].set_xlabel("")
     axes.flatten()[i].set_ylabel("")
 
 fig.suptitle('Median correlation')
 fig.set_size_inches(16, 6)
-fig.savefig(os.path.join("..", "figures", "combined", "structural_corr_all_M1-4.pdf.pdf"))
+fig.savefig(os.path.join("..", "figures", "combined", "structural_corr_all_M1-4.pdf"))
 
+
+sns.set_theme(style="white", font_scale = 1.2)
+condition_palette = ["#762a83", "#1b7837"]
 
 # plot only focused pairs
 fig, axes = plt.subplots(len(focused_pairs), len(modelnames))
@@ -239,8 +246,10 @@ for i, modelname in enumerate(modelnames):
     for j, pair in enumerate(focused_pairs):
         median = np.median(plotdf.loc[plotdf["pair"] == pair, "r"])
         sns.histplot(plotdf.loc[plotdf["pair"] == pair, "r"], ax = axes[j, i], color = "grey")
-        axes[j,i].set_xlim([-1.05, 1.05])
+        axes[j,i].set_xlim([-1.1, 1.1])
+        axes[j,i].set_ylim([0, 70])
         axes[j,i].axvline(median, color = cmap(norm(median)), linewidth = 3)
+        axes[j,i].text(0.2, 40, "%.2f"%median, color = "#fc4e2a", size = 15)
         axes[j,i].axvline(0, color = "black", linestyle = "dotted") # "#238b45", 
         for spine in axes[j,i].spines.values():
             spine.set_edgecolor(cmap(norm(median)))
