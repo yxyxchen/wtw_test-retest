@@ -58,7 +58,8 @@ s1_stats_ = []
 s2_stats_ = []
 trialdata_sess1_list = []
 trialdata_sess2_list = []
-for expname in ['active', 'passive', "combined"]:
+# for expname in ['active', 'passive', "combined"]:
+for expname in ['active', 'passive']:
     if expname == "combined":
         s1_df, s2_df, s1_stats, s2_stats = pd.concat(s1_df_), pd.concat(s2_df_), pd.concat(s1_stats_), pd.concat(s2_stats_)
         trialdata_sess1_, trialdata_sess2_ = copy.copy(trialdata_sess1_list[0]), copy.copy(trialdata_sess2_list[0])
@@ -80,6 +81,18 @@ for expname in ['active', 'passive', "combined"]:
         s2_stats_.append(s2_stats)
         trialdata_sess1_list.append(trialdata_sess1_)
         trialdata_sess2_list.append(trialdata_sess2_)
+    # practice effect 
+    s1_df["sess"] = "Session 1"
+    s2_df["sess"] = "Session 2"
+    df = analysisFxs.vstack_sessions(s1_df.melt(id_vars = ["id", "sess"], value_vars = vars),
+        s2_df.melt(id_vars = ["id", "sess"], value_vars = vars))
+    df["variable"] = df["variable"].apply(var2label)
+    g = sns.FacetGrid(data = df, col = "variable", sharex = False, sharey = False)
+    g.map(sns.boxplot, "sess", "value", boxprops={'facecolor':'None'}, medianprops={"linestyle":"--", "color": "red"})
+    g.map(sns.swarmplot, "sess", "value",  color = "grey", edgecolor = "black", alpha = 0.4, linewidth=1,  size = 3)
+    for ax, var in zip(g.axes.flatten(), labels):
+        sig = figFxs.tosig(sp.stats.wilcoxon(df.loc[np.logical_and(df["sess"] == "Session 1", df["variable"] == var), "value"], df.loc[np.logical_and(df["sess"] == "Session 2", df["variable"] == var), "value"]).pvalue)
+        print(sp.stats.wilcoxon(df.loc[np.logical_and(df["sess"] == "Session 1", df["variable"] == var), "value"], df.loc[np.logical_and(df["sess"] == "Session 2", df["variable"] == var), "value"]).pvalue)
 
     # across-condition convergence
     tmp1 = s1_stats[["auc", "std_wtw", "id", "condition"]].melt(id_vars = ["id", "condition"], value_vars = ["auc", "std_wtw"])
@@ -97,7 +110,6 @@ for expname in ['active', 'passive', "combined"]:
     g.set_titles(col_template = "{col_name}")
     g.set(xlabel = "HP block", ylabel = "LP block")
     g.savefig(os.path.join('..', 'figures', expname, 'across-condition_convergence.pdf'))
-    
     # summary statistics
     df = analysisFxs.vstack_sessions(s1_df, s2_df)
     df.groupby(["sess"]).agg({"auc":[np.median, scipy.stats.iqr, lambda x: np.median(x) - scipy.stats.iqr(x), lambda x: np.median(x) + scipy.stats.iqr(x)],\
@@ -135,6 +147,7 @@ for expname in ['active', 'passive', "combined"]:
     g.map(sns.swarmplot, "sess", "value",  color = "grey", edgecolor = "black", alpha = 0.4, linewidth=1,  size = 3)
     for ax, var in zip(g.axes.flatten(), labels):
         sig = figFxs.tosig(sp.stats.wilcoxon(df.loc[np.logical_and(df["sess"] == "Session 1", df["variable"] == var), "value"], df.loc[np.logical_and(df["sess"] == "Session 2", df["variable"] == var), "value"]).pvalue)
+        print(sp.stats.wilcoxon(df.loc[np.logical_and(df["sess"] == "Session 1", df["variable"] == var), "value"], df.loc[np.logical_and(df["sess"] == "Session 2", df["variable"] == var), "value"]).pvalue)
         ymax = df.loc[df["variable"] == var, "value"].max()
         ax.plot([0, 0, 1, 1], [ymax * 1.1, ymax * 1.2, ymax * 1.2, ymax * 1.1], lw=1.5, color = "black")
         ax.text((0+1)*.5, ymax * 1.2, sig, ha='center', va='bottom', size = 10)
