@@ -49,8 +49,8 @@ trialdata_sess1_ = {x: y for x,y in trialdata_sess1_.items() if x[0] in hdrdata_
 s1_stats, s1_Psurv_b1_, s1_Psurv_b2_, s1_WTW_emp = analysisFxs.group_MF(trialdata_sess1_, plot_each = False)   
 s2_stats, s2_Psurv_b1_, s2_Psurv_b2_, s2_WTW_emp = analysisFxs.group_MF(trialdata_sess2_, plot_each = False)   
 
-for modelname in ['QL2', 'QL2reset']:
-# for modelname in ['QL2reset', 'QL2reset_slope', 'QL2reset_slope_two', 'QL2reset_slope_two_simple']:
+# for modelname in ['QL2', 'QL2reset']:
+for modelname in ['QL2reset', 'QL2reset_slope', 'QL2reset_slope_two', 'QL2reset_slope_two_simple']:
     # modelname = 'QL2reset_slope'
     fitMethod = "whole"
     stepsize = 0.5
