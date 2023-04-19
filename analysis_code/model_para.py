@@ -136,10 +136,9 @@ structure_noise_df = pd.DataFrame({
     "sess": sess_
     })
 
-structure_noise_summary_df = structure_noise_df.groupby(["pair", "sess"]).agg({"r":np.median}).reset_index()
-
-structure_noise_summary_df = structure_noise_df.groupby(["pair", "sess"]).agg({"r":np.mean}).reset_index()
-
+structure_noise_df.groupby(["pair", "sess"]).agg({"r":np.median}).reset_index()
+structure_noise_df.groupby(["pair"]).agg({"r":np.mean}).reset_index()
+print(structure_noise_df.shape)
 
 # plot one participant example 
 fig, ax = plt.subplots()
@@ -234,6 +233,11 @@ sns.set(font_scale = 1.5)
 sns.set_style("white")
 # if one subject only have one valid session, using one session only
 log_paradf_agg = analysisFxs.agg_across_sessions(log_paradf[log_paradf["sess"] == 1], log_paradf[log_paradf["sess"] == 2])
+# calc n subj included
+a = log_paradf_agg["id"]
+b = [x[1] for x in a]
+pd.Series(b).value_counts()
+
 gross_corr_matrix = pd.DataFrame(np.full((len(paranames), len(paranames)), np.nan), columns = log_paralabels, index = log_paralabels)
 for (i, x), (j,y) in itertools.product(enumerate(log_paranames), enumerate(log_paranames)):
     if i > j:
