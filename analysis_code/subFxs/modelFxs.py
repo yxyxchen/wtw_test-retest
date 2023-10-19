@@ -15,7 +15,6 @@ from subFxs import simFxs
 import code
 import stan
 import os
-import arviz as az
 from sksurv.nonparametric import kaplan_meier_estimator as km
 import matplotlib.pyplot as plt
 import seaborn as sns

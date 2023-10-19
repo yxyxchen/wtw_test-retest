@@ -34,6 +34,7 @@ sns.set(font_scale = 1)
 sns.set_style("white")
 condition_palette = ["#762a83", "#1b7837"]
 
+############## load and transform parameter values #################
 log_paradf_ = []
 s1_logparadf_ = []
 s2_logparadf_ = []
@@ -43,14 +44,12 @@ for expname in ["active", "passive"]:
     # load data 
     hdrdata_sess1, trialdata_sess1_ = loadFxs.group_quality_check(expname, 1, plot_quality_check = False)
     hdrdata_sess2, trialdata_sess2_ = loadFxs.group_quality_check(expname, 2, plot_quality_check = False)
-    ## only exclude valid participants 
+    ## only include valid participants 
     hdrdata_sess1 = hdrdata_sess1[np.isin(hdrdata_sess1["id"], hdrdata_sess2["id"])]
     trialdata_sess1_ = {x: y for x,y in trialdata_sess1_.items() if x[0] in hdrdata_sess2["id"].values}
-    # for modelname in ['QL2', 'QL2reset']:
     modelname = 'QL2reset'
     fitMethod = "whole"
     stepsize = 0.5
-    # subtitles = [r'$\mathbf{log(\alpha)}$', r'$\mathbf{log(\nu)}$', r'$\mathbf{\tau}$', r'$\mathbf{\gamma}$', r'$\mathbf{log(\eta)}$']
     paranames = modelFxs.getModelParas(modelname)
     npara = len(paranames)
     # load model parameters
@@ -58,8 +57,8 @@ for expname in ["active", "passive"]:
     s2_paradf = loadFxs.load_parameter_estimates(expname, 2, hdrdata_sess2, modelname, fitMethod, stepsize)
     s1_paradf_.append(s1_paradf)
     s2_paradf_.append(s2_paradf)
-    s1_logparadf = figFxs.log_transform_parameter(s1_paradf, ["alpha", "nu", "tau", "eta"])
-    s2_logparadf = figFxs.log_transform_parameter(s2_paradf, ["alpha", "nu", "tau", "eta"])
+    s1_logparadf = figFxs.log_transform_parameter(copy.deepcopy(s1_paradf), ["alpha", "nu", "tau", "eta"])
+    s2_logparadf = figFxs.log_transform_parameter(copy.deepcopy(s2_paradf), ["alpha", "nu", "tau", "eta"])
     s1_logparadf_.append(s1_logparadf)
     s2_logparadf_.append(s2_logparadf)
     # log transform 
@@ -70,26 +69,25 @@ log_paradf = pd.concat(log_paradf_)
 s1_logparadf = pd.concat(s1_logparadf_)
 s2_logparadf = pd.concat(s2_logparadf_)
 
+############ plotting constants ##############
 log_paranames = log_paradf.columns[:5].values
 log_paralabels = [r'$log(\alpha)$', r'$log(\nu)$', r'$log(\tau)$', r'$\gamma$', r'$log(\eta)$']
 log_paralabel_mapping = dict(zip(log_paranames, log_paralabels))
 log_paralimits = dict(zip(log_paranames, [(-12, 2), (-8, 4), (-3, 5), (0.4, 1.1), (-4, 4)]))
 log_paraticks = dict(zip(log_paranames, [(-12, -6, 0), (-8, 0, 4), (-3, 0, 3), (0.5, 1), (-4, 0, 4)]))
-
-
-# I need to combine both conditions
-#### parameter reliabiliy ########
 subtitles = [r'$\mathbf{log(\alpha)}$', r'$\mathbf{log(\nu)}$', r'$\mathbf{\tau}$', r'$\mathbf{\gamma}$', r'$\mathbf{log(\eta)}$']
 paranames = modelFxs.getModelParas(modelname)
 npara = len(paranames)
 
 
-######## plot parameter distributions ########
-figFxs.plot_parameter_distribution(modelname, s1_paradf.iloc[:,:-1], s2_paradf.iloc[:,:-1], color = "grey", edgecolor = "black")
-plt.gcf().set_size_inches(5 * npara, 5 * 2)
-plt.savefig(os.path.join("..", 'figures', "combined", "%s_%s_stepsize%.2f_para_dist.pdf"%(modelname, fitMethod, stepsize)))
 
-# parameter reliability
+######## plot parameter distributions ########
+figFxs.plot_parameter_distribution(modelname, s1_paradf_[0].iloc[:,:-1], s2_paradf_[0].iloc[:,:-1], color = "grey", edgecolor = "black")
+plt.gcf().set_size_inches(5 * npara, 5 * 2)
+plt.savefig(os.path.join("..", 'figures', "active", "%s_%s_stepsize%.2f_para_dist.pdf"%(modelname, fitMethod, stepsize)))
+
+
+################# parameter reliability ###############
 g = figFxs.plot_parameter_reliability(modelname, s1_logparadf.iloc[:, :(npara+2)], s2_logparadf.iloc[:, :(npara+2)], log_paralabels)
 for para, ax in zip(log_paranames, g.axes.flatten()):
     ax.set_xlim(log_paralimits[para])
@@ -99,8 +97,6 @@ for para, ax in zip(log_paranames, g.axes.flatten()):
 plt.savefig(os.path.join("..", 'figures', "combined", "%s_para_reliability.pdf"%(modelname)))
 
 ########## bootstrapped structural noise ########
-########## should I combine data here???? #### rethink
-r_ = []
 pair_ = []
 id_ = []
 cv_ = []
@@ -108,6 +104,7 @@ std_ = []
 para_ = []
 id_para_ = []
 sess_ = []
+r_ = []
 for i, expname in enumerate(["active", "passive"]):
     s1_paradf = s1_paradf_[i]
     s2_paradf = s2_paradf_[i]
@@ -138,7 +135,6 @@ structure_noise_df = pd.DataFrame({
 
 structure_noise_df.groupby(["pair", "sess"]).agg({"r":np.median}).reset_index()
 structure_noise_df.groupby(["pair"]).agg({"r":np.mean}).reset_index()
-print(structure_noise_df.shape)
 
 # plot one participant example 
 fig, ax = plt.subplots()
@@ -149,14 +145,11 @@ fig.set_size_inches(w = 4, h = 4)
 fig.tight_layout()
 fig.savefig(os.path.join("..", "figures", "combined", "sample_structure_corr_%s.pdf"%modelname))
 
-
-# plot the heatmap version 
+# transform the dataset
 structure_noise_df['var1'] = pd.Categorical([x[0] for x in structure_noise_df['pair']], log_paralabels)
 structure_noise_df['var2'] = pd.Categorical([x[1] for x in structure_noise_df['pair']], log_paralabels)
 structure_noise_matrix = pd.DataFrame(np.full((len(paranames), len(paranames)), np.nan), columns = log_paralabels, index = log_paralabels)
 structure_noise_matrix.loc[log_paralabels[1:], log_paralabels[:5]] = structure_noise_df.pivot_table('r', 'var2', 'var1', np.mean)
-
-
 from matplotlib.colors import Normalize
 import matplotlib.cm as cm
 import matplotlib as mpl
@@ -164,13 +157,13 @@ norm = Normalize(vmin=-0.90, vmax=0.90)
 cmap = cm.get_cmap('RdBu_r')
 rgba_values = cmap(norm(structure_noise_matrix))
 
+# plot the heatmap version 
+# fig, ax = plt.subplots()
+# g = sns.heatmap(structure_noise_matrix, ax = ax, annot=True, square=True, linewidths=1, cmap = cmap, norm = norm, cbar = True) 
+# #cbar = fig.colorbar(mpl.cm.ScalarMappable(norm=norm, cmap=cmap), ticks=[-0.80, -0.40, 0, 0.40, 0.80], orientation='vertical', label='Correlation')
+# plt.savefig(os.path.join("..", "figures", "combined", "heatmap_structure_corr_%s.pdf"%modelname))
 
-fig, ax = plt.subplots()
-g = sns.heatmap(structure_noise_matrix, ax = ax, annot=True, square=True, linewidths=1, cmap = cmap, norm = norm, cbar = True) 
-#cbar = fig.colorbar(mpl.cm.ScalarMappable(norm=norm, cmap=cmap), ticks=[-0.80, -0.40, 0, 0.40, 0.80], orientation='vertical', label='Correlation')
-plt.savefig(os.path.join("..", "figures", "combined", "heatmap_structure_corr_%s.pdf"%modelname))
-
-
+# plot the histgram version
 plt.style.use('classic')
 sns.set(font_scale = 1)
 sns.set_style("white")
@@ -210,24 +203,21 @@ fig.set_size_inches(w = 5 * 1.5, h = 5 * 1.7)
 fig.savefig(os.path.join("..", "figures", "combined", "para_structure_corr_%s_v2.pdf"%modelname))
 
 
-
-
 ############ estimation uncertainty #########
-plotdf = pd.DataFrame({
-    "std": std_,
-    "cv": cv_,
-    "para": para_,
-    "id": id_para_
-    })
-plotdf.groupby("para").agg({"std":np.median})
-plotdf.groupby("para").agg({"cv":np.median}) # nu has strong uncertainty 
+# plotdf = pd.DataFrame({
+#     "std": std_,
+#     "cv": cv_,
+#     "para": para_,
+#     "id": id_para_
+#     })
+# plotdf.groupby("para").agg({"std":np.median})
+# plotdf.groupby("para").agg({"cv":np.median}) # nu has strong uncertainty 
 
-g = sns.FacetGrid(plotdf, col = "para")
-g.map(plt.hist, "cv") 
+# g = sns.FacetGrid(plotdf, col = "para")
+# g.map(plt.hist, "cv") 
 
 ####### among participant correlations ####
-
-# plot the heatmap version
+# prepara the data
 plt.style.use('classic')
 sns.set(font_scale = 1.5)
 sns.set_style("white")
@@ -246,12 +236,14 @@ for (i, x), (j,y) in itertools.product(enumerate(log_paranames), enumerate(log_p
 norm = Normalize(vmin=-0.90, vmax=0.90)
 cmap = cm.get_cmap('RdBu_r')
 rgba_values = cmap(norm(gross_corr_matrix))
+
+# plot heatmap version
 fig, ax = plt.subplots()
 g = sns.heatmap(gross_corr_matrix, ax = ax, annot=True, square=True, linewidths=1, cmap = cmap, norm = norm, cbar = True) 
 #cbar = fig.colorbar(mpl.cm.ScalarMappable(norm=norm, cmap=cmap), ticks=[-0.80, -0.40, 0, 0.40, 0.80], orientation='vertical', label='Correlation')
 plt.savefig(os.path.join("..", "figures", "combined", "heatmap_gross_corr_%s.pdf"%modelname))
 
-
+# plot scatter version
 plt.style.use('classic')
 sns.set(font_scale = 1)
 sns.set_style("white")
@@ -287,30 +279,3 @@ for (i, x), (j,y) in itertools.product(enumerate(log_paranames), enumerate(log_p
 fig.tight_layout()
 fig.set_size_inches(w = 5 * 1.5, h = 5 * 1.7)
 fig.savefig(os.path.join("..", "figures", "combined", "scatter_gross_corr_%s.pdf"%modelname))
-
-
-# #####################################################
-# ##################### split half reliability ########
-# modelname = 'QL2reset_FL2'
-# stepsize = 0.5
-# s1_even_paradf = loadFxs.load_parameter_estimates(expname, 1, hdrdata_sess1, modelname, 'even', stepsize)
-# s1_odd_paradf = loadFxs.load_parameter_estimates(expname, 1, hdrdata_sess1, modelname, 'odd', stepsize)
-# figFxs.plot_parameter_reliability(modelname, s1_even_paradf.iloc[:,:-1], s1_odd_paradf.iloc[:,:-1], subtitles)
-# plt.savefig(os.path.join("..", 'figures', expname, "%s_stepsize%.2f_para_split_hald.pdf"%(modelname, stepsize)))
-
-# # is the reliability superficial? 
-# a = pd.merge(s1_paradf, s1_stats, how = 'inner', on = 'id')
-# spearmanr(a.loc[a.block == 1, 'tau'], a.loc[a.block == 1, 'auc'])
-# spearmanr(a.loc[a.block == 2, 'tau'], a.loc[a.block == 2, 'auc'])
-# # .... hmmm
-# spearmanr(a.loc[a.block == 1, 'std_wtw'], a.loc[a.block == 1, 'tau'])
-# spearmanr(a.loc[a.block == 2, 'std_wtw'], a.loc[a.block == 2, 'tau'])
-
-# # prior has high correlation with AUC
-# s1_paradf = loadFxs.load_parameter_estimates(expname, 1, hdrdata_sess1, modelname, fitMethod, stepsize)
-# s2_paradf = loadFxs.load_parameter_estimates(expname, 2, hdrdata_sess2, modelname, fitMethod, stepsize)
-# figFxs.log_transform_parameter(s1_paradf, ['alpha', 'nu',  "tau", 'eta'])
-# figFxs.log_transform_parameter(s2_paradf, ['alpha', 'nu', "tau", 'eta'])
-# sns.pairplot(s1_paradf.iloc[:, :5])
-# r_, p_ = analysisFxs.calc_prod_correlations(s1_paradf, ["log_alpha", "log_nu", "log_tau", "log_eta", "gamma"], ["log_alpha", "log_nu", "log_tau", "log_eta", "gamma"])
-

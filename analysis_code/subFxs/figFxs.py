@@ -394,6 +394,25 @@ def plot_parameter_distribution(modelname, paradf_sess1, paradf_sess2, **kwargs)
         median_val = np.median(plotdf.loc[np.logical_and(plotdf["sess"] == row_key, plotdf["variable"] == col_key), "value"])
         ax.axvline(median_val, color = "red")
         ax.text(median_val, 40, "%.2f"%median_val, color = "red")
+
+    for i in np.arange(g.axes.shape[1]):
+        ax1 = g.axes[0, i]
+        ax2 = g.axes[1, i]
+        if i == 0:
+            ax1.set_xlim([0, 0.8])
+            ax2.set_xlim([0, 0.8])
+        elif i == 1:
+            ax1.set_xlim([0, 9])
+            ax2.set_xlim([0, 9])
+        elif i == 2:
+            ax1.set_xlim([0, 40])
+            ax2.set_xlim([0, 40])
+        elif i == 3:
+            ax1.set_xlim([0.5, 1])
+            ax2.set_xlim([0.5, 1])
+        elif i == 4:
+            ax1.set_xlim([0, 12])
+            ax2.set_xlim([0, 12])
     g.set_titles(col_template="{col_name}", row_template="{row_name}")
     return g
 

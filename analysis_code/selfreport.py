@@ -38,39 +38,40 @@ sns.set(font_scale = 2)
 sns.set_style("white")
 condition_palette = ["#762a83", "#1b7837"]
 
-# 
+# plot constants
 selfreport_vars = ["BIS", "UPPS", "discount_logk", "Motor", "Nonplanning", "Attentional", "motor", "perseverance", "selfcontrol", "cogcomplex", "cogstable", "attention", "NU", "PU", "PM", "PS", "SS"]
 selfreport_totalscores = ["BIS", "UPPS", "discount_logk"]
 
-expname = "passive"
-
+############# plot reliability ########
 # load hdrdata 
+expname = "passive"
 hdrdata, _ = loadFxs.group_quality_check(expname, 2, plot_quality_check = True)
 s1_selfdf = loadFxs.parse_group_selfreport(expname, 1, isplot = False)
 s2_selfdf = loadFxs.parse_group_selfreport(expname, 2, isplot = False)
 s1_selfdf = s1_selfdf[np.isin(s1_selfdf["id"], hdrdata["id"])]
-s2_selfdf = s2_selfdf[np.isin(s2_selfdf["id"], hdrdata["id"])] # I lacked a data here ...
+s2_selfdf = s2_selfdf[np.isin(s2_selfdf["id"], hdrdata["id"])] 
 selfdf = analysisFxs.agg_across_sessions(s1_selfdf, s2_selfdf)
-# plot reliability 
-plt.style.use('classic')
-sns.set(font_scale = 1)
-sns.set_style("white")
-df = s1_selfdf.melt(id_vars = "id", value_vars = selfreport_totalscores).merge(s2_selfdf.melt(id_vars = "id", value_vars = selfreport_totalscores), on = ["id", "variable"], suffixes = ["_sess1", "_sess2"])
-g = sns.FacetGrid(data  = df, col = "variable", sharex = False, sharey = False)
-g.map(figFxs.my_regplot, "value_sess1", "value_sess2")
-g.set_titles(col_template="{col_name}")
-g.set(xlabel='Session 1', 
-      ylabel='Session 2')
-g.savefig(os.path.join("..", "figures", expname, "selfreport_totalscore_reliability.pdf"))
-df = s1_selfdf.melt(id_vars = "id", value_vars = selfreport_vars).merge(s2_selfdf.melt(id_vars = "id", value_vars = selfreport_vars), on = ["id", "variable"], suffixes = ["_sess1", "_sess2"])
-g = sns.FacetGrid(data  = df, col = "variable", sharex = False, sharey = False)
-g.map(figFxs.my_regplot, "value_sess1", "value_sess2")
-g.set_titles(col_template="{col_name}")
-g.set(xlabel='Session 1', 
-      ylabel='Session 2')
-g.savefig(os.path.join("..", "figures", expname, "selfreport_reliability.pdf"))
 
-# calculate reliability table, more i can do this tomorrow
+# plot reliability 
+# plt.style.use('classic')
+# sns.set(font_scale = 1)
+# sns.set_style("white")
+# df = s1_selfdf.melt(id_vars = "id", value_vars = selfreport_totalscores).merge(s2_selfdf.melt(id_vars = "id", value_vars = selfreport_totalscores), on = ["id", "variable"], suffixes = ["_sess1", "_sess2"])
+# g = sns.FacetGrid(data  = df, col = "variable", sharex = False, sharey = False)
+# g.map(figFxs.my_regplot, "value_sess1", "value_sess2")
+# g.set_titles(col_template="{col_name}")
+# g.set(xlabel='Session 1', 
+#       ylabel='Session 2')
+# g.savefig(os.path.join("..", "figures", expname, "selfreport_totalscore_reliability.pdf"))
+# df = s1_selfdf.melt(id_vars = "id", value_vars = selfreport_vars).merge(s2_selfdf.melt(id_vars = "id", value_vars = selfreport_vars), on = ["id", "variable"], suffixes = ["_sess1", "_sess2"])
+# g = sns.FacetGrid(data  = df, col = "variable", sharex = False, sharey = False)
+# g.map(figFxs.my_regplot, "value_sess1", "value_sess2")
+# g.set_titles(col_template="{col_name}")
+# g.set(xlabel='Session 1', 
+#       ylabel='Session 2')
+# g.savefig(os.path.join("..", "figures", expname, "selfreport_reliability.pdf"))
+
+# calculate reliability table
 df = [s1_selfdf, s2_selfdf]
 UPPS_subscales = ["NU", "PU", "PM", "PS", "SS"]
 BIS_l1_subscales = ["Attentional", "Motor", "Nonplanning"]
@@ -79,24 +80,25 @@ BIS_l2_subscales = ["attention", "cogstable", "motor", "perseverance", "selfcont
 _, _, _, _, _, report = analysisFxs.calc_zip_reliability(analysisFxs.hstack_sessions(s1_selfdf, s2_selfdf), [(x + '_sess1', x + '_sess2') for x in selfreport_totalscores + UPPS_subscales + BIS_l2_subscales])
 report.round(3).to_csv(os.path.join("..", "figures", expname, "selfreport_reliability.csv"))
 
-# plot practice effect
-df = analysisFxs.vstack_sessions(s1_selfdf.melt(id_vars = "id", value_vars = selfreport_totalscores), s2_selfdf.melt(id_vars = "id", value_vars = selfreport_totalscores))
-g = sns.FacetGrid(data = df, col = "variable", sharex = False, sharey = False)
-g.map(sns.swarmplot, "sess", "value", color = "grey", edgecolor = "black", alpha = 0.4, linewidth=1,  size = 3)
-g.map(sns.boxplot, "sess", "value", boxprops={'facecolor':'None'}, medianprops={"linestyle":"--", "color": "red"})
-g.set_titles(col_template="{col_name}")
-g.set(xlabel='')
-g.savefig(os.path.join("..", "figures", expname, "selfreport_totalscore_practice.pdf"))
+############## plot practice effect ####################
+# df = analysisFxs.vstack_sessions(s1_selfdf.melt(id_vars = "id", value_vars = selfreport_totalscores), s2_selfdf.melt(id_vars = "id", value_vars = selfreport_totalscores))
+# g = sns.FacetGrid(data = df, col = "variable", sharex = False, sharey = False)
+# g.map(sns.swarmplot, "sess", "value", color = "grey", edgecolor = "black", alpha = 0.4, linewidth=1,  size = 3)
+# g.map(sns.boxplot, "sess", "value", boxprops={'facecolor':'None'}, medianprops={"linestyle":"--", "color": "red"})
+# g.set_titles(col_template="{col_name}")
+# g.set(xlabel='')
+# g.savefig(os.path.join("..", "figures", expname, "selfreport_totalscore_practice.pdf"))
 
-df = analysisFxs.vstack_sessions(s1_selfdf.melt(id_vars = "id", value_vars = selfreport_vars), s2_selfdf.melt(id_vars = "id", value_vars = selfreport_vars))
-g = sns.FacetGrid(data = df, col = "variable", sharex = False, sharey = False)
-g.map(sns.swarmplot, "sess", "value", color = "grey", edgecolor = "black", alpha = 0.4, linewidth=1,  size = 3)
-g.map(sns.boxplot, "sess", "value", boxprops={'facecolor':'None'}, medianprops={"linestyle":"--", "color": "red"})
-g.set_titles(col_template="{col_name}")
-g.set(xlabel='')
-g.savefig(os.path.join("..", "figures", expname, "selfreport_practice.pdf"))
+# df = analysisFxs.vstack_sessions(s1_selfdf.melt(id_vars = "id", value_vars = selfreport_vars), s2_selfdf.melt(id_vars = "id", value_vars = selfreport_vars))
+# g = sns.FacetGrid(data = df, col = "variable", sharex = False, sharey = False)
+# g.map(sns.swarmplot, "sess", "value", color = "grey", edgecolor = "black", alpha = 0.4, linewidth=1,  size = 3)
+# g.map(sns.boxplot, "sess", "value", boxprops={'facecolor':'None'}, medianprops={"linestyle":"--", "color": "red"})
+# g.set_titles(col_template="{col_name}")
+# g.set(xlabel='')
+# g.savefig(os.path.join("..", "figures", expname, "selfreport_practice.pdf"))
 
 
+#################### plot correlations among selfreport datas
 # load data 
 selfdf_ = []
 for expname in ["passive", "active"]:	
@@ -116,7 +118,6 @@ for expname in ["passive", "active"]:
 
 selfdf = pd.concat(selfdf_, axis = 0).reset_index()
 
-#################### plot correlations among selfreport datas
 plt.style.use('classic')
 sns.set(font_scale = 2)
 sns.set_style("white")
@@ -125,40 +126,5 @@ g = sns.pairplot(selfdf[["UPPS", "BIS", "discount_logk"]], kind = "reg", diag_kw
 g.map_lower(figFxs.annotate_reg)
 plt.savefig(os.path.join("..", "figures", "combined", "impulsivity_corr.pdf"))
 
-# plot a flatten version
-plt.style.use('classic')
-sns.set(font_scale = 1.5)
-sns.set_style("white")
-plotdf = pd.DataFrame({
-  "x": selfdf[["UPPS", "UPPS", "BIS"]].values.flatten("F"),
-  'y': selfdf[["BIS", "discount_logk", "discount_logk"]].values.flatten("F"),
-  'pair': np.repeat(np.arange(3), selfdf.shape[0])
-  })
-g = sns.FacetGrid(data = plotdf, col = "pair", sharex = False, sharey = False)
-g.map(figFxs.my_regplot, "x", "y", equal_aspect = False)
-g.set_titles("")
-label_pairs = zip(["UPPS-P", "UPPS-P", "BIS"], ["BIS", "MCQ's log(k)", "MCQ's log(k)"])
-for (x, y), ax in zip(label_pairs, g.axes.flatten()):
-  ax.set_xlabel(x)
-  ax.set_ylabel(y)
-   
-plt.gcf().set_size_inches(4 * 3, 5.5)
-g.savefig(os.path.join('..', 'figures', "combined", 'impulsivity_corr_line.pdf'), bbox_inches = "tight")
-
-####
-g = sns.pairplot(selfdf[["NU", "PU", "PM", "PS", "SS"]], kind = "reg", diag_kws = {"color": "grey", "edgecolor": "black"},\
-	plot_kws ={'line_kws':{'color':'red'}, "scatter_kws": {"color": "grey", "edgecolor": "black"}})
-g.map_lower(figFxs.annotate_reg)
-plt.savefig(os.path.join("..", "figures", "combined", "UPPS_corr.pdf"))
-
-g = sns.pairplot(selfdf[["Motor", "Nonplanning", "Attentional"]], kind = "reg", diag_kws = {"color": "grey", "edgecolor": "black"},\
-	plot_kws ={'line_kws':{'color':'red'}, "scatter_kws": {"color": "grey", "edgecolor": "black"}})
-g.map_lower(figFxs.annotate_reg)
-plt.savefig(os.path.join("..", "figures", "combined", "BIS_corr.pdf"))
-
-g = sns.pairplot(selfdf[['motor', "perseverance", "cogstable", "selfcontrol", "attention", "cogcomplex"]], kind = "reg", diag_kws = {"color": "grey", "edgecolor": "black"},\
-	plot_kws ={'line_kws':{'color':'red'}, "scatter_kws": {"color": "grey", "edgecolor": "black"}})
-g.map_lower(figFxs.annotate_reg)
-plt.savefig(os.path.join("..", "figures", "combined", "BIS_sub_corr.pdf"))
 
 

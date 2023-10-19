@@ -778,7 +778,7 @@ def desc_RT(trialdata):
     sell_RT_se  = calc_se(trialdata.loc[np.logical_and(trialdata.trialEarnings != 0, ~np.isnan(trialdata.RT)), :].RT)
     return sell_RT_median, sell_RT_mean, sell_RT_se
 ############################ individual level analysis functions ###############
-def ind_MF(trialdata, key, isTrct = True, plot_RT = False, plot_trial = False, plot_KMSC = False, plot_WTW = False, n_subblock = 4):
+def ind_MF(trialdata, key, cutoff, isTrct = True, plot_RT = False, plot_trial = False, plot_KMSC = False, plot_WTW = False, n_subblock = 4):
     """Conduct model-free (MF) analysis for a single participant 
     Inputs:
         trialdata: a pd dataframe that contains task data
@@ -802,7 +802,11 @@ def ind_MF(trialdata, key, isTrct = True, plot_RT = False, plot_trial = False, p
     if isTrct:
         trialdata = trialdata[trialdata.sellTime <= expParas.blocksec - np.max(expParas.tMaxs)]
 
-    # 
+    
+    ########################## if necessary, calc metrics using only part of the data ##########
+    if cutoff:
+        trialdata = trialdata[trialdata.sellTime <= cutoff]
+
     nBlock = len(np.unique(trialdata.blockIdx))
     wtw = []
     WTW = []
@@ -858,7 +862,7 @@ def ind_MF(trialdata, key, isTrct = True, plot_RT = False, plot_trial = False, p
 
         # remove the data near the beginning of the block
         # this is not necessary for the HP block
-        _, _, _, _, block_auc_rh, block_std_wtw_rh = kmsc(blockdata.loc[blockdata['trialStartTime'] >= 90], expParas.tMax, expParas.Time, False)
+        # _, _, _, _, block_auc_rh, block_std_wtw_rh = kmsc(blockdata.loc[blockdata['trialStartTime'] >= 90], expParas.tMax, expParas.Time, False)
 
         # RT stats 
         # ready_RT_median, ready_RT_mean, ready_RT_se
@@ -871,12 +875,11 @@ def ind_MF(trialdata, key, isTrct = True, plot_RT = False, plot_trial = False, p
 
         if 'mean_ipi' in blockdata:
             tmp = {"id": key[0], "sess": key[1], "key": str(key), "block": i + 1, "auc": block_auc,  "std_wtw": block_std_wtw, \
-            "auc_rh": block_auc_rh, "std_wtw_rh": block_std_wtw_rh, "ipi": ipi, \
+            "ipi": ipi, \
             "diff_auc": sub_aucs[3] - sub_aucs[0], "diff_wtw": end_wtw - init_wtw, \
             "init_wtw": init_wtw, "end_wtw": end_wtw, "sell_RT_median": sell_RT_median, "sell_RT_mean": sell_RT_mean, "sell_RT_se": sell_RT_se, "condition": condition}
         else:
             tmp = {"id": key[0], "sess": key[1], "key": str(key), "block": i + 1, "auc": block_auc,  "std_wtw": block_std_wtw, \
-            "auc_rh": block_auc_rh, "std_wtw_rh": block_std_wtw_rh,\
             "diff_auc": sub_aucs[3] - sub_aucs[0], "diff_wtw": end_wtw - init_wtw, \
             "init_wtw": init_wtw, "end_wtw": end_wtw, "sell_RT_median": sell_RT_median, "sell_RT_mean": sell_RT_mean, "sell_RT_se": sell_RT_se, "condition": condition}
         tmp.update(dict(zip(['auc' + str((i + 1)) for i in range(n_subblock)], sub_aucs)))
@@ -897,7 +900,7 @@ def ind_MF(trialdata, key, isTrct = True, plot_RT = False, plot_trial = False, p
         ax_wtw.set_xlabel('Trial')
         ax_wtw.set_ylabel('WTW (s)')
 
-    ############ return  ############# y
+    ############ return  ############# 
     return stats, objs
 
 
@@ -971,7 +974,7 @@ def ind_sim_MF(simdata, empdata, key, plot_trial = False, plot_KMSC = False, plo
     return stats, objs
 
 ########################## group-level analysis functions ##############
-def group_MF(trialdata_, plot_each = False, isTrct = True, n_subblock = 4):
+def group_MF(trialdata_, plot_each = False, isTrct = True, n_subblock = 4, cutoff = None):
     # check sample sizes 
     nsub = len(trialdata_)
     print("Analyze %d valid participants"%nsub)
@@ -989,12 +992,12 @@ def group_MF(trialdata_, plot_each = False, isTrct = True, n_subblock = 4):
     idx = 0
     for key, trialdata in trialdata_.items():
         if plot_each:
-            stats, objs  = ind_MF(trialdata, key, isTrct = isTrct, plot_RT = False, plot_trial = True, plot_KMSC = False, plot_WTW = True, n_subblock = n_subblock)
+            stats, objs  = ind_MF(trialdata, key, isTrct = isTrct, plot_RT = False, plot_trial = True, plot_KMSC = False, plot_WTW = True, n_subblock = n_subblock, cutoff = cutoff)
             plt.show()
             input("Press Enter to continue...")
             plt.clf()
         else:
-            stats, objs  = ind_MF(trialdata, key, isTrct = isTrct, n_subblock = n_subblock)
+            stats, objs  = ind_MF(trialdata, key, isTrct = isTrct, n_subblock = n_subblock, cutoff = cutoff)
             stats_.append(stats)
         Psurv_block1_[idx, :] = objs['Psurv_block1']
         Psurv_block2_[idx, :] = objs['Psurv_block2']

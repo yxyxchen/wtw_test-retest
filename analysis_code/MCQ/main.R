@@ -109,37 +109,20 @@ calc_k_lookup_table = function(filepath){
 }
 
 
-# read table and run
-# df = read.csv(file.path("data", "active", "selfreport_sess1.csv"), row.names = 1)
-
-
 ####### main script #########
-if (!interactive()) {
-  expname = "passive"
-  sess = 2
-  filepath = file.path("data", expname, sprintf("selfreport_sess%d.csv", sess))
-  resdf = calc_k_lookup_table(filepath)
-  write_csv(resdf, file.path("..",  "analysis_results", expname, 'selfreport',  sprintf('MCQ_sess%d.csv', sess)))
+if (!interactive()){
+  for(expname in c("active", "passive")){
+    for(sess in 1:2){
+      if(expname == 'active' & sess == 2){
+        print("continue")
+      }else{
+        filepath = file.path("data", expname, sprintf("selfreport_sess%d.csv", sess))
+        resdf = calc_k_lookup_table(filepath)
+        write_csv(resdf, file.path("..",  "analysis_results", expname, 'selfreport',  sprintf('MCQ_sess%d.csv', sess)))
+      }
+    }
+  }
 }
 
-################# simple GLM，sum(is.na(glm_k)) = 117 ########################
-
-###############  robust regressions, 41 NA ###########
-
-
-############## use the original scoring method ###############
-
-
-##################
-# data.frame(
-#   rglm_k,
-#   resdf['GMK']
-# ) %>% ggplot(aes(log(GMK), log(rglm_k))) + geom_point()
-
-
-# priors = c(prior(cauchy(0, 1), class = "b", coef = TR), prior(cauchy(0, 1), class = "b", coef = T))
-# 
-# res = brm(pD ~ TR + T - 1, data = tmp,  family = bernoulli(link = 'logit'), warmup = 50, iter = 1000, chains = 2, backend = "rstan", prior = priors)
-# 
 
 
